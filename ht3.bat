@@ -1,3 +1,3 @@
 @echo off
 cd /D %~dp0
-python -m ht3.cli -c ht3.cfg
+"c:\Program Files (x86)\python34\python.exe" -m ht3.cli -s ht3.cfg -x "show('hans')" -i
