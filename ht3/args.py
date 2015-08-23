@@ -1,70 +1,145 @@
 import shlex
+import re
 
 
-def Args(id):
-    if not id:
-        return NoArgs
-    if id == 1 or id == 'all':
-        return AllArgs
-    if isinstance(id,str):
-        if id == '?':
-            return NoOrOneArgs
-        if id == 'shell':
-            return ShellArgs
-        if id.startswith(':'):
-            return GetOptsArgs(id[1:])
-    if isinstance(id, dict):
-        return DictArgs(id)
+class ArgParser:
+    def __call__(self, string):
+        raise NotImplementedError("This is a ABC")
 
-def NoArgs(string):
+    def complete(self, string):
+        return []
+
+class NoArgs(ArgParser):
     """ Takes no arguments """
-    string = string.strip()
-    if string != '':
-        raise ValueError("Not expecting an argument!, got: "+repr(string))
-    return []
 
-def NoOrOneArgs(string):
+    def __call__ (self, string):
+        string = string.strip()
+        if string != '':
+            raise ValueError("Not expecting an argument!, got: " + string)
+        return []
+
+class NoOrOneArgs(ArgParser):
     """ Takes no or one argument of arbitrary format """
-    string = string.strip()
-    if string != '':
-        return [string]
-    return []
 
-def AllArgs(string):
+    def __call__ (self, string):
+        string = string.strip()
+        if string != '':
+            return [string]
+        return []
+
+class AllArgs(ArgParser):
     """ Takes one argument of arbitrary format """
-    return [string]
 
-def ShellArgs(string):
-    """ Takes multiple shellencoded arguments  """
-    return shlex.split(string)
+    def __call__ (self, string):
+        return [string]
 
-class NArgs:
-    """ Takes %d shellencoded arguments """
-    def __init__(self,n):
-        self.n=n
-        self.__doc__ = self.__doc__ % n
+class ShellArgs(ArgParser):
+    """ Takes shellencoded arguments """
 
     def __call__(self,string):
         a = shlex.split(string)
-        if len(a) != self.n:
-            raise ValueError ("Not %d args" % self.n, a)
         return a
 
-class GetOptsArgs:
+class GetOptsArgs(ArgParser):
     """ Takes the following "getopt" arguments:\n%s """
-    def __init__(self, opts):
+    def __init__(self, opts, **kwargs):
+        super().__init__(**kwargs)
         self.opts = opts
         self.__doc__ = self.__doc__ % (opts,)
 
     def __call__(string):
         raise NotImplemented()
 
-class DictArgs:
+class SetArgs(ArgParser):
     """ Takes one of these argumwents: \n%s """
-    def __init__(self, dict):
-        self.dict=dict
-        self.__doc__ = self.__doc__ % (", ".join(dict),)
+    def __init__(self, sets, **kwargs):
+        super().__init__(**kwargs)
+        self.sets=sets
+        self.__doc__ = self.__doc__ % (", ".join(sorted(k for s in sets for k in s)))
 
     def __call__(self, string):
         string = string.strip()
-        return [self.dict[string]]
+        for s in self.sets:
+            if string in s:
+                return [string]
+
+        raise ValueError (string, self.sets)
+
+    def complete(self, string):
+        string = string.strip()
+        for s in self.sets:
+            for e in s:
+                if e.startswith(string):
+                    yield e
+
+class DictArgs(SetArgs):
+    """ Takes one of these argumwents: \n%s """
+    def __init__(self, dicts, **kwargs):
+        super().__init__(dicts, **kwargs)
+
+    def __call__(self, string):
+        string = string.strip()
+        for s in self.sets:
+            if string in s:
+                return [s[string]]
+        raise ValueError (string, self.sets)
+
+
+def Args(spec, **kwargs):
+    if not spec:
+        return NoArgs(**kwargs)
+
+    if spec in ['1', 1, 'all']:
+        return AllArgs(**kwargs)
+
+    if isinstance(spec, str):
+        if spec == '?':
+            return NoOrOneArgs(**kwargs)
+
+        if spec == 'shell':
+            return ShellArgs(**kwargs)
+
+        if spec == 'set':
+            d= []
+            if 'set' in kwargs:
+                d.append(kwargs['set'])
+            if 'sets' in kwargs:
+                d.extend(kwargs['sets'])
+            return SetArgs(d, **kwargs)
+
+        if spec == 'dict':
+            d= []
+            if 'dict' in kwargs:
+                d.append(kwargs['dict'])
+            if 'dicts' in kwargs:
+                d.extend(kwargs['dicts'])
+            return DictArgs(d, **kwargs)
+
+        if spec.startswith(':'):
+            return GetOptsArgs(id[1:], **kwargs)
+
+        return ParseArgSpecString(spec, **kwargs)
+
+    if isinstance(spec, list):
+        return SetArgs([spec], **kwargs)
+
+    if isinstance(spec, tuple):
+        return SetArgs([spec], **kwargs)
+
+    if isinstance(spec, set):
+        return SetArgs([spec], **kwargs)
+
+    if isinstance(spec, dict):
+        return DictArgs([spec], **kwargs)
+
+    raise ValueError(spec)
+
+def ParseArgSpecString(spec, **kwargs):
+    raise NotImplementedError(spec)
+    # Parse the spec, return an Argparser that can do it
+    # e.g. "Int (INT|CHAR|dict1)+ set0{10} dict0"
+
+    tokens = re.split("([{}()?+*,]) ", spec)
+    tokens = iter(tokens)
+    token = None
+

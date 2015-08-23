@@ -1,5 +1,7 @@
 import traceback
 import functools
+import re
+import textwrap
 
 from .args import Args
 
@@ -28,9 +30,12 @@ def cmd(func=None, *_,args=None, name=None, **attrs):
         else:
             wrapper.name = name
 
+        doc = textwrap.dedent(func.__doc__ or '')
+
         origin = [func.__code__.co_filename, func.__code__.co_firstlineno]
         fn, lno = origin
-        doc = "invoked as '%s', %s\n\n%s\n\n%s:%d" % (wrapper.name, arg_parser.__doc__, func.__doc__, fn, lno)
+
+        doc = "Invoked as '%s'.\n%s\n\n%s\n\nDefined in:\n\t%s:%d" % (wrapper.name, arg_parser.__doc__.strip(), doc, fn, lno)
 
         wrapper.__doc__ = doc
         wrapper.origin = origin

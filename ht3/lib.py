@@ -20,7 +20,7 @@ def get_command(string):
 def get_completion(string):
     try:
         c, args = get_command(string)
-        return c.complete(args)
+        return c.arg_parser.complete(args)
     except KeyError:
         return []
 

@@ -3,6 +3,7 @@ from ht3.lib import run_command
 
 import subprocess
 import sys
+import textwrap
 
 def _eval(s):
     try:
@@ -19,7 +20,7 @@ def shell(string):
     return subprocess.Popen(string, shell=True)
 
 @cmd(args="shell", name="!")
-def exe(*args):
+def execute(*args):
     return subprocess.call(args, shell=False)
 
 @cmd()
@@ -28,8 +29,13 @@ def exit():
 
 @cmd(name='l')
 def lsit_commands():
-    for c in sorted(COMMANDS):
-        show(COMMANDS[c])
+    for n in sorted(COMMANDS):
+        c = COMMANDS[n]
+        f = c.__wrapped__
+        d = f.__doc__ or ''
+        doc = textwrap.shorten(d,60)
+        doc = "%- 20s %s" % (n, doc)
+        show(doc)
 
 @cmd(name='=',args=1)
 def __eval(s):
@@ -37,7 +43,7 @@ def __eval(s):
     show (r)
 
 @cmd(name='?', args=1)
-def help(exp):
+def _help(exp):
     if exp in COMMANDS:
         obj = COMMANDS[exp]
     else:
