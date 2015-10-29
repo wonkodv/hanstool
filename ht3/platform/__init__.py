@@ -1,12 +1,5 @@
-from ..lib import Env
-import pathlib
 import sys
 import os
-
-@Env
-def get_main_module():
-    return pathlib.Path(sys.argv[0]).stem
-
 
 def _load(s):
     try:

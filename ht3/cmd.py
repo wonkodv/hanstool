@@ -19,7 +19,8 @@ def cmd(func=None, *,args=None, name=None, **attrs):
         @functools.wraps(func)
         def wrapper(arg_string):
             """ The function that will be executed """
-            return func(*arg_parser(arg_string))
+            args, kwargs = arg_parser(arg_string)
+            return func(*args, **kwargs)
 
         def complete(arg_string):
             return arg_parser.complete(arg_string)

@@ -7,6 +7,7 @@ import os.path
 
 from . import lib
 from . import complete
+from .lib import Env
 
 try:
     import readline
@@ -17,7 +18,7 @@ def setup_readline():
     if not readline:
         return False
 
-    history = lib.Env.get('RL_HISTORY', None)
+    history = Env.get('RL_HISTORY', None)
     if history:
         history = os.path.expanduser(history)
         try:
@@ -50,15 +51,24 @@ def setup_readline():
     readline.set_completer_delims('')
     readline.parse_and_bind('tab: complete')
 
-def show(s, *args):
+
+# API
+
+@Env
+def show(s, *args, **kwargs):
     print (str(s) % args)
 
-def edit_command(command):
-    """ Edit the location where a command was defined """
-    f, l = command.origin
+@Env
+def log(s, *args, **kwargs):
+    print (str(s) % args)
+
+@Env
+def edit_file(path, line):
     execute(EDITOR, f)
 
+Env['help'] = help
 
+Env.INTERFACE = "ht3.cli"
 
 def repl():
     rl = setup_readline()
@@ -86,9 +96,6 @@ def main(args):
     done = False
     help = False
     arg_iter = iter(args)
-    lib.load_default_modules()
-    lib.Env(show)
-    lib.Env(edit_command)
 
     for a in arg_iter:
         if a == '-s':

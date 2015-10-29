@@ -1,5 +1,6 @@
 import shlex
 import re
+import pathlib
 
 
 class ArgParser:
@@ -19,7 +20,7 @@ class NoArgs(ArgParser):
         string = string.strip()
         if string:
             raise ValueError("Not expecting an argument!, got: " + string)
-        return []
+        return [],{}
 
 class NoOrOneArgs(ArgParser):
     """ Takes no or one argument of arbitrary format """
@@ -28,7 +29,7 @@ class NoOrOneArgs(ArgParser):
         string = string.strip()
         if string:
             return [string]
-        return []
+        return [],{}
 
 class AllArgs(ArgParser):
     """ Takes one argument of arbitrary format """
@@ -37,14 +38,20 @@ class AllArgs(ArgParser):
         string = string.strip()
         if not string:
             raise ValueError("Expecting an argument")
-        return [string]
+        return [string],{}
 
 class ShellArgs(ArgParser):
     """ Takes shellencoded arguments """
 
     def __call__(self,string):
         a = shlex.split(string)
-        return a
+        return a,{}
+
+class PathArgs(ArgParser):
+    """ Takes shellencoded arguments """
+
+    def __call__(self, string):
+        return [pathlib.Path(string)],{}
 
 class GetOptsArgs(ArgParser):
     """ Takes the following "getopt" arguments:\n%s """
@@ -64,11 +71,9 @@ class SetArgs(ArgParser):
 
     def __call__(self, string):
         string = string.strip()
-        if not string:
-            raise ValueError("Expecting an argument")
         for s in self.sets:
             if string in s:
-                return [string]
+                return [string],{}
 
         raise ValueError (string, self.sets)
 
@@ -87,13 +92,11 @@ class DictArgs(SetArgs):
 
     def __call__(self, string):
         string = string.strip()
-        if not string:
-            raise ValueError("Expecting an argument")
         for s in self.sets:
             if string in s:
-                return [s[string]]
+                return [s[string]], {}
         if not self.default is ...:
-            return self.default
+            return [self.default],{}
         raise ValueError (string, self.sets)
 
 
@@ -110,6 +113,9 @@ def Args(spec, **kwargs):
 
         if spec == 'shell':
             return ShellArgs(**kwargs)
+
+        if spec == 'path':
+            return PathArgs(**kwargs)
 
         if spec == 'set':
             d= []
