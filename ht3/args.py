@@ -16,27 +16,26 @@ class NoArgs(ArgParser):
     """ Takes no arguments """
 
     def __call__ (self, string):
-        if not string is None:
-            string = string.strip()
-            if string != '':
-                raise ValueError("Not expecting an argument!, got: " + string)
+        string = string.strip()
+        if string:
+            raise ValueError("Not expecting an argument!, got: " + string)
         return []
 
 class NoOrOneArgs(ArgParser):
     """ Takes no or one argument of arbitrary format """
 
     def __call__ (self, string):
-        if not string is None:
-            string = string.strip()
-            if string != '':
-                return [string]
+        string = string.strip()
+        if string:
+            return [string]
         return []
 
 class AllArgs(ArgParser):
     """ Takes one argument of arbitrary format """
 
     def __call__ (self, string):
-        if string is None:
+        string = string.strip()
+        if not string:
             raise ValueError("Expecting an argument")
         return [string]
 
@@ -44,8 +43,6 @@ class ShellArgs(ArgParser):
     """ Takes shellencoded arguments """
 
     def __call__(self,string):
-        if string is None:
-            return []
         a = shlex.split(string)
         return a
 
@@ -66,9 +63,9 @@ class SetArgs(ArgParser):
         self.sets=sets
 
     def __call__(self, string):
-        if string is None:
-            raise ValueError("Expecting an argument")
         string = string.strip()
+        if not string:
+            raise ValueError("Expecting an argument")
         for s in self.sets:
             if string in s:
                 return [string]
@@ -84,19 +81,19 @@ class SetArgs(ArgParser):
 
 class DictArgs(SetArgs):
     """ Takes one of a set of arguments """
-    def __init__(self, dicts, **kwargs):
+    def __init__(self, dicts, default=..., **kwargs):
         super().__init__(dicts, **kwargs)
-        self.kwargs = kwargs
+        self.default = default
 
     def __call__(self, string):
-        if string is None:
-            raise ValueError("Expecting an argument")
         string = string.strip()
+        if not string:
+            raise ValueError("Expecting an argument")
         for s in self.sets:
             if string in s:
                 return [s[string]]
-        if 'default' in self.kwargs:
-            return self.kwargs['default']
+        if not self.default is ...:
+            return self.default
         raise ValueError (string, self.sets)
 
 

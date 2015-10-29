@@ -8,22 +8,15 @@ from . import platform
 def parse_command(string):
     i=0
     for c in string:
-        if c == ' ':
+        if c in [' ','\t']:
             cmd = string[:i]
-            arg = string[i+1:]
+            arg = string[i:]
             break
         i += 1
     else:
         cmd = string
-        arg = None
+        arg = ""
     return cmd, arg
-
-def get_completion(string):
-    c, args = parse_command(string)
-    if c in COMMANDS:
-        return c.arg_parser.complete(args)
-    elif args is None:
-        return filter(lambda s:s.startswith(string), COMMANDS + Env)
 
 def run_command(string):
     try:
@@ -63,7 +56,6 @@ def load_scripts(path):
 def load_default_modules():
     Env(load_scripts)
     Env(run_command)
-    Env(get_completion)
     Env(parse_command)
     Env(cmd)
     Env['COMMANDS'] = COMMANDS

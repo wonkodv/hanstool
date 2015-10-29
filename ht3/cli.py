@@ -6,6 +6,7 @@ import configparser
 import os.path
 
 from . import lib
+from . import complete
 
 try:
     import readline
@@ -34,11 +35,19 @@ def setup_readline():
                 readline.write_history_file(history)
         atexit.register(save)
 
+    completion_cache=[]
 
     def rl_complete(text, n):
-        l = lib.get_completion(text)
-        return l[n]
+        nonlocal completion_cache
+        if n == 0:
+            try:
+                completion_cache = list(complete.get_completion(text))
+            except:
+                traceback.print_exc()
+            print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')
+        return completion_cache[n]
     readline.set_completer(rl_complete)
+    readline.set_completer_delims('')
     readline.parse_and_bind('tab: complete')
 
 def show(s, *args):
@@ -50,7 +59,7 @@ def repl():
     try:
         while 1:
             try:
-                s = input("ht>")
+                s = input("ht> ")
                 if s:
                     x = lib.run_command(s)
                     if x:
