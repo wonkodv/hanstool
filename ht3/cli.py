@@ -53,6 +53,12 @@ def setup_readline():
 def show(s, *args):
     print (str(s) % args)
 
+def edit_command(command):
+    """ Edit the location where a command was defined """
+    f, l = command.origin
+    execute(EDITOR, f)
+
+
 
 def repl():
     rl = setup_readline()
@@ -82,6 +88,7 @@ def main(args):
     arg_iter = iter(args)
     lib.load_default_modules()
     lib.Env(show)
+    lib.Env(edit_command)
 
     for a in arg_iter:
         if a == '-s':

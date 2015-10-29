@@ -8,11 +8,7 @@ cmd(name=';',args=1)(execute_py_expression)
 cmd(name='=',args=1)(evaluate_py_expression)
 cmd(name='?', args=1)(help_command)
 
-@cmd(name="+", args=COMMANDS)
-def edit_command(command):
-    """ Edit the location where a command was defined """
-    f, l = command.origin
-    execute(EDITOR, f)
+cmd(name="+", args=COMMANDS)(edit_command)
 
 @cmd
 def py():
