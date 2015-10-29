@@ -125,7 +125,8 @@ wrapper does not apear anywhere else.
     *   `set` like `1` but has to be one of a set of args
     *   `dict` like `set` but has to be a key of a dictionary. The lookup value is passed to the fucntion
     *   `path` like `1`. Must be an absolute or relative (to the current dir) path. Is passed as a Path object.
-*   Function: A Command is a normal python function with a `cmd` decorator. The decorator
+    *   a callable like `int` or `float`: will take the entire string pass it through the function an pass result as the 1 argument.
+*   Function: A Command-function is a normal python function with a `cmd` decorator. The decorator
     takes some optional keyword arguments with which you specify:
     *   Name: defautls to the function Name
     *   args: defines, how a the argument part of the command-string is parsed and passed on to the command-function.

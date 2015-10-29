@@ -6,7 +6,6 @@ import configparser
 import os.path
 
 from . import lib
-from . import complete
 from .lib import Env
 
 try:
@@ -42,10 +41,10 @@ def setup_readline():
         nonlocal completion_cache
         if n == 0:
             try:
-                completion_cache = list(complete.get_completion(text))
+                completion_cache = list(lib.get_completion(text))
             except:
                 traceback.print_exc()
-            print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')
+            #print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')
         return completion_cache[n]
     readline.set_completer(rl_complete)
     readline.set_completer_delims('')
@@ -76,18 +75,23 @@ def repl():
         while 1:
             try:
                 s = input("ht> ")
-                if s:
-                    x = lib.run_command(s)
-                    if x:
-                        print(x)
-            except SystemExit:
-                raise
             except KeyboardInterrupt:
                 return 127
             except EOFError:
                 return 0
-            except:
-                traceback.print_exc()
+            else:
+                if s:
+                    try:
+                        x = lib.run_command(s)
+                    except KeyboardInterrupt:
+                        print("\n!!Aborted")
+                    except SystemExit:
+                        raise
+                    except:
+                        traceback.print_exc()
+                    else:
+                        if x:
+                            print(x)
     finally:
         print()
     return 0

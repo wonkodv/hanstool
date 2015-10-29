@@ -11,6 +11,7 @@ def txt():
 @cmd(args='?')
 def tea(t=3):
     """ Tea timer """
+    t = int(t)
     t = t*60
     show("sleep "+str(t))
     time.sleep(t)

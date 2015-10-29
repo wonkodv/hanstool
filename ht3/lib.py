@@ -7,7 +7,6 @@ import textwrap
 
 from .cmd import COMMANDS, cmd
 from . import env
-from . import commonenv
 
 
 def parse_command(string):

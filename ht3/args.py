@@ -28,7 +28,7 @@ class NoOrOneArgs(ArgParser):
     def __call__ (self, string):
         string = string.strip()
         if string:
-            return [string]
+            return [string], {}
         return [],{}
 
 class AllArgs(ArgParser):
@@ -99,6 +99,14 @@ class DictArgs(SetArgs):
             return [self.default],{}
         raise ValueError (string, self.sets)
 
+class CallableConverter(ArgParser):
+    """ Takes a String that is accepted by %s() """
+    def __init__(self, func, **kwargs):
+        self.call = call
+        self.__doc__ = self.__doc__ % (call,)
+
+    def __call__(self, string):
+        return [self.call(string)],{}
 
 def Args(spec, **kwargs):
     if not spec:
@@ -150,6 +158,8 @@ def Args(spec, **kwargs):
     if isinstance(spec, dict):
         return DictArgs([spec], **kwargs)
 
+    if callable(spec):
+        return CallableConverter(spec, **kwargs)
     raise ValueError(spec)
 
 def ParseArgSpecString(spec, **kwargs):
