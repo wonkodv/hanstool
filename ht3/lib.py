@@ -1,8 +1,10 @@
 import configparser
 import pathlib
+import os.path
 
 from .cmd import COMMANDS
 from .env import Env
+from . import platform
 
 def get_command(string):
     i=0
@@ -53,10 +55,14 @@ def read_config(path):
     c = configparser.RawConfigParser()
     c.optionxform = lambda option: option
     c.read(path)
-    s = c['scripts']['scripts']
     if 'env' in c:
         Env.update(c['env'])
+    s = c['scripts']['scripts']
     s = s.split('\n')
     for fn in s:
+        fn = os.path.expandvars(fn)
         p = pathlib.Path(fn)
         load_script(p)
+
+def load_default_modules():
+    platform.load_platform_modules()

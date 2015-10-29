@@ -136,10 +136,8 @@ def Args(spec, **kwargs):
 
 def ParseArgSpecString(spec, **kwargs):
     raise NotImplementedError(spec)
-    # Parse the spec, return an Argparser that can do it
-    # e.g. "Int (INT|CHAR|dict1)+ set0{10} dict0"
-
     tokens = re.split("([{}()?+*,]) ", spec)
     tokens = iter(tokens)
     token = None
 
+    "Int (INT|CHAR|dict1)+ set0{10} dict0"

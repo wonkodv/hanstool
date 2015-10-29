@@ -7,7 +7,7 @@ from .args import Args
 
 COMMANDS = {}
 
-def cmd(func=None, *_,args=None, name=None, **attrs):
+def cmd(func=None, *,args=None, name=None, **attrs):
     """ use as decorator with or without arguments to register a function
         as a command. The function will be registered in its original form 
         in the module and in arg parsing form in COMMANDS """
@@ -18,7 +18,7 @@ def cmd(func=None, *_,args=None, name=None, **attrs):
 
         @functools.wraps(func)
         def wrapper(arg_string):
-            """ The function that will be executed invoked """
+            """ The function that will be executed """
             return func(*arg_parser(arg_string))
 
         def complete(arg_string):
