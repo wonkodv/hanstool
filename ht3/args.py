@@ -4,39 +4,48 @@ import re
 
 class ArgParser:
     def __call__(self, string):
-        raise NotImplementedError("This is a ABC")
+        raise NotImplementedError()
 
     def complete(self, string):
         return []
+
+    def __str__(self):
+        return self.__doc__
 
 class NoArgs(ArgParser):
     """ Takes no arguments """
 
     def __call__ (self, string):
-        string = string.strip()
-        if string != '':
-            raise ValueError("Not expecting an argument!, got: " + string)
+        if not string is None:
+            string = string.strip()
+            if string != '':
+                raise ValueError("Not expecting an argument!, got: " + string)
         return []
 
 class NoOrOneArgs(ArgParser):
     """ Takes no or one argument of arbitrary format """
 
     def __call__ (self, string):
-        string = string.strip()
-        if string != '':
-            return [string]
+        if not string is None:
+            string = string.strip()
+            if string != '':
+                return [string]
         return []
 
 class AllArgs(ArgParser):
     """ Takes one argument of arbitrary format """
 
     def __call__ (self, string):
+        if string is None:
+            raise ValueError("Expecting an argument")
         return [string]
 
 class ShellArgs(ArgParser):
     """ Takes shellencoded arguments """
 
     def __call__(self,string):
+        if string is None:
+            return []
         a = shlex.split(string)
         return a
 
@@ -51,13 +60,14 @@ class GetOptsArgs(ArgParser):
         raise NotImplemented()
 
 class SetArgs(ArgParser):
-    """ Takes one of these argumwents: \n%s """
+    """ Takes one of a set of arguments """
     def __init__(self, sets, **kwargs):
         super().__init__(**kwargs)
         self.sets=sets
-        self.__doc__ = self.__doc__ % (", ".join(sorted(k for s in sets for k in s)))
 
     def __call__(self, string):
+        if string is None:
+            raise ValueError("Expecting an argument")
         string = string.strip()
         for s in self.sets:
             if string in s:
@@ -73,15 +83,20 @@ class SetArgs(ArgParser):
                     yield e
 
 class DictArgs(SetArgs):
-    """ Takes one of these argumwents: \n%s """
+    """ Takes one of a set of arguments """
     def __init__(self, dicts, **kwargs):
         super().__init__(dicts, **kwargs)
+        self.kwargs = kwargs
 
     def __call__(self, string):
+        if string is None:
+            raise ValueError("Expecting an argument")
         string = string.strip()
         for s in self.sets:
             if string in s:
                 return [s[string]]
+        if 'default' in self.kwargs:
+            return self.kwargs['default']
         raise ValueError (string, self.sets)
 
 
@@ -136,6 +151,7 @@ def Args(spec, **kwargs):
 
 def ParseArgSpecString(spec, **kwargs):
     raise NotImplementedError(spec)
+
     tokens = re.split("([{}()?+*,]) ", spec)
     tokens = iter(tokens)
     token = None

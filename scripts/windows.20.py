@@ -3,7 +3,7 @@ import os
 if os.name == 'nt':
 
     from ctypes import windll
-    from ht3.cmd import cmd
+    from ht3.lib import cmd
 
     @cmd(name='o', args=1)
     def shellexecute(s):

@@ -22,8 +22,7 @@ def cmd(func=None, *,args=None, name=None, **attrs):
             return func(*arg_parser(arg_string))
 
         def complete(arg_string):
-            raise NotImplemented("Completion for Arguments of type ", arg_parser, ar_stringg)
-
+            return arg_parser.complete(arg_string)
 
         if name is None:
             wrapper.name = func.__name__

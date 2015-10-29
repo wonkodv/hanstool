@@ -4,12 +4,9 @@ import traceback
 import os
 import queue
 
-from .env import Env
 from . import lib
 
-print ("HT GUI !!")
-
-@Env
+@lib.Env
 def show(s, *args):
     print (str(s) % args)
 
@@ -68,11 +65,11 @@ class CommandWindow(t.Tk):
     def on_exception(self, e):
         raise e
 
-Env.COMMAND_WINDOW = CommandWindow()
+lib.Env.COMMAND_WINDOW = CommandWindow()
 
 def main(args):
     arg_iter = iter(args)
-    Env.update(os.environ)
+    lib.Env.update(os.environ)
     lib.load_default_modules()
     for a in arg_iter:
         if a == '-s':
@@ -84,7 +81,7 @@ def main(args):
         else:
             raise ValueError(a)
 
-    Env.COMMAND_WINDOW.mainloop()
+    lib.Env.COMMAND_WINDOW.mainloop()
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))

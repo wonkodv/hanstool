@@ -1,5 +1,5 @@
 import ctypes
-from ht3.env import Env
+from ht3.lib import Env
 
 @Env
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):

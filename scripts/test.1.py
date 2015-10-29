@@ -1,5 +1,4 @@
-from ht3.cmd import cmd
-from ht3.lib import run_command
+from ht3.lib import run_command, cmd
 
 import pdb
 

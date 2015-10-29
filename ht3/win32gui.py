@@ -1,7 +1,6 @@
 import os
 import sys
 
-from . import env
 from . import lib
 
 from ctypes import *
@@ -146,7 +145,7 @@ def message_loop():
         windll.user32.TranslateMessage(lpmsg)
         windll.user32.DispatchMessageA(lpmsg)
 
-@env.Env
+@lib.Env
 def show(s, *args):
     print (str(s) % args)
 
@@ -167,6 +166,8 @@ def main(args):
     win.show()
 
     message_loop()
-    win
+
+    win # Needed so win is not GCed?
+
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
