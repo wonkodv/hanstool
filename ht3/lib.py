@@ -151,7 +151,7 @@ def list_commands():
         d = f.__doc__ or ''
         a = c.arg_parser
         doc = textwrap.shorten(d,60)
-        doc = "%- 20s %s %s" % (n, doc, a)
+        doc = "%- 20s %s %s\n" % (n, doc, a)
         text += doc
     Env.show(text)
 
