@@ -10,6 +10,7 @@ from . import lib
 def show(s, *args):
     print (str(s) % args)
 
+lib.Env['INTERFACE'] = 'ht3.gui'
 
 class CommandWindow(t.Tk):
     def __init__(self):
