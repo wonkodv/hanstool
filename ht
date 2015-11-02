@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+d=`dirname $0`
+PYTHONPATH="$d:$PYTHONPATH"
+exec python3 -m ht3.cli -s "$d/scripts/" -x 'show("Hello World")' -i
