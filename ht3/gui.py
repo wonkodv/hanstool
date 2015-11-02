@@ -5,12 +5,7 @@ import os
 import queue
 
 from . import lib
-
-@lib.Env
-def show(s, *args):
-    print (str(s) % args)
-
-lib.Env['INTERFACE'] = 'ht3.gui'
+from .lib import Env
 
 class CommandWindow(t.Tk):
     def __init__(self):
@@ -70,12 +65,10 @@ lib.Env.COMMAND_WINDOW = CommandWindow()
 
 def main(args):
     arg_iter = iter(args)
-    lib.Env.update(os.environ)
-    lib.load_default_modules()
     for a in arg_iter:
         if a == '-s':
             s = next(arg_iter)
-            lib.read_config(s)
+            lib.load_scripts(s)
         elif a == '-x':
             s = next(arg_iter)
             lib.run_command(s)
@@ -83,6 +76,28 @@ def main(args):
             raise ValueError(a)
 
     lib.Env.COMMAND_WINDOW.mainloop()
+
+
+# API
+
+# TODO: These all print on stdout. Make them use windows
+
+@Env
+def show(s, *args, **kwargs):
+    print (str(s) % args)
+
+@Env
+def log(s, *args, **kwargs):
+    print (str(s) % args)
+
+@Env
+def edit_file(path, line):
+    execute(EDITOR, f)
+
+Env['help'] = help
+
+Env['INTERFACE'] = "ht3.gui"
+
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
