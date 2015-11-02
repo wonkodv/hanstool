@@ -134,21 +134,46 @@ wrapper does not apear anywhere else.
     *   more kwargs that become attributes of the command, which can be scanned by other componentes (e.g. Hotkeys, ...)
 
 
+The one unified Namespace `Env`
+-------------------------------
+
+Namespaces are very pythonic and you should allways have more of those.  But
+this tool is not about clean and readable code, it's about getting things done
+(without dolores -.-) therfore there is only one great namespace in which
+scripts and commands are executed. From outside that namespace (the core code
+and plattform modules) the environment is available in `ht3.lib.Env`. Env is a
+decorator to put functions in it, its a dictionary kind of thing and it is also
+a namespace.
+	@Env
+	def foo(): pass
+	Env['foo']
+	Env.foo()
+Env contains itself if you need to use it from your scripts or commands.
+
+This gets problematic if you define stuff on module level in your script,
+use it from your command and another script uses different things with the same
+name on module level. But it still beats `bash` ([1]).
+
+
+
 Some Default Commands
 -----------------
 
-A shell function gets 1 argument while the execute function gets `shell` parsed arguments
-*   `! gvim ~/txt` opens txt in gvim.
+*   `!` executes programms. `! gvim ~/txt` opens txt in gvim.
     The `!` comand has argument parsing strategy `shell` so the command-function
     is invoked with 2 arguments, the strings `gvim` and `~/txt`. It
     executes the first one, an passes the second as argument. gvim
     has to deal with he tilde character. Since vim is awesome, this works. If you
     used this with notepad.exe, which is not awesome, it would not work.
-*   `$ wc -l ~/txt > ~/txt-len` writes the length of txt to txt-len
+*   `$` calls the Shell. `$ wc -l ~/txt > ~/txt-len` writes the length of txt to txt-len
     The `$` command has argumennt parsing `1` because the function wants the entire
     text after the dolalr sign, open a shell, and let that shell figure out what to
     do with the string.
 *   `l` List all commands
+*   `exit` Close the tool
+*	`;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
+*	`=` evaluate and print a python statment: `= 1+1*1+1`
+*	'?' help on commands or python objects: `? exit` `? sys`
 
 
 User Interface
@@ -168,3 +193,33 @@ They Should mainly call the following functions from `ht3.lib`:
 *   `get_completion(string)` to complete what the user started to type.
 
 
+Configure Things
+---------------
+
+Some Behaviour can be configured by setting things in the `Env`.
+*	`_command_not_found_hook` is executed if the command-string does
+	not specify a command. Defaults to evaluating or executing as python code.
+*	`CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
+*	`RL_HISTORY`: a string that points to a file with the history of the repl.
+
+Strings can be configured via environment, but require a `HT3_` prefix, for
+example in `.bashrc`:
+	export HT3_RL_HISTORY=~/.config/hanstool/readline_history
+Other python objects and strings can be configured in scripts. The default
+values are set very early by `ht3.lib`. Scripts are run by the frontend.
+`ht3.gui` runs all scripts before showing the gui, `ht3.cli` processes
+arguments sequentially, so configure your environment in a script that is run
+early.
+
+Tipps
+-----
+
+The `ht3.cli` uses readline. configure it as you need.
+	import readline
+	readline.parse_and_bind('set editing-mode vi')
+
+Make it more shell like by importing modules like `sh` [2] or `plumbum` [3] into your Environment.
+
+
+[2]: https://amoffat.github.io/sh/
+[3]: https://plumbum.readthedocs.org/en/latest/
