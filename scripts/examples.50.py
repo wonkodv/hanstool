@@ -1,19 +1,20 @@
-import os.path
 import readline
-import time
-
 readline.parse_and_bind('set editing-mode vi')
+
 
 @cmd
 def txt():
+    import os.path
     execute(EDITOR,os.path.expanduser("~/txt"))
 
 @cmd(args='?')
 def tea(t=3):
     """ Tea timer """
-    t = int(t)
+    import time
+    if t:
+        t = int(t)
+    else:
+        t = 3
     t = t*60
-    show("sleep "+str(t))
     time.sleep(t)
     show("Tee")
-
