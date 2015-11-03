@@ -45,7 +45,8 @@ def load_scripts(path):
         path = pathlib.Path(path)
     if path.is_dir():
         l = path.glob('*.py')
-        l = sorted(l, key=lambda p: [int(p.suffixes[-2][1:]),p] if len(p.suffixes)>1 else ["",p] )
+        # sort b.50.py before a.80.py
+        l = sorted(l, key=lambda p: [p.suffixes[-2][1:] if len(p.suffixes)>1 else "",p])
         for p in l:
             load_scripts(p)
     elif path.is_file():
