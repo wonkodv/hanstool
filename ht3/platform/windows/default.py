@@ -1,5 +1,5 @@
-from ... import lib
+from ...lib import Env
 
-@lib.Env
+@Env
 def gui_stay_on_top():
     Env.COMMAND_WINDOW.wm_attributes('-topmost', 1)
