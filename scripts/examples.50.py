@@ -1,6 +1,12 @@
-import readline
-readline.parse_and_bind('set editing-mode vi')
 
+def __startup():
+    try:
+        import readline
+        readline.parse_and_bind('set editing-mode vi')
+    except ImportError:
+        pass
+__startup()
+del __startup
 
 @cmd
 def txt():
