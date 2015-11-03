@@ -2,11 +2,7 @@ import sys
 import os
 
 def _load(s):
-    try:
-        __import__(__package__+'.'+s)
-    except ImportError:
-        import warnings
-        warnings.warn('could not load plattform module: %s' % s)
+    __import__(__package__+'.'+s)
 
 def load_platform_modules():
     if os.name == 'nt':
