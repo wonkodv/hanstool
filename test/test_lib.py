@@ -1,4 +1,7 @@
 import unittest
+import unittest.mock
+import time
+from unittest.mock import patch, Mock, MagicMock
 
 from ht3 import lib
 
@@ -27,3 +30,46 @@ class Test_parse_command(unittest.TestCase):
     def test_special_chars_cmd(self):
         ca = lib.parse_command("$? !%")
         self.assertTupleEqual(ca, ('$?', ' !%'))
+
+
+class Test_frontends(unittest.TestCase):
+    def test_import_recursive(self):
+        m = lib.import_recursive('unittest.mock')
+        self.assertIs(m, unittest.mock)
+
+    @patch('ht3.lib.import_recursive')
+    def test_full_run(self, importMock):
+        def get_fe():
+            m = Mock()
+            m.i=1
+            m.running = True
+            def start():
+                while m.running:
+                    m.i += 1
+
+            def stop():
+                m.running = False
+
+            m.start=start
+            m.stop=stop
+            return m
+
+        fe1 = get_fe()
+        fe2 = get_fe()
+
+        fe3 = Mock()
+        fe3.stop = lambda:None
+        fe3.start= lambda:time.sleep(0.1)
+
+        importMock.side_effect = [fe1, fe2, fe3]
+
+        lib.load_frontend('frontend1')
+        lib.load_frontend('frontend2')
+        lib.load_frontend('frontend3')
+
+        lib.run_frontends()
+
+        self.assertGreater(fe1.i, 100)
+        self.assertGreater(fe2.i, 100)
+
+

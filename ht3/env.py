@@ -3,10 +3,14 @@ class Env_class:
     all scripts and command invocations in one namespace """
 
     def __init__(self):
-        self.dict=dict(Env=self)
+        d = dict(Env=self)
+        object.__setattr__(self, 'dict', d)
 
     def __getattr__(self, key):
         return self.dict[key]
+
+    def __setattr__(self, key, val):
+        self.dict[key] = val
 
     def __getitem__(self, key):
         return self.dict[key]

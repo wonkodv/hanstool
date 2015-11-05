@@ -4,10 +4,70 @@ import pathlib
 import subprocess
 import sys
 import textwrap
+import threading
+import collections
 
 from .cmd import COMMANDS, cmd
 from . import env
 
+#{{{ Frontends
+
+FRONTENDS = collections.deque() # This one is explicitly threadsafe
+
+def import_recursive(name):
+    m = __import__(name)
+    s = name.split('.')
+    for p in s[1:]:
+        m = getattr(m, p)
+    return m
+
+
+def load_frontend(name):
+    mod = import_recursive(name)
+    if not callable(mod.start) or not callable (mod.stop):
+        raise TypeError("frontend must have start and stop methods", name, mod)
+    FRONTENDS.append(mod)
+
+def run_frontends():
+    """ Start all loaded frontends in seperate threads. If any frontend returns from its start() method,
+        call stop() of all frontends (from the main thread so stop must be threadsafe) and wait for all
+        threads to finish.
+    """
+
+    threads = []
+    evt = threading.Event()
+
+    def run_fe(fe):
+        try:
+            fe.start()
+        except Exception as e:
+            Env._handle_exception(e)
+        finally:
+            evt.set()
+
+    for fe in FRONTENDS:
+        t = threading.Thread(target=run_fe, args=[fe])
+        t.start()
+        threads.append((t,fe))
+
+    evt.wait() # wait till some Frontend's start() method returns
+
+    # stop all frontends
+    for t, f in threads:
+        try:
+            f.stop()
+        except Exception as e:
+            Env._handle_exception(e)
+
+    # wait for all frontends to finish.
+    for t, f in threads:
+        t.join()
+
+
+
+#}}}
+
+#{{{ Commands
 
 def parse_command(string):
     i=0
@@ -38,6 +98,10 @@ def run_command(string):
         Env['_'] = e
         raise e
 
+#}}}
+
+#{{{ Scripts
+
 def load_scripts(path):
     if not isinstance(path, pathlib.Path):
         path = str(path)
@@ -56,6 +120,10 @@ def load_scripts(path):
         exec (c, Env.dict)
     else:
         raise Exception("neither file nor dir in load_Scripts", path)
+
+#}}}
+
+#{{{ Completion
 
 def get_completion(string):
     c, args = parse_command(string)
@@ -104,9 +172,12 @@ def py_completion(string):
 
     return [ prefix + c for c in values if c[:l]==pl ]
 
+#}}}
+
+#{{{ Env
 
 Env = env.Env_class()
-Env['COMMANDS'] = COMMANDS
+Env.COMMANDS = COMMANDS
 Env(cmd)
 
 from . import platform
@@ -124,8 +195,18 @@ def _command_not_found_hook(s):
         c = compile(s, "<input>", "eval")
     except SyntaxError:
         c = compile(s, "<input>", "exec")
-    r = eval(c, Env.dict)
+    try:
+        r = eval(c, Env.dict)
+    except Exception as e:
+        r = Env._handle_exception(e)
     return r
+
+@Env
+def _handle_exception(e):
+    if Env.get('DEBUG',False):
+        import pdb
+        pdb.post_mortem()
+    raise e
 
 @Env
 def shell(string):
@@ -138,9 +219,9 @@ def execute(*args):
     return subprocess.call(args, shell=False)
 
 @Env
-def exit():
+def exit(n=0):
     """ Stop the program """
-    sys.exit()
+    sys.exit(n)
 
 @Env
 def list_commands():
@@ -177,3 +258,6 @@ def help_command(exp):
     else:
         obj = evaluate_py_expression(exp)
     Env.help(obj)
+
+
+# }}}

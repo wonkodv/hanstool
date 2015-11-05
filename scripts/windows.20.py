@@ -3,6 +3,7 @@ import os
 if os.name == 'nt':
     @cmd(name='o', args=1)
     def shellexecute(s):
+        """ Shell Execute, windows's all purpose opening function for files and programms """
         from ctypes import windll
         windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
 

@@ -13,7 +13,7 @@ Components:
 *   Script loader, which executes python scripts in which you define commands.
 *   One global Namespace in which the scripts and commands are exected in, for less typing
 *   Completion for Commands, their arguments, and simple python statements
-*   Various User Interfaces They ask the user for input, offer completion and
+*   Frontends: They ask the user for input, offer completion and
     offer a few functions to the commands.
     *   CLI: This one is really almost a shell
     *   A little Window
@@ -144,10 +144,10 @@ scripts and commands are executed. From outside that namespace (the core code
 and plattform modules) the environment is available in `ht3.lib.Env`. Env is a
 decorator to put functions in it, its a dictionary kind of thing and it is also
 a namespace.
-	@Env
-	def foo(): pass
-	Env['foo']
-	Env.foo()
+    @Env
+    def foo(): pass
+    Env['foo']
+    Env.foo()
 Env contains itself if you need to use it from your scripts or commands.
 
 This gets problematic if you define stuff on module level in your script,
@@ -171,54 +171,86 @@ Some Default Commands
     do with the string.
 *   `l` List all commands
 *   `exit` Close the tool
-*	`;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
-*	`=` evaluate and print a python statment: `= 1+1*1+1`
-*	'?' help on commands or python objects: `? exit` `? sys`
+*   `;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
+*   `=` evaluate and print a python statment: `= 1+1*1+1`
+*   '?' help on commands or python objects: `? exit` `? sys`
 
 
-User Interface
+Frontends
 -----------
 
-Various user interfaces are possible. They need to call put some functions in the Environment:
-*   `show(text, *args, **kwargs)`
-*   `log(text, *args, **kwargs)`
-*   `edit_file(path, line)`
-*   `help(topic)`
+Any packet can be a HT-Fronend. The user chooses which one(s) to load.
 
-And need to put INTERFACE in the Environment containing a unique String to identify which interface that is.
+A Frontend must specify at module level:
+*   a `start()` method. This is called from a frontend specific thread and should start the frontend and ask
+    the user for input. Place a REPL's while loop or a GUI's MessagePump in
+    this function. If the user closes the frontend, `start` should return and
+    further stuff may happen. Raise `SystemExit` to stop the program.
+*   a `stop()` function which is called from the main thread and should notify the `start` function to return soon.
+    this may be called after `start` returned.
 
-They Should mainly call the following functions from `ht3.lib`:
+At least one Frontend should put the following functions in `Env`:
+*   `show(text, *args, **kwargs)` put `text%args` to the users attention (Notification, Messagebox, print, ...)
+*   `log(text, *args, **kwargs)` put `text%args` somewhere the user can look it up. (TextArea in some window, print, ...)
+*   `edit_file(path, line)` Open an Editor for the file `path`, possibly at `line`.
+*   `help(topic)` Display help on a command or python topic (Invoke `less`, display a large text window, ...)
+*   `handle_exception` Tell the user a command or Frontend or ... did something bad.
+
+A Frontend should also register all useful functions in Env, for example `Put the command window to front`, `RegisterHotkey`, ...
+
+Frontends should mainly call the following functions from `ht3.lib`:
 *   `load_scripts(fn)`  to load one script or a folder full of them, where commands and useful functions are defined
 *   `run_command(string)`   to do what the user typed
-*   `get_completion(string)` to complete what the user started to type.
+*   `get_completion(string)` to complete what the user started to type
+
+Frontends can get information (names, doc, hotkey, ...) about registered commands from `ht3.lib.COMMANDS`
 
 
 Configure Things
 ---------------
 
 Some Behaviour can be configured by setting things in the `Env`.
-*	`_command_not_found_hook` is executed if the command-string does
-	not specify a command. Defaults to evaluating or executing as python code.
-*	`CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
-*	`RL_HISTORY`: a string that points to a file with the history of the repl.
+*   `command_not_found_hook` is executed if the command-string does
+    not specify a command. Defaults to evaluating or executing as python code.
+*   `CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
+*   `RL_HISTORY`: a string that points to a file with the history of the repl.
 
 Strings can be configured via environment, but require a `HT3_` prefix, for
 example in `.bashrc`:
-	export HT3_RL_HISTORY=~/.config/hanstool/readline_history
+    export HT3_RL_HISTORY=~/.config/hanstool/readline_history
 Other python objects and strings can be configured in scripts. The default
-values are set very early by `ht3.lib`. Scripts are run by the frontend.
-`ht3.gui` runs all scripts before showing the gui, `ht3.cli` processes
-arguments sequentially, so configure your environment in a script that is run
-early.
+values are set very early by `ht3.lib`. Scripts are run in the order they appear on
+the command line.
+
+Command Line
+-----------
+
+Execute with `python3 -m ht ARGUMENTS` where arguments are zero or more of the following:
+*   `--help`        Display this text
+*   `-e KEY VALUE`  add a variable to the environment
+*   `-s FILE`       execute a script
+*   `-s PATH`       execute a folder full of scripts. Scripts are sorted (z.10.py before a.20.py)
+*   `-f FRONTEND`   load a frontend.
+*   `-x COMMAND`    execute a command
+*   `-r`            (run) Start all frontends loaded so far.
+Arguments are processed in the order they are passed. You should propably put
+them in the order they appear above to put things in the environment, then load
+scripts, then load frontends, then execute some commands and finally start the
+frontends. When processing `-r`, all the frontends that were loaded by
+previous `-f` are started.  Once one interface exits, all others are stopped as
+well and the argument after `-r` is processed.  Multiple `-r` will start
+the frontends multiple times. At the end, if there was `-f` but not `-r` the frontends are started.
+If there was no `-f` and no `-x`, the `ht3.cli` frontend is started.
 
 Tipps
 -----
 
-The `ht3.cli` uses readline. configure it as you need.
-	import readline
-	readline.parse_and_bind('set editing-mode vi')
+The `ht3.cli` uses readline. Configure it as you need.
+    import readline
+    readline.parse_and_bind('set editing-mode vi')
 
-Make it more shell like by importing modules like `sh` [2] or `plumbum` [3] into your Environment.
+Make it more shell like by importing modules like `sh` [2] or `plumbum` [3]
+into your Environment and glue them to the `command_not_found_hook`.
 
 
 [2]: https://amoffat.github.io/sh/

@@ -61,24 +61,18 @@ class CommandWindow(t.Tk):
     def on_exception(self, e):
         raise e
 
-lib.Env.COMMAND_WINDOW = CommandWindow()
 
-def main(args):
-    arg_iter = iter(args)
-    for a in arg_iter:
-        if a == '-s':
-            s = next(arg_iter)
-            lib.load_scripts(s)
-        elif a == '-x':
-            s = next(arg_iter)
-            lib.run_command(s)
-        else:
-            raise ValueError(a)
+# Frontend API
 
+def start():
+    lib.Env.COMMAND_WINDOW = CommandWindow()
     lib.Env.COMMAND_WINDOW.mainloop()
 
+def stop():
+    lib.Env.COMMAND_WINDOW.event_generate("close")
 
-# API
+
+# User API
 
 # TODO: These all print on stdout. Make them use windows
 
@@ -94,10 +88,4 @@ def log(s, *args, **kwargs):
 def edit_file(path, line):
     execute(EDITOR, f)
 
-Env['help'] = help
-
-Env['INTERFACE'] = "ht3.gui"
-
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
+Env.help = help
