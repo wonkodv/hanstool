@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 
-d=`dirname $0`
+d=`dirname $0`/..
 PYTHONPATH="$d:$PYTHONPATH"
 exec python3 -m ht3 -s "$d/scripts/" -f ht3.gui "$@"
