@@ -13,7 +13,7 @@ def txt():
     import os.path
     execute(EDITOR,os.path.expanduser("~/txt"))
 
-@cmd(args='?')
+@cmd(args='?', async=True)
 def tea(t=3):
     """ Tea timer """
     import time
