@@ -41,7 +41,7 @@ def run_frontends():
         try:
             fe.start()
         except Exception as e:
-            Env._handle_exception(e)
+            Env.handle_exception(e)
         finally:
             evt.set()
 
@@ -57,7 +57,7 @@ def run_frontends():
         try:
             f.stop()
         except Exception as e:
-            Env._handle_exception(e)
+            Env.handle_exception(e)
 
     # wait for all frontends to finish.
     for t, f in threads:
@@ -91,12 +91,12 @@ def run_command(string):
             Env['_'] = res
             return res
         except KeyError:
-            res = Env._command_not_found_hook(string)
+            res = Env.command_not_found_hook(string)
             Env['_'] = res
             return res
     except Exception as e:
         Env['_'] = e
-        raise e
+        Env.handle_exception(e)
 
 #}}}
 
@@ -188,7 +188,7 @@ def get_main_module():
     return pathlib.Path(sys.argv[0]).stem
 
 @Env
-def _command_not_found_hook(s):
+def command_not_found_hook(s):
     """ Try to evaluate as expression and return the result,
         if that fails, try to execute as statements """
     try:
@@ -198,11 +198,11 @@ def _command_not_found_hook(s):
     try:
         r = eval(c, Env.dict)
     except Exception as e:
-        r = Env._handle_exception(e)
+        r = Env.handle_exception(e)
     return r
 
 @Env
-def _handle_exception(e):
+def handle_exception(e):
     if Env.get('DEBUG',False):
         import pdb
         pdb.post_mortem()
