@@ -1,5 +1,6 @@
 import os
 import sys
+import threading
 
 from . import lib
 
@@ -16,6 +17,8 @@ WS_CAPTION = 0xc00000
 WS_BORDER   = 0x00800000
 WS_CHILD    = 0x40000000
 WS_VISIBLE  = 0x10000000
+WS_POPUP    = 0x80000000
+
 
 ES_LEFT        = 0x0
 ES_CENTER      = 0x1
@@ -40,6 +43,7 @@ CS_VREDRAW = 1
 CW_USEDEFAULT = 0x80000000
 
 WM_DESTROY = 2
+WM_COMMAND = 0x0111
 
 WHITE_BRUSH = 0
 
@@ -80,7 +84,8 @@ class Window:
                 WS_EX_TOPMOST,
                 name,
                 title,
-                WS_OVERLAPPEDWINDOW | WS_CAPTION,
+                #WS_OVERLAPPEDWINDOW | WS_CAPTION,
+                WS_POPUP,
                 x, y,
                 width, height, 0, 0, 0, 0)
 
@@ -106,7 +111,7 @@ class Window:
             else:
                 return x
         except:
-            stop_message_loop()
+            stop()
             raise
 
     def proc_message(self, hWnd, msr, wParam, lParam):
@@ -118,14 +123,16 @@ class HTWindow(Window):
         self.edit = windll.user32.CreateWindowExW(
                 0,
                 "EDIT",
-                "EDIT",
+                "",
                 WS_CHILD | WS_VISIBLE | WS_BORDER | ES_AUTOHSCROLL | ES_NOHIDESEL,
                 0, 0,
                 100, 21,
                 self.handle,
                 1, # EditID
                 0, 0)
-        assert self.edit
+
+        if not self.edit:
+            raise OSError("Can not create EDIT")
 
     def proc_message(self, hWnd, msg, wParam, lParam):
         if self.edit == hWnd:
@@ -133,41 +140,27 @@ class HTWindow(Window):
         else:
             print("%4X: %4X, %4X, %4X" % (hWnd, msg, wParam, lParam))
 
-_message_loop_running = False
-def stop_message_loop():
-    _message_loop_running = False
+_message_loop_running = threading.Event()
 
-def message_loop():
-    _message_loop_running = True
-    msg = MSG()
-    lpmsg = pointer(msg)
-    while _message_loop_running and windll.user32.GetMessageA(lpmsg, 0, 0, 0) != 0:
-        windll.user32.TranslateMessage(lpmsg)
-        windll.user32.DispatchMessageA(lpmsg)
+def stop():
+    _message_loop_running.set()
 
-@lib.Env
-def show(s, *args):
-    print (str(s) % args)
-
-def main(args):
-    ok = False
-    arg_iter = iter(args)
-    env.Env.update(os.environ)
-    for a in arg_iter:
-        if a == '-s':
-            s = next(arg_iter)
-            lib.read_config(s)
-        elif a == '-x':
-            s = next(arg_iter)
-            lib.run_command(s)
-        else:
-            raise ValueError(a)
+def loop():
     win = HTWindow()
     win.show()
 
-    message_loop()
+    lib.Env.GUI_WINDOW = win
 
-    win # Needed so win is not GCed?
+    _message_loop_running.clear()
+    msg = MSG()
+    lpmsg = pointer(msg)
+    while 1:
+        if _message_loop_running.is_set():
+            return
+        if windll.user32.GetMessageA(lpmsg, 0, 0, 0) == 0:
+            return
+        windll.user32.TranslateMessage(lpmsg)
+        windll.user32.DispatchMessageA(lpmsg)
 
 if __name__ == '__main__':
     sys.exit(main(sys.argv[1:]))
