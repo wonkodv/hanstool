@@ -5,6 +5,7 @@ import atexit
 import configparser
 import os.path
 import logging
+import threading
 
 from . import lib
 from .lib import Env
@@ -14,13 +15,12 @@ try:
 except:
     readline = None
 
-Running = False
+_evt = threading.Event()
 
 def loop():
     setup_readline()
-    global Running
-    Running = True
-    while Running:
+    _evt.clear()
+    while not _evt.is_set():
         try:
             prompt = Env.CLI_PROMPT
             if callable(prompt):
