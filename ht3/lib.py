@@ -34,34 +34,49 @@ def run_frontends():
     so stop must be threadsafe) and wait for all threads to finish.
     """
 
-    threads = []
-    evt = threading.Event()
+    frontends = list(FRONTENDS)
 
-    def run_fe(fe):
+    if not frontends:
+        raise ValueError("No Frontend Loaded yet")
+
+    if len(frontends) == 1:     # Shortcut if there is no need for threading stuff
+        fe = frontends[0]
         try:
             fe.loop()
         except Exception as e:
             Env.handle_exception(e)
-        finally:
-            evt.set()
-
-    for fe in FRONTENDS:
-        t = threading.Thread(target=run_fe, args=[fe])
-        t.start()
-        threads.append((t,fe))
-
-    evt.wait() # wait till some Frontend's loop() method returns
-
-    # stop all frontends
-    for t, f in threads:
         try:
-            f.stop()
+            fe.stop()
         except Exception as e:
             Env.handle_exception(e)
+    else:
+        threads = []
+        evt = threading.Event()
 
-    # wait for all frontends to finish.
-    for t, f in threads:
-        t.join()
+        def run_fe(fe):
+            try:
+                fe.loop()
+            except Exception as e:
+                Env.handle_exception(e)
+            finally:
+                evt.set()
+        for fe in frontends:
+            t = threading.Thread(target=run_fe, args=[fe])
+            t.start()
+            threads.append((t, fe))
+
+        evt.wait() # wait till some Frontend's loop() method returns
+
+        # stop all frontends
+        for t, f in threads:
+            try:
+                f.stop()
+            except Exception as e:
+                Env.handle_exception(e)
+
+        # wait for all frontends to finish.
+        for t, f in threads:
+            t.join()
 
 
 
