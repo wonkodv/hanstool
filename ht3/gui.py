@@ -64,7 +64,7 @@ class CommandWindow(t.Tk):
 
 # Frontend API
 
-def start():
+def loop():
     lib.Env.COMMAND_WINDOW = CommandWindow()
     lib.Env.COMMAND_WINDOW.mainloop()
 

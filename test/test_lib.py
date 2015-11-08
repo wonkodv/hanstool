@@ -37,29 +37,31 @@ class Test_frontends(unittest.TestCase):
         m = lib.import_recursive('unittest.mock')
         self.assertIs(m, unittest.mock)
 
+
+    def get_fe(self):
+        m = Mock()
+        m.i = 0
+        m.running = True
+        def start():
+            while m.running:
+                m.i += 1
+
+        def stop():
+            m.running = False
+
+        m.loop = start
+        m.stop = stop
+        return m
+
     @patch('ht3.lib.import_recursive')
     def test_full_run(self, importMock):
-        def get_fe():
-            m = Mock()
-            m.i=1
-            m.running = True
-            def start():
-                while m.running:
-                    m.i += 1
 
-            def stop():
-                m.running = False
-
-            m.start=start
-            m.stop=stop
-            return m
-
-        fe1 = get_fe()
-        fe2 = get_fe()
+        fe1 = self.get_fe()
+        fe2 = self.get_fe()
 
         fe3 = Mock()
         fe3.stop = lambda:None
-        fe3.start= lambda:time.sleep(0.1)
+        fe3.loop = lambda:time.sleep(0.1)
 
         importMock.side_effect = [fe1, fe2, fe3]
 

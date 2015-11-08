@@ -24,14 +24,14 @@ def import_recursive(name):
 
 def load_frontend(name):
     mod = import_recursive(name)
-    if not callable(mod.start) or not callable (mod.stop):
-        raise TypeError("frontend must have start and stop methods", name, mod)
+    if not callable(mod.loop) or not callable (mod.stop):
+        raise TypeError("frontend must have loop and stop methods", name, mod)
     FRONTENDS.append(mod)
 
 def run_frontends():
-    """ Start all loaded frontends in seperate threads. If any frontend returns from its start() method,
-        call stop() of all frontends (from the main thread so stop must be threadsafe) and wait for all
-        threads to finish.
+    """ Start all loaded frontends in seperate threads. If any frontend returns
+    from its loop() method, call stop() of all frontends (from the main thread
+    so stop must be threadsafe) and wait for all threads to finish.
     """
 
     threads = []
@@ -39,7 +39,7 @@ def run_frontends():
 
     def run_fe(fe):
         try:
-            fe.start()
+            fe.loop()
         except Exception as e:
             Env.handle_exception(e)
         finally:
@@ -50,7 +50,7 @@ def run_frontends():
         t.start()
         threads.append((t,fe))
 
-    evt.wait() # wait till some Frontend's start() method returns
+    evt.wait() # wait till some Frontend's loop() method returns
 
     # stop all frontends
     for t, f in threads:

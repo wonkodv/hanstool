@@ -16,7 +16,7 @@ except:
 
 Running = False
 
-def start():
+def loop():
     setup_readline()
     global Running
     Running = True
@@ -47,8 +47,7 @@ def start():
     return 0
 
 def stop():
-    global Running
-    Running = False
+    _evt.set()
 
 
 def setup_readline():

@@ -182,12 +182,12 @@ Frontends
 Any packet can be a HT-Fronend. The user chooses which one(s) to load.
 
 A Frontend must specify at module level:
-*   a `start()` method. This is called from a frontend specific thread and should start the frontend and ask
+*   a `loop()` method. This is called from a frontend specific thread and should start the frontend and ask
     the user for input. Place a REPL's while loop or a GUI's MessagePump in
-    this function. If the user closes the frontend, `start` should return and
+    this function. If the user closes the frontend, `loop should return and
     further stuff may happen. Raise `SystemExit` to stop the program.
-*   a `stop()` function which is called from the main thread and should notify the `start` function to return soon.
-    this may be called after `start` returned.
+*   a `stop()` function which is called from the main thread and should notify the `loop function to return soon.
+    this may be called after `loop` returned.
 
 At least one Frontend should put the following functions in `Env`:
 *   `show(text, *args, **kwargs)` put `text%args` to the users attention (Notification, Messagebox, print, ...)
