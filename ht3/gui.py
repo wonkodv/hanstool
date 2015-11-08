@@ -3,6 +3,7 @@ import sys
 import traceback
 import os
 import queue
+import threading
 
 from . import lib
 from .lib import Env
@@ -24,6 +25,9 @@ class CommandWindow(t.Tk):
         self.bind("<ButtonPress-1>",self.on_mousedown)
         self.bind("<B1-Motion>",self.on_move)
         self.bind("<B3-Motion>",self.on_resize)
+
+        self.closed_evt = threading.Event()
+        self.after(100, self.check_closed)
 
     def on_mousedown(self, event):
         self.x = event.x
@@ -49,27 +53,29 @@ class CommandWindow(t.Tk):
         self.text['bg']="red"
         s = self.cmd.get()
         if s:
-            try:
-                lib.run_command(s)
-                self.cmd.set("")
-            except SystemExit:
-                raise
-            except Exception as e:
-                self.on_exception(e)
+            lib.run_command(s)
+            self.cmd.set("")
         self.text['bg']="white"
 
-    def on_exception(self, e):
-        raise e
+    def check_closed(self):
+        if self.closed_evt.is_set():
+            self.quit()
+        else:
+            self.after(100, self.check_closed)
 
 
 # Frontend API
 
 def loop():
-    lib.Env.COMMAND_WINDOW = CommandWindow()
-    lib.Env.COMMAND_WINDOW.mainloop()
+    try:
+        lib.Env.COMMAND_WINDOW = CommandWindow()
+        lib.Env.COMMAND_WINDOW.mainloop()
+    finally:
+        lib.Env.COMMAND_WINDOW = None
 
 def stop():
-    lib.Env.COMMAND_WINDOW.event_generate("close")
+    if not lib.Env.COMMAND_WINDOW is None:
+        lib.Env.COMMAND_WINDOW.closed_evt.set()
 
 
 # User API
@@ -89,3 +95,6 @@ def edit_file(path, line):
     execute(EDITOR, f)
 
 Env.help = help
+
+if __name__ == '__main__':
+    loop()
