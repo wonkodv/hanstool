@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
-d=`dirname $0`/..
+d="$0"
+d="`readlink -f "$d"`"
+d="`dirname "$d"`"
+d="`dirname "$d"`"
 PYTHONPATH="$d:$PYTHONPATH"
 exec python3 -m ht3 -s "$d/scripts/" "$@"
