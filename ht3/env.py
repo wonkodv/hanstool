@@ -28,3 +28,9 @@ class Env_class:
         """ decorator to put functions in Env """
         self.dict[func.__name__] = func
         return func
+
+    def __str__(self):
+        return "Env: " + ", ".join(self.dict)
+
+    def __repr__(self):
+        return str(self.dict)
