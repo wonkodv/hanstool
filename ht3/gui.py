@@ -19,7 +19,10 @@ class CommandWindow(t.Tk):
         self.geometry("100x20")
         self.geometry("+100+20")
         self.text.bind("<KeyPress-Tab>",self.on_tab)
-        self.text.bind("<KeyPress-Return>",self.on_enter)
+        self.text.bind("<Shift-KeyPress-Tab>",self.on_shift_tab)
+        self.text.bind("<KeyPress-Return>",self.on_submit)
+
+        self.cmd.trace("w",lambda *args: self.clear_completion())
 
         self.bind("<ButtonPress-3>",self.on_mousedown)
         self.bind("<ButtonPress-1>",self.on_mousedown)
@@ -46,16 +49,57 @@ class CommandWindow(t.Tk):
         self.geometry("%sx%s" % (x, y))
         self.text.pack()
 
-    def on_tab(self, event):
-        pass
+    completion_cache = None
+    completion_index = None
+    uncompleted_string  = None
 
-    def on_enter(self, event):
+    def clear_completion(self):
+        self.completion_cache = None
+
+
+    def set_completion(self, i):
+        if self.completion_cache is None:
+            print ("Redo Completion")
+            s = self.cmd.get()
+            self.completion_cache = lib.get_all_completions(s)
+            self.completion_index = 0
+            self.uncompleted_string = s
+        else:
+            self.completion_index += i
+
+        cc = self.completion_cache
+
+        if 0 <= self.completion_index < len(self.completion_cache):
+            s = self.cmd.get()
+            ct = self.completion_cache[self.completion_index]
+            self.cmd.set(ct)
+            self.text.selection_range(2,4)
+        else:
+            self.completion_index = -1
+            self.cmd.set(self.uncompleted_string)
+
+        self.text.selection_range(len(self.uncompleted_string), len(self.cmd.get()))
+        #TODO: Line is ignored !
+
+        self.completion_cache = cc # TODO: remove this HACK line by
+            # TODO making clear_completion only trigger on user input that modifies text.
+
+
+    def on_tab(self, event):
+        self.set_completion(1)
+
+    def on_shift_tab(self, event):
+        self.set_completion(-1)
+
+    def on_submit(self, event):
         self.text['bg']="red"
         s = self.cmd.get()
         if s:
-            lib.run_command(s)
-            self.cmd.set("")
-        self.text['bg']="white"
+            if lib.run_command(s):
+                self.cmd.set("")
+                self.text['bg']="white"
+            else:
+                self.text['bg']="orange"
 
     def check_closed(self):
         if self.closed_evt.is_set():

@@ -8,9 +8,12 @@ cmd(name='=',args=1)(evaluate_py_expression)
 cmd(name='?', args=1)(help_command)
 
 @cmd(name="+", args=COMMANDS)
-def edit_command(cmd):
+def edit_command(c):
     """ Edit the location where a command was defined """
-    f, l = command.origin
+    import ht3.lib
+    f, l = c.origin
+    edit_file(f, l)
+
 
 @cmd(name="<", args='path')
 def run_command_file(p):

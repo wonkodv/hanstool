@@ -6,6 +6,8 @@ import sys
 import textwrap
 import threading
 import collections
+import traceback
+
 
 from .cmd import COMMANDS, cmd
 from . import env
@@ -65,18 +67,19 @@ def run_frontends():
             t.start()
             threads.append((t, fe))
 
-        evt.wait() # wait till some Frontend's loop() method returns
+        try:
+            evt.wait() # wait till some Frontend's loop() method returns
+        finally:
+            # stop all frontends
+            for t, f in threads:
+                try:
+                    f.stop()
+                except Exception as e:
+                    Env.handle_exception(e)
 
-        # stop all frontends
-        for t, f in threads:
-            try:
-                f.stop()
-            except Exception as e:
-                Env.handle_exception(e)
-
-        # wait for all frontends to finish.
-        for t, f in threads:
-            t.join()
+            # wait for all frontends to finish.
+            for t, f in threads:
+                t.join()
 
 
 
@@ -98,20 +101,19 @@ def parse_command(string):
     return cmd, arg
 
 def run_command(string):
+    cmd, arg = parse_command(string)
     try:
         try:
-            cmd, arg = parse_command(string)
             cmd = COMMANDS[cmd]
-            res = cmd(arg)
-            Env['_'] = res
-            return res
         except KeyError:
-            res = Env.command_not_found_hook(string)
-            Env['_'] = res
-            return res
+            res = False, Env.command_not_found_hook(string)
+        else:
+            res = True, cmd(arg)
     except Exception as e:
-        Env['_'] = e
-        Env.handle_exception(e)
+        res = False, Env.handle_exception(e)
+    success, Env._ = res
+    return success
+
 
 #}}}
 
@@ -140,21 +142,19 @@ def load_scripts(path):
 
 #{{{ Completion
 
-def get_completion(string):
+def get_all_completions(string):
+    return _command_completion(string) + _py_completion(string)
+
+def _command_completion(string):
     c, args = parse_command(string)
-    if c in COMMANDS:
+    if args and c in COMMANDS: # only complete args if the space after command came already
         cmd = COMMANDS[c]
         values = cmd.arg_parser.complete(args)
         return [c+" "+ x for x in values]
-
-
-    return command_completion(string) + py_completion(string)
-
-def command_completion(string):
     l = len(string)
     return [ c for c in COMMANDS if c[:l]==string]
 
-def py_completion(string):
+def _py_completion(string):
     parts = [s.strip() for s in string.split(".")]
 
     values = dict()
@@ -221,7 +221,8 @@ def handle_exception(e):
     if Env.get('DEBUG',False):
         import pdb
         pdb.post_mortem()
-    raise e
+    traceback.print_exc()
+    return False
 
 @Env
 def shell(string):
