@@ -14,7 +14,7 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=..., **attrs):
         in the module and in arg parsing form in COMMANDS """
     def decorator(func):
         """ the actual decorator """
-    
+
         nonlocal args, name, async, complete, attrs
 
         if name is None:
@@ -23,7 +23,7 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=..., **attrs):
         arg_parser = Args(args, **attrs)
 
         @functools.wraps(func)
-        def wrapper(arg_string):
+        def wrapper(arg_string=""):
             """ The function that will be executed """
             args, kwargs = arg_parser(arg_string)
 

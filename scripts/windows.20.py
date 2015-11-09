@@ -22,3 +22,6 @@ if os.name == 'nt':
                 except:
                     pass
 
+    @cmd(HotKey="F8")
+    def httofront():
+        return NotImplemented
