@@ -73,13 +73,10 @@ class CommandWindow(t.Tk):
             s = self.cmd.get()
             ct = self.completion_cache[self.completion_index]
             self.cmd.set(ct)
-            self.text.selection_range(2,4)
         else:
             self.completion_index = -1
             self.cmd.set(self.uncompleted_string)
 
-        self.text.selection_range(len(self.uncompleted_string), len(self.cmd.get()))
-        #TODO: Line is ignored !
 
         self.completion_cache = cc # TODO: remove this HACK line by
             # TODO making clear_completion only trigger on user input that modifies text.

@@ -4,29 +4,7 @@ import warnings
 import time
 
 from . import lib
-from ctypes import windll, pointer
-from ctypes.wintypes import MSG
-
-
-KEY_CODES = {'F8': 119} 
-MODIFIERS = {}              # TODO
-
-if os.name == 'nt':
-    def register_hotkey(id, mod, vk):
-        return windll.user32.RegisterHotKey(None, id, mod, vk)
-
-    def unregister_hotkey(id):
-        return windll.user32.UnregisterHotKey(0, i)
-
-    def do_loop():
-        msg = MSG()
-        lpmsg = pointer(msg)
-
-        while 1:
-            while windll.user32.PeekMessageW(lpmsg, 0, 0, 0, 1):
-                yield msg.wParam
-            yield None  # give caller a change to close the generator
-            time.sleep(0.05)
+from .platform.hotkey import *
 
 def translate_hotkey(s):
     parts = s.split('+')
@@ -62,11 +40,12 @@ def loop():
                 lib.Env.log("Register Hotkey %d, %s mod=%r vk=%r: %r" % (id, h, mod, vk, r))
 
 
-    hotkey_iter = do_loop()
+    hotkey_iter = hotkey_loop()
 
     while not _message_loop_running.is_set():
         id = next(hotkey_iter)
-        if id is None: 
+        if id is None:
+            time.sleep(0.05)
             continue
         if id < 0 or id >= len(hotkeys):
             warning.warn("Invalid Hotkey ID")
@@ -80,7 +59,7 @@ def loop():
     hotkey_iter.close()
 
     for i in range(len(hotkeys)):
-        if not windll.user32.UnregisterHotKey(0, i):
+        if not unregister_hotkey(i):
             warnings.warn("Can not unregister HotKey "+str(hotkeys[i][1]))
 
 def stop():

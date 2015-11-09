@@ -1,4 +1,4 @@
-from ...lib import Env
+from ht3.lib import Env
 
 @Env
 def gui_stay_on_top():

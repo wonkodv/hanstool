@@ -8,7 +8,7 @@ import threading
 import collections
 import traceback
 
-
+from .filter import Filter
 from .cmd import COMMANDS, cmd
 from . import env
 
@@ -29,6 +29,7 @@ def load_frontend(name):
     if not callable(mod.loop) or not callable (mod.stop):
         raise TypeError("frontend must have loop and stop methods", name, mod)
     FRONTENDS.append(mod)
+    Filter.FRONTENDS.update(name)
 
 def run_frontends():
     """ Start all loaded frontends in seperate threads. If any frontend returns
@@ -187,10 +188,10 @@ def _py_completion(string):
 
 Env = env.Env_class()
 Env.COMMANDS = COMMANDS
+Env.Filter = Filter
 Env(cmd)
 
-from . import platform
-platform.load_platform_modules()
+from .platform import env
 
 @Env
 def get_main_module():
