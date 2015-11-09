@@ -4,6 +4,9 @@ import pathlib
 
 
 class ArgParser:
+    def __init__(self, **kwargs):
+        pass
+
     def __call__(self, string):
         raise NotImplementedError()
 
@@ -43,7 +46,7 @@ class AllArgs(ArgParser):
 class ShellArgs(ArgParser):
     """ Takes shellencoded arguments """
 
-    def __call__(self,string):
+    def __call__(self, string):
         a = shlex.split(string)
         return a,{}
 
