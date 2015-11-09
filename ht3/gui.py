@@ -63,6 +63,9 @@ class CommandWindow(t.Tk):
         else:
             self.after(100, self.check_closed)
 
+    def to_front(self):
+        self.text.focus_force()
+        self.text.select_range(0, len(self.cmd.get()))
 
 # Frontend API
 
@@ -78,8 +81,7 @@ def stop():
         lib.Env.COMMAND_WINDOW.closed_evt.set()
 
 
-# User API
-
+# Mandatory User API
 # TODO: These all print on stdout. Make them use windows
 
 @Env
@@ -95,6 +97,12 @@ def edit_file(path, line):
     execute(EDITOR, f)
 
 Env.help = help
+
+# Extended User API
+
+@Env
+def show_input_window():
+    Env.COMMAND_WINDOW.to_front()
 
 if __name__ == '__main__':
     loop()

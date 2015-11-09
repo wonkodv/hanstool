@@ -31,3 +31,8 @@ def py():
     """ start a python repl """
     import sys
     return execute(sys.executable)
+
+
+@cmd(HotKey="F8")
+def httofront():
+    show_input_window()

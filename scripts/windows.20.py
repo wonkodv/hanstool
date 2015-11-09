@@ -21,7 +21,3 @@ if os.name == 'nt':
                         execute("explorer","/select"+str(p))
                 except:
                     pass
-
-    @cmd(HotKey="F8")
-    def httofront():
-        return NotImplemented
