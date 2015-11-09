@@ -27,24 +27,23 @@ def loop():
                 prompt = prompt()
             s = input(prompt)
         except KeyboardInterrupt:
-            return 127
+            continue
         except EOFError:
-            return 0
-        else:
-            if s:
-                try:
-                    x = lib.run_command(s)
-                except KeyboardInterrupt:
-                    print("\n!!Aborted")
-                except SystemExit:
-                    print()
-                    raise
-                except:
-                    traceback.print_exc()
-                else:
-                    if x:
-                        print(x)
-    return 0
+            return
+        if s:
+            try:
+                result = lib.run_command(s)
+            except KeyboardInterrupt:
+                print("\n!!Aborted")
+            except SystemExit:
+                print("\nQuitting")
+                raise
+            except:
+                traceback.print_exc()
+            else:
+                if result is not None:
+                    Env._ = result
+                    print(result)
 
 def stop():
     _evt.set()

@@ -95,11 +95,18 @@ class CommandWindow(t.Tk):
         self.text['bg']="red"
         s = self.cmd.get()
         if s:
-            if lib.run_command(s):
+            try:
+                result = lib.run_command(s)
+            except Exception as e:
+                self.text['bg']="orange"
+                Env.log("Error %s: %r", s, e)
+            else:
+                if result is not None:
+                    Env.log("Cmd %s: %r", s, result)
+                else:
+                    Env.log("Cmd %s", s)
                 self.cmd.set("")
                 self.text['bg']="white"
-            else:
-                self.text['bg']="orange"
 
     def check_closed(self):
         if self.closed_evt.is_set():

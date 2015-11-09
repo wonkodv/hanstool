@@ -103,17 +103,11 @@ def parse_command(string):
 def run_command(string):
     cmd, arg = parse_command(string)
     try:
-        try:
-            cmd = COMMANDS[cmd]
-        except KeyError:
-            res = False, Env.command_not_found_hook(string)
-        else:
-            res = True, cmd(arg)
-    except Exception as e:
-        res = False, Env.handle_exception(e)
-    success, Env._ = res
-    return success
-
+        cmd = COMMANDS[cmd]
+    except KeyError:
+        return Env.command_not_found_hook(string)
+    else:
+        return cmd(arg)
 
 #}}}
 
