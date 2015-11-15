@@ -1,4 +1,4 @@
-import tkinter as t
+import tkinter as tk
 import sys
 import traceback
 import os
@@ -10,12 +10,12 @@ from .lib import Env
 
 COMMAND_WINDOW = None
 
-class CommandWindow(t.Tk):
+class CommandWindow(tk.Tk):
     def __init__(self):
         super().__init__()
         self.overrideredirect(True)
-        self.cmd = t.StringVar()
-        self.text = t.Entry(self, textvariable=self.cmd)
+        self.cmd = tk.StringVar()
+        self.text = tk.Entry(self, textvariable=self.cmd)
         self.text.pack()
 
         self.geometry("100x20")
@@ -23,6 +23,9 @@ class CommandWindow(t.Tk):
         self.text.bind("<KeyPress-Tab>",self.on_tab)
         self.text.bind("<Shift-KeyPress-Tab>",self.on_shift_tab)
         self.text.bind("<KeyPress-Return>",self.on_submit)
+        self.text.bind("<Control-KeyPress-W>", self.delete_word) #TODO
+        self.text.bind("<Control-KeyPress-U>", self.delete_text) #TODO
+        self.text.bind("<KeyPress-Escape>", self.delete_text)
 
         self.cmd.trace("w",lambda *args: self.clear_completion())
 
@@ -74,15 +77,28 @@ class CommandWindow(t.Tk):
         if 0 <= self.completion_index < len(self.completion_cache):
             s = self.cmd.get()
             ct = self.completion_cache[self.completion_index]
-            self.cmd.set(ct)
         else:
             self.completion_index = -1
-            self.cmd.set(self.uncompleted_string)
-
+            ct = self.uncompleted_string
+        self.set_text(ct)
 
         self.completion_cache = cc # TODO: remove this HACK line by
             # TODO making clear_completion only trigger on user input that modifies text.
 
+
+    def set_text(self, text):
+        self.text.delete(0, tk.END)
+        self.text.insert(0, text)
+        def sel():
+            self.text.selection_clear()
+            self.text.xview(len(text)-1)
+        self.after(0, sel)
+
+    def delete_word(self, event):
+        pass
+
+    def delete_text(self, event):
+        self.set_text("")
 
     def on_tab(self, event):
         self.set_completion(1)
@@ -105,7 +121,7 @@ class CommandWindow(t.Tk):
                     Env.log("Cmd %s: %r", s, result)
                 else:
                     Env.log("Cmd %s", s)
-                self.cmd.set("")
+                self.set_text("")
                 self.text['bg']="white"
 
     def check_closed(self):
