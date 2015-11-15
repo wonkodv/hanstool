@@ -75,6 +75,11 @@ def py():
     return execute(sys.executable)
 
 
+@cmd
+def restart():
+    import os, sys
+    os.execl(sys.executable, sys.executable, "-m", "ht3", *sys.argv[1:])
+
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
     @cmd(HotKey="F8")
     def httofront():
@@ -85,3 +90,4 @@ if Check.frontend('ht3.gui'):
     def _():
         ht3.gui.stay_on_top()
         ht3.gui.set_rect(5,44,72,27)
+
