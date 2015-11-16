@@ -1,17 +1,17 @@
 
-def __startup():
-    try:
-        import readline
-        readline.parse_and_bind('set editing-mode vi')
-    except ImportError:
-        pass
-__startup()
-del __startup
+if Filter.frontend('ht3.cli'):
+    @ht3.cli.do_on_start
+    def _():
+        try:
+            import readline
+            readline.parse_and_bind('set editing-mode vi')
+        except ImportError:
+            pass
 
 @cmd
 def txt():
     import os.path
-    execute(EDITOR,os.path.expanduser("~/txt"))
+    edit_file(os.path.expanduser("~/txt"),1)
 
 @cmd(args='?', async=True)
 def tea(t=3):

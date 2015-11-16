@@ -8,6 +8,8 @@ import threading
 from . import lib
 from .lib import Env
 
+COMMAND_WINDOW = None
+
 class CommandWindow(t.Tk):
     def __init__(self):
         super().__init__()
@@ -111,6 +113,9 @@ class CommandWindow(t.Tk):
         else:
             self.after(100, self.check_closed)
 
+    def close_soon(self):
+        self.closed_evt.set()
+
     def to_front(self):
         self.text.focus_force()
         self.text.select_range(0, len(self.cmd.get()))
@@ -118,15 +123,18 @@ class CommandWindow(t.Tk):
 # Frontend API
 
 def loop():
+    global COMMAND_WINDOW
     try:
-        lib.Env.COMMAND_WINDOW = CommandWindow()
-        lib.Env.COMMAND_WINDOW.mainloop()
+        COMMAND_WINDOW = CommandWindow()
+        for c in _do_on_start:
+            c()
+        COMMAND_WINDOW.mainloop()
     finally:
-        lib.Env.COMMAND_WINDOW = None
+        COMMAND_WINDOW = None
 
 def stop():
-    if not lib.Env.COMMAND_WINDOW is None:
-        lib.Env.COMMAND_WINDOW.closed_evt.set()
+    if not COMMAND_WINDOW is None:
+        COMMAND_WINDOW.close_soon()
 
 
 # Mandatory User API
@@ -148,9 +156,20 @@ Env.help = help
 
 # Extended User API
 
-@Env
-def show_input_window():
-    Env.COMMAND_WINDOW.to_front()
+_do_on_start = []
+def do_on_start(f):
+    assert callable(f)
+    _do_on_start.append(f)
+    return f
+
+def show():
+    COMMAND_WINDOW.to_front()
+
+def stay_on_top():
+    COMMAND_WINDOW.wm_attributes('-topmost', 1)
+
+def set_rect(left, top, width, height):
+    COMMAND_WINDOW.geometry("%dx%d+%d+%d" % (width, height, left, top))
 
 if __name__ == '__main__':
     loop()

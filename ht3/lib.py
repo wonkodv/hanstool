@@ -19,6 +19,7 @@ FRONTENDS = collections.deque() # This one is explicitly threadsafe
 def import_recursive(name):
     m = __import__(name)
     s = name.split('.')
+    Env[s[0]] = m
     for p in s[1:]:
         m = getattr(m, p)
     return m
@@ -26,10 +27,10 @@ def import_recursive(name):
 
 def load_frontend(name):
     mod = import_recursive(name)
-    if not callable(mod.loop) or not callable (mod.stop):
-        raise TypeError("frontend must have loop and stop methods", name, mod)
+    assert callable(mod.loop)
+    assert callable(mod.stop)
     FRONTENDS.append(mod)
-    Filter.FRONTENDS.update(name)
+    Filter.FRONTENDS.add(name)
 
 def run_frontends():
     """ Start all loaded frontends in seperate threads. If any frontend returns
@@ -194,10 +195,6 @@ Env(cmd)
 from .platform import env
 
 @Env
-def get_main_module():
-    return pathlib.Path(sys.argv[0]).stem
-
-@Env
 def command_not_found_hook(s):
     """ Try to evaluate as expression and return the result,
         if that fails, try to execute as statements """
@@ -205,19 +202,15 @@ def command_not_found_hook(s):
         c = compile(s, "<input>", "eval")
     except SyntaxError:
         c = compile(s, "<input>", "exec")
-    try:
-        r = eval(c, Env.dict)
-    except Exception as e:
-        r = Env.handle_exception(e)
-    return r
+    return eval(c, Env.dict)
 
 @Env
 def handle_exception(e):
+    """ Handle Exceptions that a frontend can not handle itself """
     if Env.get('DEBUG',False):
         import pdb
         pdb.post_mortem()
     traceback.print_exc()
-    return False
 
 @Env
 def shell(string):
@@ -247,6 +240,11 @@ def list_commands():
         doc = "%- 20s %s %s\n" % (n, doc, a)
         text += doc
     Env.show(text)
+
+@Env
+def list_env():
+    """ List all commands """
+    Env.show("\n".join(sorted(Env.dict.keys(), key=lambda k:k.lower())))
 
 @Env
 def execute_py_expression(s):

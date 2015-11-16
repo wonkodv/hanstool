@@ -20,6 +20,8 @@ _evt = threading.Event()
 def loop():
     setup_readline()
     _evt.clear()
+    for c in _do_on_start:
+        c()
     while not _evt.is_set():
         try:
             prompt = Env.CLI_PROMPT
@@ -87,7 +89,7 @@ def setup_readline():
     readline.parse_and_bind('tab: complete')
 
 
-# API
+# Basic API
 
 @Env
 def show(s, *args, **kwargs):
@@ -103,4 +105,10 @@ def edit_file(path, line):
 
 Env['help'] = help
 
+# Extended API
+
 Env['CLI_PROMPT'] = "ht3> "
+
+_do_on_start=[]
+def cli_do_on_start(f):
+    _do_on_start.append(f)

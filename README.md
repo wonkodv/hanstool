@@ -196,10 +196,10 @@ At least one Frontend should put the following functions in `Env`:
 *   `help(topic)` Display help on a command or python topic (Invoke `less`, display a large text window, ...)
 *   `handle_exception` Tell the user a command or Frontend or ... did something bad.
 
-A Frontend should also register all useful functions in Env, for example `Put the command window to front`, `RegisterHotkey`, ...
+A Frontend should propably provide a function (decorator) so scripts can register functions
+that are executed at the start of the frontend's `loop` after some initialization happened.
 
 Frontends should mainly call the following functions from `ht3.lib`:
-*   `load_scripts(fn)`  to load one script or a folder full of them, where commands and useful functions are defined
 *   `run_command(string)`   to do what the user typed
 *   `get_completion(string)` to complete what the user started to type
 

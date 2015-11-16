@@ -36,6 +36,15 @@ def py():
     return execute(sys.executable)
 
 
-@cmd(HotKey="F8")
-def httofront():
-    show_input_window()
+if Filter.frontend('ht3.gui') and Filter.frontend('ht3.hotkey'):
+    @cmd(HotKey="F8")
+    def httofront():
+        import ht3.gui
+        ht3.gui.show()
+
+if Filter.frontend('ht3.gui'):
+    @ht3.gui.do_on_start
+    def _():
+        import ht3.gui
+        ht3.gui.stay_on_top()
+        ht3.gui.set_rect(5,44,72,27)
