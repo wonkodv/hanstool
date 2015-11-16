@@ -77,7 +77,10 @@ def py():
 @cmd
 def restart():
     import os, sys
-    os.execl(sys.executable, sys.executable, "-m", "ht3", *sys.argv[1:])
+    if Check.os.win:
+        os.execl(sys.executable, '"'+sys.executable+'"', "-m", "ht3", *sys.argv[1:]) # Bug in Python with whitespaces?
+    else:
+        os.execl(sys.executable, sys.executable, "-m", "ht3", *sys.argv[1:])
 
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
     @cmd(HotKey="F8")
