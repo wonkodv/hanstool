@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from ht3.filter import Filter, Group, Value
+from ht3.filter import Filter, Group
 
 class TestFilter(unittest.TestCase):
     def test_basic_os(self):
@@ -14,23 +14,19 @@ class TestFilter(unittest.TestCase):
             assert Filter.os.nt
         elif os.name == 'posix':
             assert Filter.os.posix
-            assert Filter.os.linux_4_2
+            #TODO: assert Filter.os.linux
 
 class TestGroup(unittest.TestCase):
-    def test_ListGroup(self):
+    def test_all(self):
         l = ['x', 'y']
         g = Group(l)
 
         assert g.x
-        assert 'y' in g
+        assert not g.z
 
+        assert 'x' in g
         assert not 'z' in g
 
-    def dict_filter(self):
-        d = {'x':1, 'y': 'Test'}
-        g = group(d)
-
-        assert g.x
-        assert g.x == 1
-        assert g.x < 3
-        assert g.x > 0
+        assert g('x','y')
+        assert not g('x', 'y', 'z')
+        assert not g('z')

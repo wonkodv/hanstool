@@ -2,26 +2,21 @@ import os
 import sys
 
 
-class Value:
-    def __init__ (self, col, key):
-        self.col = col
-        self.key = key
-
-    def __bool__(self):
-        return self.key in self.col
-
-    def __int__(self):
-        return int(self.col[key])
-
 class Group:
     def __init__(self, col):
         self.col = col
 
     def __getattr__(self, key):
-        return Value(self.col, key)
+        return key in self.col
 
     def __contains__(self, val):
         return val in self.col
+
+    def __call__(self, *vals):
+        for v in vals:
+            if not v in self.col:
+                return False
+        return True
 
 class Filter_class():
     OS = set()
