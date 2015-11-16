@@ -1,5 +1,5 @@
 
-if Filter.frontend('ht3.cli'):
+if Check.frontend('ht3.cli'):
     @ht3.cli.do_on_start
     def _():
         try:

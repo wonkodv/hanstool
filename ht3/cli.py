@@ -99,10 +99,6 @@ def show(s, *args, **kwargs):
 def log(s, *args, **kwargs):
     print (str(s) % args)
 
-@Env
-def edit_file(path, line):
-    execute(EDITOR, f)
-
 Env['help'] = help
 
 # Extended API
@@ -112,3 +108,4 @@ Env['CLI_PROMPT'] = "ht3> "
 _do_on_start=[]
 def cli_do_on_start(f):
     _do_on_start.append(f)
+

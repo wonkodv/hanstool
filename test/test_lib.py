@@ -89,7 +89,7 @@ class Test_check(unittest.TestCase):
             assert lib.Check.os.nt
         elif os.name == 'posix':
             assert lib.Check.os.posix
-            #TODO: assert Filter.os.linux
+            #TODO: assert Check.os.linux
 
     def test_currnet_frontend(self):
         with self.assertRaises(AttributeError):

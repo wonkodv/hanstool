@@ -192,7 +192,6 @@ A Frontend must specify at module level:
 At least one Frontend should put the following functions in `Env`:
 *   `show(text, *args, **kwargs)` put `text%args` to the users attention (Notification, Messagebox, print, ...)
 *   `log(text, *args, **kwargs)` put `text%args` somewhere the user can look it up. (TextArea in some window, print, ...)
-*   `edit_file(path, line)` Open an Editor for the file `path`, possibly at `line`.
 *   `help(topic)` Display help on a command or python topic (Invoke `less`, display a large text window, ...)
 *   `handle_exception` Tell the user a command or Frontend or ... did something bad.
 

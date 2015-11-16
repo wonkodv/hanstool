@@ -43,7 +43,7 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=..., **attrs):
 
         doc = textwrap.dedent(func.__doc__ or '')
 
-        origin = [func.__code__.co_filename, func.__code__.co_firstlineno]
+        origin = [func.__code__.co_filename, func.__code__.co_firstlineno] # TODO: use calltrace of cmd()?
         fn, lno = origin
 
         doc = "".join(["Invoked as '%s'" % name, "\n",

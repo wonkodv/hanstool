@@ -98,7 +98,8 @@ class CommandWindow(t.Tk):
                 result = lib.run_command(s)
             except Exception as e:
                 self.text['bg']="orange"
-                Env.log("Error %s: %r", s, e)
+                e = traceback.format_exc()
+                Env.log("Error %s: %s", s, e)
             else:
                 if result is not None:
                     Env.log("Cmd %s: %r", s, result)
@@ -147,10 +148,6 @@ def show(s, *args, **kwargs):
 @Env
 def log(s, *args, **kwargs):
     print (str(s) % args)
-
-@Env
-def edit_file(path, line):
-    execute(EDITOR, f)
 
 Env.help = help
 

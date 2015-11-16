@@ -1,18 +1,57 @@
 
-cmd(name="$", args=1)(shell)
-cmd(name="!", args="shell")(execute)
 cmd(exit)
 cmd(name='l')(list_commands)
 cmd(name=';',args=1)(execute_py_expression)
 cmd(name='=',args=1)(evaluate_py_expression)
 cmd(name='?', args=1)(help_command)
 
+if Check.frontend('ht3.cli'):
+    @cmd(name="$", args=1)
+    def _shell(arg):
+        p = ht3.lib.shell(arg)
+        if Check.current_frontend('ht3.cli'):
+            return p.wait()
+        return p
+
+    @cmd(name="!", args="shell")
+    def _execute(args):
+        p = ht3.lib.execute(*args)
+        if Check.current_frontend('ht3.cli'):
+            return p.wait()
+        return p
+
+    @cmd(name="$&", args=1)
+    def _shell_bg(arg):
+        p = ht3.lib.shell(arg)
+        return p
+
+    @cmd(name="!&", args="shell")
+    def _execute_bg(args):
+        p = ht3.lib.execute(*args)
+        return p
+else:
+    @cmd(name="$", args=1)
+    def _shell(arg):
+        p = ht3.lib.shell(arg)
+        return p
+
+    @cmd(name="!", args="shell")
+    def _execute(args):
+        p = ht3.lib.execute(*args)
+        return p
+
+
 @cmd(name="+", args=COMMANDS)
 def edit_command(c):
     """ Edit the location where a command was defined """
-    import ht3.lib
     f, l = c.origin
-    edit_file(f, l)
+    f = shellescape(f)
+    l = int(l)
+    e = os.environ.get('EDITOR', 'gvim')
+    if e.endswith('vim'):
+        shell("%s %s +%d"%(e, f, l))
+    else:
+        shell("%s %s"%(e, f))
 
 
 @cmd(name="<", args='path')
@@ -36,15 +75,13 @@ def py():
     return execute(sys.executable)
 
 
-if Filter.frontend('ht3.gui') and Filter.frontend('ht3.hotkey'):
+if Check.frontend('ht3.gui', 'ht3.hotkey'):
     @cmd(HotKey="F8")
     def httofront():
-        import ht3.gui
         ht3.gui.show()
 
-if Filter.frontend('ht3.gui'):
+if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _():
-        import ht3.gui
         ht3.gui.stay_on_top()
         ht3.gui.set_rect(5,44,72,27)

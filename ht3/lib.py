@@ -7,6 +7,9 @@ import textwrap
 import threading
 import collections
 import traceback
+import shlex
+import warnings
+
 
 from .cmd import COMMANDS, cmd
 from . import env
@@ -243,14 +246,29 @@ def handle_exception(e):
     traceback.print_exc()
 
 @Env
-def shell(string):
-    """ pass a string to a shell. The shell will parse it. """
-    return subprocess.Popen(string, shell=True)
+def shellescape(string):
+    if Check.os.posix:
+        return shlex.quote(string)
+
+    #TODO: make this safe!
+    warnings.warn("UNSAFE !!! ht3.lib.shellescape")
+    string = string.replace('^', '^^')
+    string = string.replace('"', '^"')
+    string = '"' + string + '"'
+
+    return string
 
 @Env
-def execute(*args):
+def shell(string, cwd=None):
+    """ pass a string to a shell. The shell will parse it. """
+    Env.log("Running Shell with: "+string)
+    return subprocess.Popen(string, shell=True, cwd=cwd)
+
+@Env
+def execute(*args, cwd=None):
     """ Execute a programm with arguments """
-    return subprocess.call(args, shell=False)
+    Env.log("executing: "+str(args))
+    return subprocess.Popen(args, shell=False, cwd=cwd)
 
 @Env
 def exit(n=0):
@@ -298,5 +316,12 @@ def help_command(exp):
         obj = evaluate_py_expression(exp)
     Env.help(obj)
 
-
+@cmd
+def restart():
+    import sys, threading, time, subprocess
+    def r():
+        time.sleep(1)
+        subprocess.Popen(r"C:\users\riegel\hanstool\ht3\bin\ht_gui.bat")
+    threading.Thread(target=r).start() #TODO: daemonize false
+    sys.exit()
 # }}}
