@@ -2,6 +2,7 @@ import shlex
 import re
 import pathlib
 
+_DEFAULT=object()
 
 class ArgParser:
     def __init__(self, **kwargs):
@@ -36,10 +37,14 @@ class NoOrOneArgs(ArgParser):
 
 class AllArgs(ArgParser):
     """ Takes one argument of arbitrary format """
+    def __init__(self, default=_DEFAULT, **kwargs):
+        self.default=default
 
     def __call__ (self, string):
         string = string.strip()
         if not string:
+            if not self.default is _DEFAULT:
+                return [self.default],{}
             raise ValueError("Expecting an argument")
         return [string],{}
 
@@ -68,9 +73,10 @@ class GetOptsArgs(ArgParser):
 
 class SetArgs(ArgParser):
     """ Takes one of a set of arguments """
-    def __init__(self, sets, **kwargs):
+    def __init__(self, sets, default=_DEFAULT, **kwargs):
         super().__init__(**kwargs)
         self.sets=sets
+        self.default=default
 
     def __call__(self, string):
         string = string.strip()
@@ -78,7 +84,9 @@ class SetArgs(ArgParser):
             if string in s:
                 return [string],{}
 
-        raise ValueError (string, self.sets)
+        if self.default is _DEFAULT:
+            raise ValueError (string, self.sets)
+        return [self.default],{}
 
     def complete(self, string):
         string = string.strip()
@@ -89,7 +97,7 @@ class SetArgs(ArgParser):
 
 class DictArgs(SetArgs):
     """ Takes one of a set of arguments """
-    def __init__(self, dicts, default=..., **kwargs):
+    def __init__(self, dicts, default=_DEFAULT, **kwargs):
         super().__init__(dicts, **kwargs)
         self.default = default
 
@@ -98,17 +106,20 @@ class DictArgs(SetArgs):
         for s in self.sets:
             if string in s:
                 return [s[string]], {}
-        if not self.default is ...:
+        if not self.default is _DEFAULT:
             return [self.default],{}
         raise ValueError (string, self.sets)
 
 class CallableConverter(ArgParser):
     """ Takes a String that is accepted by %s() """
-    def __init__(self, func, **kwargs):
+    def __init__(self, func, deafult=_DEFAULT, **kwargs):
         self.call = call
+        self.default = default
         self.__doc__ = self.__doc__ % (call,)
 
     def __call__(self, string):
+        if not self.default is _DEFAULT and string.strip() == '':
+            return [self.kwargs['default']],{}
         return [self.call(string)],{}
 
 def Args(spec, **kwargs):
