@@ -7,8 +7,9 @@ import textwrap
 from .args import Args
 
 COMMANDS = {}
+_DEFAULT = object()
 
-def cmd(func=None, *,args=None, name=None, async=False, complete=..., **attrs):
+def cmd(func=None, *,args=None, name=None, async=False, complete=_DEFAULT, **attrs):
     """ use as decorator with or without arguments to register a function
         as a command. The function will be registered in its original form 
         in the module and in arg parsing form in COMMANDS """
@@ -36,9 +37,8 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=..., **attrs):
             else:
                 r = func(*args, **kwargs)
                 return r
-        if complete is ...:
-            def complete(arg_string):
-                return arg_parser.complete(arg_string)
+        if complete is _DEFAULT:
+            complete = arg_parser.complete
 
 
         doc = textwrap.dedent(func.__doc__ or '')

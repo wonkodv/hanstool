@@ -61,7 +61,7 @@ def run_command_file(p):
             run_command(l)
 
 
-@cmd(args=1)
+@cmd(args=1, complete=lambda s:COMMANDS.keys())
 def debug(what):
     """ Debug a Command """
     import pdb, ht3.lib
@@ -74,7 +74,6 @@ def py():
     import sys
     return execute(sys.executable)
 
-
 @cmd
 def restart():
     import os, sys
@@ -83,11 +82,11 @@ def restart():
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
     @cmd(HotKey="F8")
     def httofront():
-        ht3.gui.show()
+        ht3.gui.cmd_win_to_front()
 
 if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _():
-        ht3.gui.stay_on_top()
-        ht3.gui.set_rect(5,44,72,27)
+        ht3.gui.cmd_win_stay_on_top()
+        ht3.gui.cmd_win_set_rect(5,44,72,27)
 

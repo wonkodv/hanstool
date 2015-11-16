@@ -8,150 +8,236 @@ import threading
 from . import lib
 from .lib import Env
 
-COMMAND_WINDOW = None
+GUI = None
 
-class CommandWindow(tk.Tk):
+
+class UserInterface():
     def __init__(self):
-        super().__init__()
-        self.overrideredirect(True)
-        self.cmd = tk.StringVar()
-        self.text = tk.Entry(self, textvariable=self.cmd)
-        self.text.pack()
+        self.root = tk.Tk()
+        self.root.overrideredirect(True)
+        self.root.title("root")
+        self.cmd_win = self.CommandWindow(self)
+        self.log_win = self.MessageWindow(self)
 
-        self.geometry("100x20")
-        self.geometry("+100+20")
-        self.text.bind("<KeyPress-Tab>",self.on_tab)
-        self.text.bind("<Shift-KeyPress-Tab>",self.on_shift_tab)
-        self.text.bind("<KeyPress-Return>",self.on_submit)
-        self.text.bind("<Control-KeyPress-W>", self.delete_word) #TODO
-        self.text.bind("<Control-KeyPress-U>", self.delete_text) #TODO
-        self.text.bind("<KeyPress-Escape>", self.delete_text)
-
-        self.cmd.trace("w",lambda *args: self.clear_completion())
-
-        self.bind("<ButtonPress-3>",self.on_mousedown)
-        self.bind("<ButtonPress-1>",self.on_mousedown)
-        self.bind("<B1-Motion>",self.on_move)
-        self.bind("<B3-Motion>",self.on_resize)
-
+    def loop(self):
         self.closed_evt = threading.Event()
-        self.after(100, self.check_closed)
-
-    def on_mousedown(self, event):
-        self.x = event.x
-        self.y = event.y
-
-    def on_move(self, event):
-        deltax = event.x - self.x
-        deltay = event.y - self.y
-        self.geometry("+%s+%s" % (deltax, deltay))
-
-    def on_resize(self, event):
-        deltax = event.x - self.x
-        deltay = event.y - self.y
-        x = self.winfo_x() + deltax
-        y = self.winfo_y() + deltay
-        self.geometry("%sx%s" % (x, y))
-        self.text.pack()
-
-    completion_cache = None
-    completion_index = None
-    uncompleted_string  = None
-
-    def clear_completion(self):
-        self.completion_cache = None
-
-
-    def set_completion(self, i):
-        if self.completion_cache is None:
-            print ("Redo Completion")
-            s = self.cmd.get()
-            self.completion_cache = lib.get_all_completions(s)
-            self.completion_index = 0
-            self.uncompleted_string = s
-        else:
-            self.completion_index += i
-
-        cc = self.completion_cache
-
-        if 0 <= self.completion_index < len(self.completion_cache):
-            s = self.cmd.get()
-            ct = self.completion_cache[self.completion_index]
-        else:
-            self.completion_index = -1
-            ct = self.uncompleted_string
-        self.set_text(ct)
-
-        self.completion_cache = cc # TODO: remove this HACK line by
-            # TODO making clear_completion only trigger on user input that modifies text.
-
-
-    def set_text(self, text):
-        self.text.delete(0, tk.END)
-        self.text.insert(0, text)
-        def sel():
-            self.text.selection_clear()
-            self.text.xview(len(text)-1)
-        self.after(0, sel)
-
-    def delete_word(self, event):
-        pass
-
-    def delete_text(self, event):
-        self.set_text("")
-
-    def on_tab(self, event):
-        self.set_completion(1)
-
-    def on_shift_tab(self, event):
-        self.set_completion(-1)
-
-    def on_submit(self, event):
-        self.text['bg']="red"
-        s = self.cmd.get()
-        if s:
-            try:
-                result = lib.run_command(s)
-            except Exception as e:
-                self.text['bg']="orange"
-                e = traceback.format_exc()
-                Env.log("Error %s: %s", s, e)
-            else:
-                if result is not None:
-                    Env.log("Cmd %s: %r", s, result)
-                else:
-                    Env.log("Cmd %s", s)
-                self.set_text("")
-                self.text['bg']="white"
+        self.root.after(100, self.check_closed)
+        self.root.mainloop()
 
     def check_closed(self):
         if self.closed_evt.is_set():
-            self.quit()
+            self.root.quit()
         else:
-            self.after(100, self.check_closed)
+            self.root.after(100, self.check_closed)
 
     def close_soon(self):
         self.closed_evt.set()
 
-    def to_front(self):
-        self.text.focus_force()
-        self.text.select_range(0, len(self.cmd.get()))
+    def log(self, msg, *args, **kwargs):
+        if kwargs:
+            if args:
+                raise ValueError("args or kwargs")
+            msg = msg % kwargs
+        else:
+            msg = msg % args
+
+        self.log_win.log(msg)
+
+    def show(self, msg, *args, **kwargs):
+        self.log(msg, *args, **kwargs)
+        self.log_win.show()
+
+    def run_command(self, string):
+        if string:
+            self.cmd_win.text['bg']="red"
+            self.log("Run Cmd: %s", string)
+            try:
+                result = lib.run_command(string)
+            except Exception as e:
+                self.cmd_win.text['bg']="orange"
+                e = traceback.format_exc()
+                log("Exception: %s", e)
+            else:
+                if result is not None:
+                    self.log("Result: %r", result)
+                self.cmd_win.text['bg']="white"
+                return ""
+        return string
+
+    class CommandWindow():
+        def __init__(self, ui):
+            self.ui = ui
+            self.window = ui.root
+            self.master = ui.root
+            #self.window=tk.Toplevel(self.master)
+            self.window.title("Command Window")
+            self.window.overrideredirect(True)
+
+            self.cmd = tk.StringVar()
+            self.text = tk.Entry(self.window, textvariable=self.cmd)
+            self.text.pack(fill='both', expand=1)
+
+            self.window.geometry("100x20+100+20")
+
+            self.text.bind("<KeyPress-Tab>",self._next_completion)
+            self.text.bind("<Shift-KeyPress-Tab>",self._previous_completion)
+            self.text.bind("<KeyPress-Return>",self._submit)
+            self.text.bind("<Control-KeyPress-W>", self._delete_word) #TODO
+            self.text.bind("<Control-KeyPress-U>", self._delete_text) #TODO
+            self.text.bind("<KeyPress-Escape>", self._delete_text)
+            self.cmd.trace("w",lambda *args: self._clear_completion())
+
+            self.window.bind("<ButtonPress-3>",self._start_resize_move)
+            self.window.bind("<ButtonPress-1>",self._start_resize_move)
+            self.window.bind("<B1-Motion>",self._move)
+            self.window.bind("<B3-Motion>",self._resize)
+
+            self.window.bind("<Double-Button-1>", self._toggle_log)
+
+            self._completion_cache = None
+            self._completion_index = None
+            self._uncompleted_string  = None
+            self._completion_update = False
+
+
+
+        def to_front(self):
+            self.window.deiconify()
+            self.text.focus_force()
+            self.text.select_range(0, 'end')
+
+        def stay_on_top(self):
+            self.window.wm_attributes('-topmost', 1)
+
+        def set_rect(self, left, top, width, height):
+            self.window.geometry("%dx%d+%d+%d" % (width, height, left, top))
+
+        def _toggle_log(self, event):
+            self.ui.log_win.toggle()
+
+        def _start_resize_move(self, event):
+            self.x = event.x
+            self.y = event.y
+
+        def _move(self, event):
+            x = self.window.winfo_x() + event.x - self.x
+            y = self.window.winfo_y() + event.y - self.y
+            self.window.geometry("+%s+%s" % (x, y))
+
+        def _resize(self, event):
+            x = self.window.winfo_width() + event.x - self.x
+            y = self.window.winfo_height() + event.y - self.y
+            self.x = event.x
+            self.y = event.y
+            if x>10 and y>10:
+                self.window.geometry("%sx%s" % (x, y))
+
+        def _clear_completion(self):
+            if not self._completion_update:
+                self._completion_cache = None
+
+        def _next_completion(self, event):
+            self._set_completion(1)
+
+        def _previous_completion(self, event):
+            self._set_completion(-1)
+
+        def _set_completion(self, i):
+            if self._completion_cache is None:
+                s = self.cmd.get()
+                self._completion_cache = lib.get_all_completions(s)
+                self._completion_index = 0
+                self._uncompleted_string = s
+            else:
+                self._completion_index += i
+
+            cc = self._completion_cache
+
+            if 0 <= self._completion_index < len(self._completion_cache):
+                s = self.cmd.get()
+                ct = self._completion_cache[self._completion_index]
+            else:
+                self._completion_index = -1
+                ct = self._uncompleted_string
+
+            self._completion_update = True
+            self._set_text(ct)
+            self._completion_update = False
+
+        def _set_text(self, text):
+            self.text.delete(0, tk.END)
+            self.text.insert(0, text)
+            def sel():
+                self.text.selection_clear()
+                self.text.xview(len(text)-1)
+            self.window.after(0, sel)
+
+        def _delete_word(self, event):
+            pass
+
+        def _delete_text(self, event):
+            self._set_text("")
+
+        def _submit(self, event):
+            s = self.cmd.get()
+            s = self.ui.run_command(s)
+            self._set_text(s)
+
+
+    class MessageWindow():
+        def __init__(self, ui):
+            self.ui = ui
+            self.master = ui.root
+            self.window = tk.Toplevel(self.master)
+            self.window.title("Log")
+            self.text=tk.Text(self.window)
+            self.text.pack(fill='both', expand=1)
+            self.window.protocol('WM_DELETE_WINDOW', self.hide)
+            self.hide()
+
+        def log(self, msg):
+            self.text.insert('end', msg+'\n')
+            self.text.yview('end')
+
+        def toggle(self):
+            if not self.visible:
+                self.show()
+            else:
+                self.hide()
+
+        def show(self):
+            self.visible = True
+            self.window.deiconify()
+            self.window.focus_set()
+
+        def hide(self):
+            self.visible = False
+            self.window.withdraw()
+            self.ui.cmd_win.to_front()
 
 # Frontend API
 
+_stored_log=[]
+
 def loop():
-    global COMMAND_WINDOW
+    global GUI
     try:
-        COMMAND_WINDOW = CommandWindow()
+        GUI = UserInterface()
+
+        for s, args, kwargs in _stored_log:
+            GUI.log(s, *args, **kwargs)
+        _stored_log.clear()
+
         for c in _do_on_start:
             c()
-        COMMAND_WINDOW.mainloop()
+
+        GUI.loop()
     finally:
-        COMMAND_WINDOW = None
+        GUI = None
 
 def stop():
-    if not COMMAND_WINDOW is None:
-        COMMAND_WINDOW.close_soon()
+    if not GUI is None:
+        GUI.close_soon()
 
 
 # Mandatory User API
@@ -159,11 +245,14 @@ def stop():
 
 @Env
 def show(s, *args, **kwargs):
-    print (str(s) % args)
+    GUI.show(s, *args, **kwargs)
 
 @Env
 def log(s, *args, **kwargs):
-    print (str(s) % args)
+    if GUI:
+       GUI.log(s, *args, **kwargs)
+    else:
+        _stored_log.append([s, args, kwargs])
 
 Env.help = help
 
@@ -175,14 +264,14 @@ def do_on_start(f):
     _do_on_start.append(f)
     return f
 
-def show():
-    COMMAND_WINDOW.to_front()
+def cmd_win_stay_on_top():
+    GUI.cmd_win.stay_on_top()
 
-def stay_on_top():
-    COMMAND_WINDOW.wm_attributes('-topmost', 1)
+def cmd_win_to_front():
+    GUI.cmd_win.to_front()
 
-def set_rect(left, top, width, height):
-    COMMAND_WINDOW.geometry("%dx%d+%d+%d" % (width, height, left, top))
+def cmd_win_set_rect(left, top, width, height):
+    GUI.cmd_win.set_rect(left, top, width, height)
 
 if __name__ == '__main__':
     loop()

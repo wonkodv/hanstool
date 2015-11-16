@@ -173,10 +173,10 @@ def _command_completion(string):
     c, args = parse_command(string)
     if args and c in COMMANDS: # only complete args if the space after command came already
         cmd = COMMANDS[c]
-        values = cmd.arg_parser.complete(args)
+        values = cmd.complete(args)
         return [c+" "+ x for x in values]
     l = len(string)
-    return [ c+" " for c in COMMANDS if c[:l]==string]
+    return [ c for c in COMMANDS if c[:l]==string]
 
 def _py_completion(string):
     #s = re.split("[^a-zA-A0-9_.]", string)
