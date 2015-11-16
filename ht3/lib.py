@@ -8,13 +8,14 @@ import threading
 import collections
 import traceback
 
-from .filter import Filter
 from .cmd import COMMANDS, cmd
 from . import env
 
 #{{{ Frontends
 
-FRONTENDS = collections.deque() # This one is explicitly threadsafe
+FRONTENDS = []
+FRONTEND_MODULES = []
+FRONTEND_LOCAL = threading.local()
 
 def import_recursive(name):
     m = __import__(name)
@@ -29,8 +30,8 @@ def load_frontend(name):
     mod = import_recursive(name)
     assert callable(mod.loop)
     assert callable(mod.stop)
-    FRONTENDS.append(mod)
-    Filter.FRONTENDS.add(name)
+    FRONTEND_MODULES.append(mod)
+    FRONTENDS.append(name)
 
 def run_frontends():
     """ Start all loaded frontends in seperate threads. If any frontend returns
@@ -38,13 +39,14 @@ def run_frontends():
     so stop must be threadsafe) and wait for all threads to finish.
     """
 
-    frontends = list(FRONTENDS)
+    frontends = list(FRONTEND_MODULES) # avoid concurrency
 
     if not frontends:
         raise ValueError("No Frontend Loaded yet")
 
     if len(frontends) == 1:     # Shortcut if there is no need for threading stuff
         fe = frontends[0]
+        FRONTEND_LOCAL.frontend = fe.__name__
         try:
             fe.loop()
         except Exception as e:
@@ -53,11 +55,13 @@ def run_frontends():
             fe.stop()
         except Exception as e:
             Env.handle_exception(e)
+        del FRONTEND_LOCAL.frontend
     else:
         threads = []
         evt = threading.Event()
 
         def run_fe(fe):
+            FRONTEND_LOCAL.frontend = fe.__name__
             try:
                 fe.loop()
             except Exception as e:
@@ -84,6 +88,26 @@ def run_frontends():
                 t.join()
 
 
+
+#}}}
+
+#{{{ Check
+
+from . import check
+
+Check = check.Check()
+
+OS = set()
+OS.add(os.name)
+OS.add(sys.platform)
+
+if os.name == 'nt':
+    OS.add("win")
+    OS.add("windows")
+
+Check.os = check.Group(OS)
+Check.frontend = check.Group(FRONTENDS)
+Check.current_frontend = check.Value(lambda:FRONTEND_LOCAL.frontend)
 
 #}}}
 
@@ -189,8 +213,14 @@ def _py_completion(string):
 
 Env = env.Env_class()
 Env.COMMANDS = COMMANDS
-Env.Filter = Filter
+Env.Check = Check
+
 Env(cmd)
+
+for k, v in os.environ.items():
+    if k[:4] == 'HT3_':
+        Env[k[4:]] = v
+
 
 from .platform import env
 

@@ -1,4 +1,4 @@
-from ht3.filter import Filter
+from ht3.lib import Check
 
-if Filter.os.windows:
+if Check.os.windows:
     from . import windows
