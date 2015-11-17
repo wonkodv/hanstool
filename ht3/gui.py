@@ -10,6 +10,11 @@ from .lib import Env
 
 GUI = None
 
+_BACKGROUND_ACTIVE = 'white'
+_BACKGROUND_INACTIVE = '#D4D0C8'
+_BACKGROUND_ERROR = 'orange'
+_BACKGROUND_RUNNING = 'red'
+
 
 class UserInterface():
     def __init__(self):
@@ -49,18 +54,18 @@ class UserInterface():
 
     def run_command(self, string):
         if string:
-            self.cmd_win.text['bg']="red"
+            self.cmd_win._set_color(_BACKGROUND_RUNNING)
             self.log("Run Cmd: %s", string)
             try:
                 result = lib.run_command(string)
             except Exception as e:
-                self.cmd_win.text['bg']="orange"
+                self.cmd_win._set_color(_BACKGROUND_ERROR)
                 e = traceback.format_exc()
                 log("Exception: %s", e)
             else:
                 if result is not None:
                     self.log("Result: %r", result)
-                self.cmd_win.text['bg']="white"
+                self.cmd_win._set_color(_BACKGROUND_ACTIVE)
                 return ""
         return string
 
@@ -76,6 +81,7 @@ class UserInterface():
             self.cmd = tk.StringVar()
             self.text = tk.Entry(self.window, textvariable=self.cmd)
             self.text.pack(fill='both', expand=1)
+            self._bg_color = _BACKGROUND_ACTIVE
 
             self.window.geometry("100x20+100+20")
 
@@ -94,12 +100,24 @@ class UserInterface():
 
             self.window.bind("<Double-Button-1>", self._toggle_log)
 
+            self.window.bind("<FocusIn>", self._set_active_color)
+            self.window.bind("<FocusOut>", self._set_inactive_color)
+
             self._completion_cache = None
             self._completion_index = None
             self._uncompleted_string  = None
             self._completion_update = False
 
+            self.to_front()
 
+        def _set_active_color(self, event):
+            self.text['bg']=self._bg_color
+
+        def _set_inactive_color(self, event):
+            self.text['bg'] = _BACKGROUND_INACTIVE
+
+        def _set_color(self, color):
+            self._bg_color = color
 
         def to_front(self):
             self.window.deiconify()
