@@ -46,10 +46,10 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=_DEFAULT, **att
         origin = [func.__code__.co_filename, func.__code__.co_firstlineno] # TODO: use calltrace of cmd()?
         fn, lno = origin
 
-        doc = "".join(["Invoked as '%s'" % name, "\n",
+        doc = "".join(["Command '%s'" % name, "\n",
+            ("Calls %s\n" % func.__name__ ) if func.__name__ != name else "",
             arg_parser.__doc__.strip(), "\n",
             "Executed in a seperate Thread\n" if async else "",
-            "\n",
             "\n",
             doc, "\n",
             "\n",
