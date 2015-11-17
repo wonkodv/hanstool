@@ -271,8 +271,13 @@ def log(s, *args, **kwargs):
        GUI.log(s, *args, **kwargs)
     else:
         _stored_log.append([s, args, kwargs])
+@Env
+def help(obj):
+    show(obj.__doc__)
 
-Env.help = help
+@Env
+def handle_exception(exc):
+    show(traceback.format_exc())
 
 # Extended User API
 
