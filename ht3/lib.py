@@ -143,6 +143,8 @@ def run_command(string):
 
 #{{{ Scripts
 
+SCRIPTS = []
+
 def load_scripts(path):
     if not isinstance(path, pathlib.Path):
         path = str(path)
@@ -157,8 +159,9 @@ def load_scripts(path):
     elif path.is_file():
         with path.open("rt") as f:
             c = f.read()
-        c = compile(c, path.as_posix(), "exec")
+        c = compile(c, str(path), "exec")
         exec (c, Env.dict)
+        SCRIPTS.append(path)
     else:
         raise Exception("neither file nor dir in load_Scripts", path)
 
@@ -265,16 +268,16 @@ def shellescape(string):
     return string
 
 @Env
-def shell(string, cwd=None):
+def shell(string, cwd=None, env=None):
     """ pass a string to a shell. The shell will parse it. """
     Env.log("Running Shell with: "+string)
-    return subprocess.Popen(string, shell=True, cwd=cwd)
+    return subprocess.Popen(string, shell=True, cwd=cwd, env=env)
 
 @Env
-def execute(*args, cwd=None):
+def execute(*args, cwd=None, env=None):
     """ Execute a programm with arguments """
     Env.log("executing: "+str(args))
-    return subprocess.Popen(args, shell=False, cwd=cwd)
+    return subprocess.Popen(args, shell=False, cwd=cwd, env=env)
 
 @Env
 def exit(n=0):
