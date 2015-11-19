@@ -10,11 +10,6 @@ from .lib import Env
 
 GUI = None
 
-_BACKGROUND_ACTIVE = 'white'
-_BACKGROUND_INACTIVE = '#D4D0C8'
-_BACKGROUND_ERROR = 'orange'
-_BACKGROUND_RUNNING = 'red'
-
 
 class UserInterface():
     def __init__(self):
@@ -54,20 +49,23 @@ class UserInterface():
 
     def run_command(self, string):
         if string:
-            self.cmd_win._set_color(_BACKGROUND_RUNNING)
+            self.cmd_win._set_state("Working")
             self.log("Run Cmd: %s", string)
             try:
                 result = lib.run_command(string)
             except Exception as e:
-                self.cmd_win._set_color(_BACKGROUND_ERROR)
+                self.cmd_win._set_state("Error")
                 e = traceback.format_exc()
-                log("Exception: %s", e)
+                show("Exception: %s", e)
+                return string
             else:
                 if result is not None:
                     self.log("Result: %r", result)
-                self.cmd_win._set_color(_BACKGROUND_ACTIVE)
+                self.cmd_win._set_state("Waiting")
                 return ""
-        return string
+        else:
+            self.cmd_win._set_state("Waiting")
+            return string
 
     class CommandWindow():
         def __init__(self, ui):
@@ -77,16 +75,14 @@ class UserInterface():
             #self.window=tk.Toplevel(self.master)
             self.window.title("Command Window")
             self.window.overrideredirect(True)
+            self.window.geometry("100x20+100+20")
 
             self.cmd = tk.StringVar()
             self.text = tk.Entry(self.window, textvariable=self.cmd)
             self.text.pack(fill='both', expand=1)
-            self._bg_color = _BACKGROUND_ACTIVE
 
-            self.window.geometry("100x20+100+20")
-
-            self.text.bind("<KeyPress-Tab>",self._next_completion)
-            self.text.bind("<Shift-KeyPress-Tab>",self._previous_completion)
+            self.text.bind("<KeyPress-Tab>",lambda e: self._set_completion(1))
+            self.text.bind("<Shift-KeyPress-Tab>",lambda e: self._set_completion(-1))
             self.text.bind("<KeyPress-Return>",self._submit)
             self.text.bind("<Control-KeyPress-W>", self._delete_word) #TODO
             self.text.bind("<Control-KeyPress-U>", self._delete_text) #TODO
@@ -100,24 +96,39 @@ class UserInterface():
 
             self.window.bind("<Double-Button-1>", self._toggle_log)
 
-            self.window.bind("<FocusIn>", self._set_active_color)
-            self.window.bind("<FocusOut>", self._set_inactive_color)
+            self.window.bind("<FocusIn>", lambda e:self._set_focus(True))
+            self.window.bind("<FocusOut>", lambda e:self._set_focus(False))
 
             self._completion_cache = None
             self._completion_index = None
             self._uncompleted_string  = None
             self._completion_update = False
 
-            self.to_front()
+            self._state = "Waiting"
+            self._has_focus = False
+            self._update_color()
 
-        def _set_active_color(self, event):
-            self.text['bg']=self._bg_color
+        def _set_focus(self, f):
+            self._has_focus = f
+            self._update_color()
 
-        def _set_inactive_color(self, event):
-            self.text['bg'] = _BACKGROUND_INACTIVE
+        def _set_state(self, state):
+            self._state = state
+            self._update_color()
 
-        def _set_color(self, color):
-            self._bg_color = color
+        def _update_color(self):
+            if self._state == 'Waiting':
+                if self._has_focus:
+                    self.text['bg'] = 'white'
+                else:
+                    self.text['bg'] = '#D4D0C8'
+            elif self._state == 'Working':
+                self.text['bg'] = 'red'
+            elif self._state == 'Error':
+                self.text['bg'] = 'orange'
+            else:
+                assert False
+            self.master.update_idletasks()
 
         def to_front(self):
             self.window.deiconify()
@@ -154,11 +165,6 @@ class UserInterface():
             if not self._completion_update:
                 self._completion_cache = None
 
-        def _next_completion(self, event):
-            self._set_completion(1)
-
-        def _previous_completion(self, event):
-            self._set_completion(-1)
 
         def _set_completion(self, i):
             if self._completion_cache is None:
@@ -242,8 +248,11 @@ def loop():
     try:
         GUI = UserInterface()
 
-        for s, args, kwargs in _stored_log:
-            GUI.log(s, *args, **kwargs)
+        for s_l, s, args, kwargs in _stored_log:
+            if s_l:
+                GUI.show(s, *args, **kwargs)
+            else:
+                GUI.log(s, *args, **kwargs)
         _stored_log.clear()
 
         for c in _do_on_start:
@@ -263,21 +272,27 @@ def stop():
 
 @Env
 def show(s, *args, **kwargs):
-    GUI.show(s, *args, **kwargs)
+    if GUI:
+       GUI.show(s, *args, **kwargs)
+    else:
+        _stored_log.append([True, s, args, kwargs])
 
 @Env
 def log(s, *args, **kwargs):
     if GUI:
        GUI.log(s, *args, **kwargs)
     else:
-        _stored_log.append([s, args, kwargs])
+        _stored_log.append([False, s, args, kwargs])
 @Env
 def help(obj):
     show(obj.__doc__)
 
 @Env
 def handle_exception(exc):
-    show(traceback.format_exc())
+    if GUI:
+        show(traceback.format_exc())
+    else:
+        raise obj
 
 # Extended User API
 
