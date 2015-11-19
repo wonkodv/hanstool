@@ -135,9 +135,12 @@ def run_command(string):
     try:
         cmd = COMMANDS[cmd]
     except KeyError:
-        return Env.command_not_found_hook(string)
+        r = Env.command_not_found_hook(string)
     else:
-        return cmd(arg)
+        r = cmd(arg)
+    Env._ = r
+    Env.__.append(r)
+    return r
 
 #}}}
 
@@ -228,6 +231,9 @@ Env.COMMANDS = COMMANDS
 Env.Check = Check
 
 Env(cmd)
+
+Env.__ = []
+Env._  = None
 
 for k, v in os.environ.items():
     if k[:4] == 'HT3_':

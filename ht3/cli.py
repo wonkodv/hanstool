@@ -44,7 +44,6 @@ def loop():
                 traceback.print_exc()
             else:
                 if result is not None:
-                    Env._ = result
                     print(result)
 
 def stop():
