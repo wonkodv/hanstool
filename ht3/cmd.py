@@ -13,6 +13,11 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=_DEFAULT, **att
     """ use as decorator with or without arguments to register a function
         as a command. The function will be registered in its original form 
         in the module and in arg parsing form in COMMANDS """
+
+    origin = traceback.extract_stack()
+    origin = origin[-2]
+    origin = origin[0:2]
+
     def decorator(func):
         """ the actual decorator """
 
@@ -43,7 +48,7 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=_DEFAULT, **att
 
         doc = textwrap.dedent(func.__doc__ or '')
 
-        origin = [func.__code__.co_filename, func.__code__.co_firstlineno] # TODO: use calltrace of cmd()?
+        #origin = [func.__code__.co_filename, func.__code__.co_firstlineno] # TODO: use calltrace of cmd()?
         fn, lno = origin
 
         doc = "".join(["Command '%s'" % name, "\n",
