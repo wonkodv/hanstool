@@ -141,8 +141,9 @@ def run_command(string):
         r = Env.command_not_found_hook(string)
     else:
         r = cmd(arg)
-    Env._ = r
-    Env.__.append(r)
+    if r is not None:
+        Env._ = r
+        Env.__.append(r)
     return r
 
 #}}}
