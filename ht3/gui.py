@@ -16,8 +16,9 @@ class UserInterface():
         self.root = tk.Tk()
         self.root.overrideredirect(True)
         self.root.title("root")
-        self.cmd_win = self.CommandWindow(self)
         self.log_win = self.MessageWindow(self)
+        self.cmd_win = self.CommandWindow(self)
+        self.root.after(5, self.cmd_win.to_front)
 
     def loop(self):
         self.closed_evt = threading.Event()
@@ -34,13 +35,15 @@ class UserInterface():
         self.closed_evt.set()
 
     def log(self, msg, *args, **kwargs):
-        if kwargs:
-            if args:
-                raise ValueError("args or kwargs")
-            msg = msg % kwargs
+        if isinstance(msg, str):
+            if kwargs:
+                if args:
+                    raise ValueError("args or kwargs")
+                msg = msg % kwargs
+            else:
+                msg = msg % args
         else:
-            msg = msg % args
-
+            msg = repr(msg)
         self.log_win.log(msg)
 
     def show(self, msg, *args, **kwargs):
@@ -217,7 +220,8 @@ class UserInterface():
             self.text=tk.Text(self.window)
             self.text.pack(fill='both', expand=1)
             self.window.protocol('WM_DELETE_WINDOW', self.hide)
-            self.hide()
+            self.visible = False
+            self.window.withdraw()
 
         def log(self, msg):
             self.text.insert('end', msg+'\n')
