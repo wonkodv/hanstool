@@ -98,11 +98,19 @@ def restart():
     else:
         args.append(sys.executable)
     args += ['-m','ht3']
+    if not '_RESTARTED' in Env.dict:
+        args += ['-e', '_RESTARTED', '1']
 
     it = iter(sys.argv[1:])
     for a in it:
-        if a in ['-f', '-s', '-e']:
+        if a in ['-f', '-s']:
             args += [a, next(it)]
+        elif a == '-e':
+            k = next(it)
+            v = next(it)
+            if v == '_RESTARTED':
+                v=str(int(v)+1)
+            args += [a, k, v]
         elif a == '-r':
             args += [a]
         else:
