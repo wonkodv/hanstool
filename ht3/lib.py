@@ -122,16 +122,19 @@ def parse_command(string):
     for c in string:
         if c in [' ','\t']:
             cmd = string[:i]
-            arg = string[i:]
+            sep = string[i]
+            arg = string[i+1:]
             break
         i += 1
     else:
         cmd = string
+        sep = ""
         arg = ""
-    return cmd, arg
+
+    return cmd, sep, arg
 
 def run_command(string):
-    cmd, arg = parse_command(string)
+    cmd, sep, arg = parse_command(string)
     try:
         cmd = COMMANDS[cmd]
     except KeyError:
@@ -173,18 +176,25 @@ def load_scripts(path):
 #{{{ Completion
 
 def get_all_completions(string):
-    return _command_completion(string) + _py_completion(string)
+    return complete_command(string) + complete_py(string)
 
-def _command_completion(string):
-    c, args = parse_command(string)
-    if args and c in COMMANDS: # only complete args if the space after command came already
+def complete_command(string):
+    c, sep, args = parse_command(string)
+    if sep and c in COMMANDS: # only complete args if the space after command came already
         cmd = COMMANDS[c]
         values = cmd.complete(args)
-        return [c+" "+ x for x in values]
-    l = len(string)
-    return [ c for c in COMMANDS if c[:l]==string]
+        l = len(args)
+        values = filter(lambda x:x[:l]==args, values)
+        values = sorted(values)
+        values = [c + sep + x for x in values]
+    else:
+        l = len(string)
+        values = COMMANDS.keys()
+        values = filter(lambda x:x[:l]==string, values)
+        values = sorted(values)
+    return values
 
-def _py_completion(string):
+def complete_py(string):
     #s = re.split("[^a-zA-A0-9_.]", string)
     #string = s[-1]
     parts = [s.strip() for s in string.split(".")]
@@ -194,8 +204,7 @@ def _py_completion(string):
     values.update(Env.dict)
 
     if len(parts) == 1:
-        prefix = ""
-        pl = string
+        pl = parts[0]
     else:
         p0 = parts[0]
         pl = parts[-1]
@@ -218,9 +227,13 @@ def _py_completion(string):
             pass
 
     l = len(pl)
-    prefix = string[:-l]
+    prefix = string[:len(string)-l]
 
-    return [ prefix + c for c in values if c[:l]==pl ]
+    values = filter(lambda x:x[:l]==pl, values)
+    values = sorted(values)
+    values = [prefix + x for x in values]
+
+    return values
 
 #}}}
 

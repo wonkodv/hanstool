@@ -1,8 +1,17 @@
 cmd(exit)
 cmd(name='l')(list_commands)
-cmd(name=';',args=1)(execute_py_expression)
-cmd(name='=',args=1)(evaluate_py_expression)
-cmd(name='?', args=1)(help_command)
+cmd(name='e')(list_env)
+cmd(name=';',args=1, complete=ht3.lib.complete_py)(execute_py_expression)
+cmd(name='?', args=1, complete=ht3.lib.get_all_completions)(help_command)
+
+@cmd(name='=',args=1, complete=ht3.lib.complete_py)
+def _show_eval(s):
+    r = evaluate_py_expression(s)
+    Env._ = r
+    Env.__.append(r)
+    show(r)
+    return None
+
 
 if Check.frontend('ht3.cli'):
     @cmd(name="$", args=1)
@@ -71,7 +80,8 @@ def py():
 @cmd
 def restart():
     """ Check if all loaded Scripts can be compiled and then restart the python
-        programm using sys.executable, "-m ht3" and sys.argv[1:]
+        programm using sys.executable, "-m ht3" and args, where args is all
+        -f, -s and -r args, NOT -x.
     """
     import os, sys
     for path in ht3.lib.SCRIPTS:
@@ -82,10 +92,23 @@ def restart():
         except Exception as e:
             handle_exception(e)
             return
+    args = []
     if Check.os.win:
-        os.execl(sys.executable, '"'+sys.executable+'"', "-m", "ht3", *sys.argv[1:]) # Bug in Python with whitespaces?
+        args.append('"' + sys.executable + '"')
     else:
-        os.execl(sys.executable, sys.executable, "-m", "ht3", *sys.argv[1:])
+        args.append(sys.executable)
+    args += ['-m','ht3']
+
+    it = iter(sys.argv[1:])
+    for a in it:
+        if a in ['-f', '-s', '-e']:
+            args += [a, next(it)]
+        elif a == '-r':
+            args += [a]
+        else:
+            assert a == '-x'
+            next(it)    # dont execute -x
+    os.execv(sys.executable, args)
 
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
     @cmd(HotKey="F8")

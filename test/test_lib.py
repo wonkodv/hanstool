@@ -10,27 +10,27 @@ class Test_parse_command(unittest.TestCase):
 
     def test_noarg(self):
         ca = lib.parse_command("cmd")
-        self.assertTupleEqual(ca, ('cmd', ''))
+        self.assertTupleEqual(ca, ('cmd',"", ''))
 
     def test_empty_cmd(self):
         ca = lib.parse_command("")
-        self.assertTupleEqual(ca, ('', ''))
+        self.assertTupleEqual(ca, ('',"", ''))
 
     def test_empty_cmd_with_arg(self):
         ca = lib.parse_command(" a")
-        self.assertTupleEqual(ca, ('', ' a'))
+        self.assertTupleEqual(ca, (''," ", 'a'))
 
     def test_arg(self):
         ca = lib.parse_command("cmd arg")
-        self.assertTupleEqual(ca, ('cmd', ' arg'))
+        self.assertTupleEqual(ca, ('cmd', " ", 'arg'))
 
     def test_tab_arg(self):
         ca = lib.parse_command("cmd\targ")
-        self.assertTupleEqual(ca, ('cmd', '\targ'))
+        self.assertTupleEqual(ca, ('cmd', '\t', 'arg'))
 
     def test_special_chars_cmd(self):
         ca = lib.parse_command("$? !%")
-        self.assertTupleEqual(ca, ('$?', ' !%'))
+        self.assertTupleEqual(ca, ('$?', ' ', '!%'))
 
 
 class Test_frontends(unittest.TestCase):
@@ -99,3 +99,37 @@ class Test_check(unittest.TestCase):
             assert lib.Check.current_frontend('testfe')
 
 
+
+class Test_Completion(unittest.TestCase):
+
+    def test_command_completion(self):
+        c1 = Mock()
+        c1.complete = lambda s: ["arg1", "a2"]
+        c2 = Mock()
+
+        with patch("ht3.lib.COMMANDS", {'c1':c1, 'c2': c2, 'asdfg':None}):
+            self.assertListEqual(lib.complete_command('c'), ['c1', 'c2'])
+            self.assertListEqual(lib.complete_command('c1'), ['c1'])
+            self.assertListEqual(lib.complete_command('c1 '), ['c1 a2', 'c1 arg1'])
+            self.assertListEqual(lib.complete_command('c1 a'), ['c1 a2', 'c1 arg1'])
+            self.assertListEqual(lib.complete_command('c1 ar'), ['c1 arg1'])
+
+    def test_py_completion(self):
+        with patch("ht3.lib.Env") as mockEnv:
+            mockEnv.dict = {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}
+            c = lib.complete_py('t')
+            assert 'three' in c
+            assert 'two' in c
+            assert 'text' in c
+            assert not 'one' in c
+
+            c = lib.complete_py('text')
+            assert c == ['text']
+
+            c = lib.complete_py('text.')
+            self.assertIn('text.startswith', c)
+            self.assertIn('text.capitalize', c)
+
+            c = lib.complete_py('text.s')
+            self.assertIn('text.startswith', c)
+            self.assertIn('text.strip', c)
