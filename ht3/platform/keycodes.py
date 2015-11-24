@@ -11,9 +11,12 @@ KEY_CODES = {
     "RETURN":               0x0D,
     "SHIFT":                0x10,
     "CONTROL":              0x11,
+    "CTRL":                 0x11,
     "MENU":                 0x12,
+    "ALT":                  0x12,
     "PAUSE":                0x13,
     "CAPITAL":              0x14,
+    "CAPSLOCK":             0x14,
     "KANA":                 0x15,
     "HANGUEL":              0x15,
     "HANGUL":               0x15,
@@ -137,3 +140,6 @@ KEY_CODES = {
     "PA1":                  0xFD,
     "OEM_CLEAR":            0xFE
 }
+
+for x in '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+    KEY_CODES[x] = ord(x)

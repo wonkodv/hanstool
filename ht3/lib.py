@@ -350,12 +350,86 @@ def help_command(exp):
         obj = evaluate_py_expression(exp)
     Env.help(obj)
 
-@cmd
-def restart():
-    import sys, threading, time, subprocess
-    def r():
-        time.sleep(1)
-        subprocess.Popen(r"C:\users\riegel\hanstool\ht3\bin\ht_gui.bat")
-    threading.Thread(target=r).start() #TODO: daemonize false
-    sys.exit()
+
+from .platform import fake_input
+
+_fake_types = (
+    ("WHITESPACE",  r"\s+"),
+    ("MOVE",        r"(?P<x>\d+)x(?P<y>\d+)"),
+    ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
+    ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
+    ("STRING1",     r"'(?P<s1>[^']*)'"),
+    ("STRING2",     r'"(?P<s2>[^"]*)"'),
+    ("INVALID",     r"\S+")
+    )
+
+_fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in _fake_types))
+
+
+@Env
+def fake(string):
+    """ Fake a sequence of Events, specified by a string in the
+        following mini language:
+        *   Whitespaces are ignored
+        *   123X456 moves the mouse to x=123 and y=456, see mouse_move
+        *   M1      Does a Mouse Click at the current mouse position
+                    With the left button. 2=Middle, 3=right
+        *   +M2     Press but do not release the middle mouse button
+        *   -M3     Release the right mouse button
+        *   'hans@fred.com'  Type hans' email address. No escaping. Tou can use
+                     single or double quotes
+        *   +Key    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL,... see KEY_CODES
+        *   -A  Releaase A
+        *   A   Press, then release A
+    """
+
+    sequence = []
+    def a(f, *a):
+        sequence.append((f, a))
+    for m in _fake_re.finditer(string):
+        if   m.group("WHITESPACE"):
+            pass
+
+        elif m.group("MOVE"):
+            x = int(m.group('x'))
+            y = int(m.group('y'))
+            a(fake_input.mouse_move, x, y)
+
+        elif m.group("MBTN"):
+            ud = m.group('mud')
+            btn= int(m.group('btn'))
+            if ud != '-':
+                a(fake_input.mouse_down, btn)
+            if ud != '+':
+                a(fake_input.mouse_up, btn)
+
+        elif m.group("KEY"):
+            ud = m.group('kud')
+            key= m.group('key')
+            key= fake_input.KEY_CODES[key.upper()]
+            if ud != '-':
+                a(fake_input.key_down, key)
+            if ud != '+':
+                a(fake_input.key_up, key)
+
+        elif m.group("STRING1"):
+            s = m.group('s1')
+            a(fake_input.type_string, s)
+
+        elif m.group("STRING2"):
+            s = m.group('s2')
+            a(fake_input.type_string, s)
+
+        elif m.group("INVALID"):
+            raise ValueError("Invalid Token", m.group(0))
+        else:
+            assert False, m
+
+    for c, a in sequence:
+        c(*a)
+
+
+Env.dict.update(vars(fake_input))
+
+
 # }}}
