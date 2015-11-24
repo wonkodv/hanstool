@@ -112,7 +112,7 @@ class DictArgs(SetArgs):
 
 class CallableConverter(ArgParser):
     """ Takes a String that is accepted by %s() """
-    def __init__(self, func, deafult=_DEFAULT, **kwargs):
+    def __init__(self, call, default=_DEFAULT, **kwargs):
         self.call = call
         self.default = default
         self.__doc__ = self.__doc__ % (call,)

@@ -60,10 +60,10 @@ _MessageBoxResults = [
 ]
 
 @Env
-def MessageBox(title, text, *flags):
+def MessageBox(title, text, flags):
     try:
-        flags = int(flags[0])
+        flags = int(flags)
     except:
-        flags = reduce(operator.or_, (_MessageBoxFlags[x.upper()] for x in flags))
+        flags = reduce(lambda x,y: x|y, (_MessageBoxFlags[x.strip().upper()] for x in flags.split(" ")))
     x = ctypes.windll.user32.MessageBoxW(0, text, title, flags)
     return _MessageBoxResults[x]

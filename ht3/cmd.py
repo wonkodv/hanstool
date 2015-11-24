@@ -36,7 +36,7 @@ def cmd(func=None, *,args=None, name=None, async=False, complete=_DEFAULT, **att
             if async:
                 t = threading.Thread(target=func, args=args,
                         kwargs=kwargs,
-                        name="CommandThread :"+name)
+                        name="CommandThread: "+name)
                 t.start()
                 return t
             else:

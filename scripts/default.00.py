@@ -1,11 +1,13 @@
 cmd(exit)
 cmd(name='l')(list_commands)
 cmd(name='e')(list_env)
-cmd(name=';',args=1, complete=ht3.lib.complete_py)(execute_py_expression)
-cmd(name='?', args=1, complete=ht3.lib.get_all_completions)(help_command)
+cmd(name=';',args=1, complete=complete_py)(execute_py_expression)
+cmd(name='?', args=1, complete=complete_all)(help_command)
+cmd(name=':', args=1)(fake)
 
-@cmd(name='=',args=1, complete=ht3.lib.complete_py)
+@cmd(name='=',args=1, complete=complete_py)
 def _show_eval(s):
+    """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s)
     Env._ = r
     Env.__.append(r)
@@ -43,7 +45,7 @@ else:
     cmd(name="!", args="shell")(execute)
 
 def edit_file(file_name, line=1):
-    f = shellescape(file_name)
+    f = shellescape(str(file_name)) # allow paths
     l = int(line)
     e = os.environ.get('EDITOR', 'gvim')
     if e.endswith('vim'):
@@ -56,6 +58,22 @@ def edit_command(c):
     """ Edit the location where a command was defined """
     f, l = c.origin
     edit_file(f, l)
+
+@cmd(name="++", args="shell")
+def add_command(script, name=None):
+    """ Add a new command to a script.
+        First argument is matched against all scripts,
+        second is used as command name
+    """
+    import ht3.lib
+    for s in ht3.lib.SCRIPTS:
+        if s.name.find(script) >= 0:
+            if name:
+                with s.open("ta") as f:
+                    f.write("\n@cmd(name='"+name+"', args=0)\ndef "+name+"():\n    pass")
+            with s.open("rt") as f:
+                l = len(list(f.read()))
+            edit_file(s, l)
 
 @cmd(name="<", args='path')
 def run_command_file(p):

@@ -180,7 +180,7 @@ def load_scripts(path):
 
 #{{{ Completion
 
-def get_all_completions(string):
+def complete_all(string):
     return complete_command(string) + complete_py(string)
 
 def complete_command(string):
@@ -249,6 +249,9 @@ Env.COMMANDS = COMMANDS
 Env.Check = Check
 
 Env(cmd)
+Env(complete_py)
+Env(complete_command)
+Env(complete_all)
 
 Env.__ = []
 Env._  = None
@@ -285,8 +288,6 @@ def shellescape(string):
 
     #TODO: make this safe!
     warnings.warn("UNSAFE !!! ht3.lib.shellescape")
-    string = string.replace('^', '^^')
-    string = string.replace('"', '^"')
     string = '"' + string + '"'
 
     return string

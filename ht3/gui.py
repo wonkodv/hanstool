@@ -18,7 +18,7 @@ class UserInterface():
         self.root.title("root")
         self.log_win = self.MessageWindow(self)
         self.cmd_win = self.CommandWindow(self)
-        self.root.after(5, self.cmd_win.to_front)
+        self.root.after(100, self.cmd_win.to_front)
 
     def loop(self):
         self.closed_evt = threading.Event()
@@ -172,7 +172,7 @@ class UserInterface():
         def _set_completion(self, i):
             if self._completion_cache is None:
                 s = self.cmd.get()
-                self._completion_cache = lib.get_all_completions(s)
+                self._completion_cache = lib.complete_all(s)
                 self._completion_index = 0
                 self._uncompleted_string = s
             else:

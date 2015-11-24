@@ -13,14 +13,9 @@ def txt():
     import os.path
     edit_file(os.path.expanduser("~/txt"),1)
 
-@cmd(args='?', async=True)
-def tea(t=3):
+@cmd(args=float, default=3, async=True)
+def tea(t):
     """ Tea timer """
     import time
-    if t:
-        t = int(t)
-    else:
-        t = 3
-    t = t*60
-    time.sleep(t)
-    show("Tee")
+    time.sleep(t*60)
+    MessageBox("Tee", "tee fertig", "TOPMOST SETFOREGROUND SYSTEMMODAL OK ICONINFORMATION")

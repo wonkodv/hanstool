@@ -78,7 +78,7 @@ def setup_readline():
         nonlocal completion_cache
         if n == 0:
             try:
-                completion_cache = list(lib.get_all_completions(text))
+                completion_cache = list(lib.complete_all(text))
             except:
                 traceback.print_exc()
             #print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')
