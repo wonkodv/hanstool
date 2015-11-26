@@ -117,23 +117,42 @@ class Test_Completion(unittest.TestCase):
 
     def test_py_completion(self):
         with patch("ht3.lib.Env") as mockEnv:
-            mockEnv.dict = {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}
-            c = lib.complete_py('t')
-            assert 'three' in c
-            assert 'two' in c
-            assert 'text' in c
-            assert not 'one' in c
+            with patch("ht3.lib.__builtins__", {
+                    'dict':dict,
+                    'len':len,
+                    'filter':filter,
+                    'sorted':sorted,
+                    'dir':dir}):
+                mockEnv.dict = {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}
 
-            c = lib.complete_py('text')
-            assert c == ['text']
+                c = lib.complete_py('FO')
+                self.assertListEqual(c, [])
 
-            c = lib.complete_py('text.')
-            self.assertIn('text.startswith', c)
-            self.assertIn('text.capitalize', c)
+                c = lib.complete_py('FO ')
+                self.assertListEqual(c, [])
 
-            c = lib.complete_py('text.s')
-            self.assertIn('text.startswith', c)
-            self.assertIn('text.strip', c)
+                c = lib.complete_py('FO BAR')
+                self.assertListEqual(c, [])
+
+                c = lib.complete_py('t')
+                self.assertListEqual(c, ['text', 'three', 'two'])
+
+                c = lib.complete_py('text')
+                self.assertListEqual(c, ['text'])
+
+                c = lib.complete_py('text ')
+                self.assertListEqual(c, []) # Is a command, not py, dont py complete
+
+                c = lib.complete_py('text foo')
+                self.assertListEqual(c, []) # Is a command, not py, dont py complete
+
+                c = lib.complete_py('text.')
+                self.assertIn('text.startswith', c)
+                self.assertIn('text.capitalize', c)
+
+                c = lib.complete_py('text.s')
+                self.assertIn('text.startswith', c)
+                self.assertIn('text.strip', c)
 
 class Test_fake(unittest.TestCase):
     def runSequence(self, string):

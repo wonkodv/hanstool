@@ -181,7 +181,9 @@ def load_scripts(path):
 #{{{ Completion
 
 def complete_all(string):
-    return complete_command(string) + complete_py(string)
+    comp = complete_command(string) + complete_py(string)
+    comp = sorted(set(comp)) # make unique
+    return comp
 
 def complete_command(string):
     c, sep, args = parse_command(string)
@@ -202,7 +204,7 @@ def complete_command(string):
 def complete_py(string):
     #s = re.split("[^a-zA-A0-9_.]", string)
     #string = s[-1]
-    parts = [s.strip() for s in string.split(".")]
+    parts = string.split(".")
 
     values = dict()
     values.update(__builtins__)
@@ -218,6 +220,7 @@ def complete_py(string):
             val = values[p0]
 
             for p in parts[1:-1]:
+                p = p.strip()
                 val = getattr(val, p)
 
             values = dir(val)
