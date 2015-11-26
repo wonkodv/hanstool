@@ -10,6 +10,7 @@ import traceback
 import shlex
 import warnings
 import re
+import time
 
 
 from .cmd import COMMANDS, cmd
@@ -256,6 +257,8 @@ Env(complete_py)
 Env(complete_command)
 Env(complete_all)
 
+Env(time.sleep)
+
 Env.__ = []
 Env._  = None
 
@@ -363,6 +366,7 @@ _fake_types = (
     ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
     ("STRING1",     r"'(?P<s1>[^']*)'"),
     ("STRING2",     r'"(?P<s2>[^"]*)"'),
+    ("SLEEP",       r'\((?P<sleep>[0-9.]+)\)'),
     ("INVALID",     r"\S+")
     )
 
@@ -370,25 +374,29 @@ _fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in _fake_types))
 
 
 @Env
-def fake(string):
+def fake(string,interval=10):
     """ Fake a sequence of Events, specified by a string in the
         following mini language:
         *   Whitespaces are ignored
         *   123X456 moves the mouse to x=123 and y=456, see mouse_move
         *   M1      Does a Mouse Click at the current mouse position
-                    With the left button. 2=Middle, 3=right
+                    With the left button. 2=Middle, 3=right, 4, 5
         *   +M2     Press but do not release the middle mouse button
         *   -M3     Release the right mouse button
-        *   'hans@fred.com'  Type hans' email address. No escaping. Tou can use
-                     single or double quotes
+        *   'hans@fred.com'  Type hans' email address. No escaping any char
+            except the closing quote is allowed in the string. You can use
+            single or double quotes for text that contains the other quote.
         *   +Key    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL,... see KEY_CODES
-        *   -A  Releaase A
+        *   -A  Release A
         *   A   Press, then release A
+        *   (10.3) sleep 10.3 ms
+        if an interval (in ms) is given, wait this long before every event (thus
+        twice when pressing and releasing keys/buttons). also before sleeps.
     """
 
     sequence = []
     def a(f, *a):
-        sequence.append((f, a))
+        sequence.append((f, a, m))
     for m in _fake_re.finditer(string):
         if   m.group("WHITESPACE"):
             pass
@@ -417,19 +425,28 @@ def fake(string):
 
         elif m.group("STRING1"):
             s = m.group('s1')
-            a(fake_input.type_string, s)
+            a(fake_input.type_string, s, interval)
 
         elif m.group("STRING2"):
             s = m.group('s2')
-            a(fake_input.type_string, s)
+            a(fake_input.type_string, s, interval)
+
+        elif m.group("SLEEP"):
+            t = float(m.group('sleep'))/1000
+            a(time.sleep, t)
 
         elif m.group("INVALID"):
             raise ValueError("Invalid Token", m.group(0))
         else:
             assert False, m
 
-    for c, a in sequence:
-        c(*a)
+    for c, a, m in sequence:
+        if interval:
+            time.sleep(float(interval)/1000)
+        try:
+            c(*a)
+        except:
+            raise Exception(m)
 
 
 Env.dict.update(vars(fake_input))

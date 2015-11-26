@@ -5,15 +5,17 @@ cmd(name=';',args=1, complete=complete_py)(execute_py_expression)
 cmd(name='?', args=1, complete=complete_all)(help_command)
 cmd(name=':', args=1)(fake)
 
-@cmd(name='=',args=1, complete=complete_py)
-def _show_eval(s):
+@cmd(name='=',args='?', complete=complete_py)
+def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
-    r = evaluate_py_expression(s)
-    Env._ = r
-    Env.__.append(r)
+    if s:
+        r = evaluate_py_expression(s)
+        Env._ = r
+        Env.__.append(r)
+    else:
+        r = None
     show(r)
     return None
-
 
 if Check.frontend('ht3.cli'):
     @cmd(name="$", args=1)
@@ -72,7 +74,7 @@ def add_command(script, name=None):
                 with s.open("ta") as f:
                     f.write("\n@cmd(name='"+name+"', args=0)\ndef "+name+"():\n    pass")
             with s.open("rt") as f:
-                l = len(list(f.read()))
+                l = len(list(f))
             edit_file(s, l)
 
 @cmd(name="<", args='path')
@@ -146,4 +148,3 @@ if Check.frontend('ht3.gui'):
     def _():
         ht3.gui.cmd_win_stay_on_top()
         ht3.gui.cmd_win_set_rect(4, 46, 75, 22)
-

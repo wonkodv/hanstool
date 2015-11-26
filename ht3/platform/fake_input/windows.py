@@ -1,5 +1,6 @@
 from ctypes import windll
 from ..keycodes import KEY_CODES
+import time
 
 
 __all__ = ['type_string', 'mouse_wheel', 'mouse_move', 'mouse_down', 'mouse_up', 'key_down', 'key_up']
@@ -70,25 +71,39 @@ def key_down(vk):
 def key_up(vk):
     keybd_event(vk, 42, KEYEVENTF_KEYUP, 0)
 
-def type_string(s):
+def type_string(s, interval=0):
+    if interval:
+        def i():
+            time.sleep(float(interval)/1000)
+    else:
+        def i():
+            pass
     for c in s:
         x = keyscan(ord(c))
         if x < 0:
             raise OSError("Cannot get keycode")
 
         if x & 0x100:
+            i()
             key_down(KEY_CODES['SHIFT'])
         if x & 0x200:
+            i()
             key_down(KEY_CODES['CTRL'])
         if x & 0x400:
+            i()
             key_down(KEY_CODES['ALT'])
+        i()
         key_down(x&0xff)
+        i()
         key_up(x&0xff)
         if x & 0x400:
+            i()
             key_up(KEY_CODES['ALT'])
         if x & 0x200:
+            i()
             key_up(KEY_CODES['CTRL'])
         if x & 0x100:
+            i()
             key_up(KEY_CODES['SHIFT'])
 
 
