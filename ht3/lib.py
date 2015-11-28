@@ -183,7 +183,6 @@ def load_scripts(path):
 
 def complete_all(string):
     comp = complete_command(string) + complete_py(string)
-    comp = sorted(set(comp)) # make unique
     return comp
 
 def complete_command(string):
