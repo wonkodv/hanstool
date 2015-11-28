@@ -294,9 +294,9 @@ def help(obj):
 @Env
 def handle_exception(exc):
     if GUI:
-        show(traceback.format_exc())
+        show(traceback.format_exc(exc))
     else:
-        raise obj
+        raise exc
 
 # Extended User API
 

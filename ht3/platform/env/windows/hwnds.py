@@ -4,13 +4,27 @@ from ht3.lib import Env
 @Env
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
     if spec is ...:
-        return ctypes.windll.user32.FindWindowExW(parent, adter, cls, name)
+        return ctypes.windll.user32.FindWindowExW(parent, after, cls, title)
     if parent or after or cls or title:
         raise ValueError()
     w = ctypes.windll.user32.FindWindowW(spec, None)
     if not w:
         w = ctypes.windll.user32.FindWindowW(None, spec)
     return w
+
+class Rect(ctypes.Structure):
+    _fields_ = [("left", ctypes.c_ulong),
+                ("top", ctypes.c_ulong),
+                ("right", ctypes.c_ulong),
+                ("bottom", ctypes.c_ulong)
+            ]
+
+@Env
+def GetWindowRect(hwnd):
+    r = Rect(0,0,0,0)
+    p = ctypes.pointer(r)
+    ctypes.windll.user32.GetWindowRect(hwnd, p)
+    return r.left, r.top, r.right - r.left, r.bottom - r.top
 
 @Env
 def SetParent(child, parent):
@@ -36,4 +50,16 @@ def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., fl
         after = 0
     if not ctypes.windll.user32.SetWindowPos(hwnd, after, left, top, width, height, flags):
         raise OSError("win32API Error", ctypes.windll.kernel32.GetLastError())
+@Env
+def GetTaskBarHandle():
+    h = FindWindow(cls='Shell_TrayWnd')
+    if not h:
+        raise OSError("Can't find 'Shell_TrayWnd'")
+    h = FindWindow(parent=h, cls='ReBarWindow32')
+    if not h:
+        raise OSError("Can't find 'ReBarWindow32'")
+    h = FindWindow(parent=h, cls='ToolbarWindow32', title='hanstool')
+    if not h:
+        raise OSError("Can't find 'ToolbarWindow32','hanstool'")
 
+    return h

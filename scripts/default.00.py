@@ -147,4 +147,3 @@ if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _():
         ht3.gui.cmd_win_stay_on_top()
-        ht3.gui.cmd_win_set_rect(4, 46, 75, 22)
