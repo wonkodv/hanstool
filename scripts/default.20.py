@@ -1,8 +1,13 @@
+
 cmd(exit)
+
+# Helpers
 cmd(name='l')(list_commands)
 cmd(name='e')(list_env)
-cmd(name=';',args=1, complete=complete_py)(execute_py_expression)
 cmd(name='?', args=1, complete=complete_all)(help_command)
+
+# Some Eval Python functions
+cmd(name=';',args=1, complete=complete_py)(execute_py_expression)
 cmd(name=':', args=1)(fake)
 
 @cmd(name='=',args='?', complete=complete_py)
@@ -17,7 +22,11 @@ def _show_eval(s=""):
     show(r)
     return None
 
+
+# Execute Programms and Shell
+
 if Check.frontend('ht3.cli'):
+    # Programms should run in foreground when invoked from CLI
     @cmd(name="$", args=1)
     def _shell(arg):
         p = ht3.lib.shell(arg)
@@ -32,7 +41,7 @@ if Check.frontend('ht3.cli'):
             return p.wait()
         return p
 
-    # disconnect stdinout for bg
+    # TODO disconnect stdinout for bg
     @cmd(name="$&", args=1)
     def _shell_bg(arg):
         p = ht3.lib.shell(arg)
@@ -43,23 +52,58 @@ if Check.frontend('ht3.cli'):
         p = ht3.lib.execute(*args)
         return p
 else:
+    # Programms should run in background when invoked from other frontends
     cmd(name="$", args=1)(shell)
     cmd(name="!", args="shell")(execute)
 
-def edit_file(file_name, line=1):
-    f = shellescape(str(file_name)) # allow paths
-    l = int(line)
-    e = os.environ.get('EDITOR', 'gvim')
-    if e.endswith('vim'):
-        shell("%s %s +%d"%(e, f, l))
-    else:
-        shell("%s %s"%(e, f))
 
-@cmd(name="+", args=COMMANDS)
+def _():
+    import os
+    import os.path
+
+    if 'EDITOR' in os.environ:
+        import shlex
+        e = shlex.split(os.environ['EDITOR'])
+    elif Check.os.posix:
+        if Check.frontend('ht3.cli'):
+            EDITOR=['vim']
+        else:
+            EDITOR=['gvim']
+    elif Check.os.win:
+        e = r"C:\Program Files (x86)\Notepad++\notepad++.exe"
+        if os.path.exists(e):
+            e = [e]
+        else:
+            e = ['notepad.exe']
+    Env.EDITOR = e
+_()
+
+def edit_file(file_name, line=1):
+    f = str(file_name) # allow paths
+    l = int(line)
+    e = Env.EDITOR
+    if e[0].endswith('vim'):
+        args = e + [f, '+%d'%l ]
+    if e[0].endswith('notepad++.exe'):
+        args = e + ['-n%d'%l, f]
+    else:
+        args = e + [f]
+    p = execute(*args)
+    return p
+
+@cmd(name="+", args="1", complete=complete_all)
 def edit_command(c):
-    """ Edit the location where a command was defined """
-    f, l = c.origin
+    """ Edit the location where a command or function was defined """
+    if c in COMMANDS:
+        f, l = COMMANDS[c].origin
+    else:
+        o = evaluate_py_expression(c)
+        import inspect
+        if not inspect.isfunction(o):
+            raise TypeError("Not a function", o)
+        f, l = inspect.getsourcefile(o), o.__code__.co_firstlineno
     edit_file(f, l)
+
 
 @cmd(name="++", args="shell")
 def add_command(script, name=None):
@@ -82,7 +126,6 @@ def run_command_file(p):
     with p.open('rt') as f:
         for l in f:
             run_command(l)
-
 
 @cmd(args=1, complete=lambda s:COMMANDS.keys())
 def debug(what):

@@ -1,7 +1,6 @@
 if not Check.os.win:
     raise NotImplementedError()
 
-
 @cmd(name='o', args=1)
 def shellexecute(s):
     """ Shell Execute, windows's all purpose opening function for files and programms """
@@ -25,15 +24,12 @@ def explore_command(cmd):
 
 if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start
-    def _():
+    def _place_cmd_win_over_taskbar_toolbar():
         h = GetTaskBarHandle()
         r = GetWindowRect(h)
         show(r)
         ht3.gui.cmd_win_set_rect(*r)
 
-
-
-if Check.frontend('ht3.gui'):
     @Env
     def DockInTaskbar():
         c = ht3.gui.GUI.cmd_win.window.winfo_id()
