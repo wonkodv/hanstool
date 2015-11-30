@@ -22,8 +22,9 @@ class Rect(ctypes.Structure):
 @Env
 def GetWindowRect(hwnd):
     r = Rect(0,0,0,0)
-    p = ctypes.pointer(r)
-    ctypes.windll.user32.GetWindowRect(hwnd, p)
+    p = ctypes.byref(r)
+    if not ctypes.windll.user32.GetWindowRect(hwnd, p):
+        raise ctypes.WinError()
     return r.left, r.top, r.right - r.left, r.bottom - r.top
 
 @Env
@@ -54,12 +55,12 @@ def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., fl
 def GetTaskBarHandle():
     h = FindWindow(cls='Shell_TrayWnd')
     if not h:
-        raise OSError("Can't find 'Shell_TrayWnd'")
+        raise ctypes.WinError()
     h = FindWindow(parent=h, cls='ReBarWindow32')
     if not h:
-        raise OSError("Can't find 'ReBarWindow32'")
+        raise ctypes.WinError()
     h = FindWindow(parent=h, cls='ToolbarWindow32', title='hanstool')
     if not h:
-        raise OSError("Can't find 'ToolbarWindow32','hanstool'")
+        raise ctypes.WinError()
 
     return h

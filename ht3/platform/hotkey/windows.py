@@ -1,4 +1,4 @@
-from ctypes import windll, pointer
+from ctypes import windll, byref
 from ctypes.wintypes import MSG
 
 MODIFIERS = {
@@ -18,7 +18,7 @@ def unregister_hotkey(id):
 
 def hotkey_loop():
     msg = MSG()
-    lpmsg = pointer(msg)
+    lpmsg = byref(msg)
 
     while 1:
         while windll.user32.PeekMessageW(lpmsg, 0, 0, 0, 1):
