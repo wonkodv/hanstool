@@ -1,5 +1,6 @@
 import ctypes
-from ht3.lib import Env
+from ctypes.wintypes import RECT
+from ht3.env import Env
 
 @Env
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
@@ -12,16 +13,9 @@ def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
         w = ctypes.windll.user32.FindWindowW(None, spec)
     return w
 
-class Rect(ctypes.Structure):
-    _fields_ = [("left", ctypes.c_ulong),
-                ("top", ctypes.c_ulong),
-                ("right", ctypes.c_ulong),
-                ("bottom", ctypes.c_ulong)
-            ]
-
 @Env
 def GetWindowRect(hwnd):
-    r = Rect(0,0,0,0)
+    r = RECT(0,0,0,0)
     p = ctypes.byref(r)
     if not ctypes.windll.user32.GetWindowRect(hwnd, p):
         raise ctypes.WinError()

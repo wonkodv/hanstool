@@ -1,3 +1,5 @@
+__all__ = ['Env']
+
 class Env_class:
     """ Class to record all variables and functions of
     all scripts and command invocations in one namespace """
@@ -34,3 +36,6 @@ class Env_class:
 
     def __repr__(self):
         return str(self.dict)
+
+Env = Env_class()
+

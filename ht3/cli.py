@@ -8,7 +8,9 @@ import logging
 import threading
 
 from . import lib
-from .lib import Env
+from .env import Env
+from .command import run_command
+from .complete import complete_all
 
 try:
     import readline
@@ -34,7 +36,7 @@ def loop():
             return
         if s:
             try:
-                result = lib.run_command(s)
+                result = run_command(s)
             except KeyboardInterrupt:
                 print("\n!!Aborted")
             except SystemExit:
@@ -78,7 +80,7 @@ def setup_readline():
         nonlocal completion_cache
         if n == 0:
             try:
-                completion_cache = list(lib.complete_all(text))
+                completion_cache = list(complete_all(text))
             except:
                 traceback.print_exc()
             #print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')

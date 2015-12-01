@@ -1,6 +1,4 @@
 
-cmd(exit)
-
 # Helpers
 cmd(name='l')(list_commands)
 cmd(name='e')(list_env)
@@ -22,6 +20,11 @@ def _show_eval(s=""):
     show(r)
     return None
 
+@cmd
+def exit():
+    import sys
+    sys.exit(0)
+
 
 # Execute Programms and Shell
 
@@ -29,14 +32,14 @@ if Check.frontend('ht3.cli'):
     # Programms should run in foreground when invoked from CLI
     @cmd(name="$", args=1)
     def _shell(arg):
-        p = ht3.lib.shell(arg)
+        p = shell(arg)
         if Check.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
     @cmd(name="!", args="shell")
     def _execute(args):
-        p = ht3.lib.execute(*args)
+        p = execute(*args)
         if Check.current_frontend('ht3.cli'):
             return p.wait()
         return p
@@ -44,12 +47,12 @@ if Check.frontend('ht3.cli'):
     # TODO disconnect stdinout for bg
     @cmd(name="$&", args=1)
     def _shell_bg(arg):
-        p = ht3.lib.shell(arg)
+        p = shell(arg)
         return p
 
     @cmd(name="!&", args="shell")
     def _execute_bg(args):
-        p = ht3.lib.execute(*args)
+        p = execute(*args)
         return p
 else:
     # Programms should run in background when invoked from other frontends
@@ -79,17 +82,20 @@ def _():
 _()
 
 def edit_file(file_name, line=1):
-    f = str(file_name) # allow paths
+    f = str(file_name) # allow pathlib.Path
     l = int(line)
-    e = Env.EDITOR
-    if e[0].endswith('vim'):
-        args = e + [f, '+%d'%l ]
-    if e[0].endswith('notepad++.exe'):
-        args = e + ['-n%d'%l, f]
+    e = Env.EDITOR[0]
+    if e[-4:] == '.exe':
+        e = e[:-4]
+    if e.endswith('vim'):
+        args = Env.EDITOR + [f, '+%d'%l ]
+    elif e.endswith('notepad++'):
+        args = Env.EDITOR + ['-n%d'%l, f]
     else:
-        args = e + [f]
+        args = EDITOR + [f]
     p = execute(*args)
-    return p
+    if Check.current_frontend == 'ht3.cli':
+        p.wait()
 
 @cmd(name="+", args="1", complete=complete_all)
 def edit_command(c):
@@ -130,8 +136,8 @@ def run_command_file(p):
 @cmd(args=1, complete=lambda s:COMMANDS.keys())
 def debug(what):
     """ Debug a Command """
-    import pdb, ht3.lib
-    pdb.runcall(ht3.lib.run_command, what)
+    import pdb, ht3.command
+    pdb.runcall(ht3.command.run_command, what)
 
 
 @cmd
@@ -140,8 +146,8 @@ def py():
     import sys
     return execute(sys.executable)
 
-@cmd
-def restart():
+@cmd(args="shell")
+def restart(*more_args):
     """ Check if all loaded Scripts can be compiled and then restart the python
         programm using sys.executable, "-m ht3" and args, where args is all
         -f, -s and -r args, NOT -x.
@@ -179,6 +185,23 @@ def restart():
         else:
             assert a == '-x'
             next(it)    # dont execute -x
+
+    it = iter(more_args)
+    for a in it:
+        if a in ['-f', '-s', '-x']:
+            args += [a, next(it)]
+        elif a == '-e':
+            k = next(it)
+            v = next(it)
+            if v == '_RESTARTED':
+                v=str(int(v)+1)
+            args += [a, k, v]
+        elif a == '-r':
+            args += [a]
+        else:
+            raise ValueError("Unsupported Argument", a)
+
+
     os.execv(sys.executable, args)
 
 if Check.frontend('ht3.gui', 'ht3.hotkey'):

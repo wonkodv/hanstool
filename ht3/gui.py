@@ -6,7 +6,9 @@ import queue
 import threading
 
 from . import lib
-from .lib import Env
+from .env import Env
+from .command import run_command
+from .complete import complete_all
 
 GUI = None
 
@@ -34,20 +36,12 @@ class UserInterface():
     def close_soon(self):
         self.closed_evt.set()
 
-    def log(self, msg, *args, **kwargs):
-        if isinstance(msg, str):
-            if kwargs:
-                if args:
-                    raise ValueError("args or kwargs")
-                msg = msg % kwargs
-            else:
-                msg = msg % args
-        else:
-            msg = repr(msg)
+    def log(self, *args, **kwargs):
+        msg = lib.format_log_message(*args, **kwargs)
         self.log_win.log(msg)
 
-    def show(self, msg, *args, **kwargs):
-        self.log(msg, *args, **kwargs)
+    def show(self, *args, **kwargs):
+        self.log(*args, **kwargs)
         self.log_win.show()
 
     def run_command(self, string):
@@ -55,7 +49,7 @@ class UserInterface():
             self.cmd_win._set_state("Working")
             self.log("Run Cmd: %s", string)
             try:
-                result = lib.run_command(string)
+                result = run_command(string)
             except Exception as e:
                 self.cmd_win._set_state("Error")
                 e = traceback.format_exc()
@@ -172,7 +166,7 @@ class UserInterface():
         def _set_completion(self, i):
             if self._completion_cache is None:
                 s = self.cmd.get()
-                self._completion_cache = lib.complete_all(s)
+                self._completion_cache = complete_all(s)
                 self._completion_index = 0
                 self._uncompleted_string = s
             else:
@@ -294,7 +288,7 @@ def help(obj):
 @Env
 def handle_exception(exc):
     if GUI:
-        show(traceback.format_exc(exc))
+        show(traceback.format_exc())
     else:
         raise exc
 

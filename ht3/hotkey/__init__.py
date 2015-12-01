@@ -3,8 +3,17 @@ import threading
 import warnings
 import time
 
-from . import lib
-from .platform.hotkey import *
+from ht3.lib import Check
+from ht3.keycodes import KEY_CODES
+
+from ht3 import env
+from ht3 import command
+
+if Check.os.win:
+    from .windows import *
+
+
+__all__ = ['register_hotkey', 'unregister_hotkey', 'hotkey_loop', 'MODIFIERS', 'KEY_CODES']
 
 def translate_hotkey(s):
     parts = s.split('+')
@@ -16,29 +25,26 @@ def translate_hotkey(s):
 
     return mod, vk
 
-
 _message_loop_running = threading.Event()
 
 def loop():
     _message_loop_running.clear()
 
-
     hotkeys = []
 
-    for c in lib.COMMANDS.values():
+    for c in command.COMMANDS.values():
         h = c.attrs.get('HotKey',None)
         if h:
             mod, vk = translate_hotkey(h)
             id = len(hotkeys)
             hotkeys.append([c, h])
 
-            r = register_hotkey(id, mod, vk)
-
-            if not r:
-                warnings.warn("Can not register HotKey "+h)
+            try:
+                register_hotkey(id, mod, vk)
+            except Exception as e:
+                env.Env.handle_exception(e)
             else:
-                lib.Env.log("Register Hotkey %d, %s mod=%r vk=%r: %r" % (id, h, mod, vk, r))
-
+                env.Env.log("Register Hotkey: id=%d hk=%s mod=%r vk=%r" % (id, h, mod, vk))
 
     hotkey_iter = hotkey_loop()
 
@@ -48,19 +54,21 @@ def loop():
             time.sleep(0.05)
             continue
         if id < 0 or id >= len(hotkeys):
-            warning.warn("Invalid Hotkey ID")
+            lib.handle_exception(ValueError("Invalid Hotkey ID"))
             continue
         c, h = hotkeys[id]
         try:
             r = c()
-            lib.Env.log("Hotkey %s: %s => %r", h, c.name, r)
+            env.Env.log("Hotkey %s: %s => %r", h, c.name, r)
         except Exception as e:
-            lib.Env.handle_exception(e)
+            env.Env.handle_exception(e)
     hotkey_iter.close()
 
     for i in range(len(hotkeys)):
-        if not unregister_hotkey(i):
-            warnings.warn("Can not unregister HotKey "+str(hotkeys[i][1]))
+        try:
+            unregister_hotkey(i)
+        except Exception as e:
+            env.Env.handle_exception(e)
 
 def stop():
     _message_loop_running.set()

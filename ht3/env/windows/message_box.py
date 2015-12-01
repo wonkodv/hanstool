@@ -1,5 +1,5 @@
 import ctypes
-from ht3.lib import Env
+from ht3.env import Env
 from functools import reduce
 import operator
 

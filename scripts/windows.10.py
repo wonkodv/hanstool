@@ -7,27 +7,36 @@ def shellexecute(s):
     from ctypes import windll
     windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
 
-@cmd(args=COMMANDS, name="#")
+@cmd(args="1", complete=complete_command, name="#")
 def explore_command(cmd):
     """ Show the directory or file used in the target commands source in explorer"""
     from pathlib import Path
-    for c in cmd.__wrapped__.__code__.consts:
-        if isinstance(str, c):
-            try:
-                p = Path(c)
-                if p.exists():
-                    if not p.is_dir():
-                        p = p.parent
-                    execute("explorer","/select"+str(p))
-            except:
-                pass
+    import functools
+
+    w = COMMANDS[cmd].__wrapped__
+
+    strings = []
+    if isinstance(w, functools.partial):
+        strings = w.args
+    else:
+        strings = [s for s in w.__code__.co_consts if isinstance(s, str)]
+    try:
+        for s in strings:
+            p = Path(s)
+            if p.exists():
+                if p.is_dir():
+                    execute("explorer",str(p))
+                else:
+                    shell('explorer /select,"'+str(p)+'"')
+                return
+    except:
+        pass
 
 if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _place_cmd_win_over_taskbar_toolbar():
         h = GetTaskBarHandle()
         r = GetWindowRect(h)
-        show(r)
         ht3.gui.cmd_win_set_rect(*r)
 
     @Env
@@ -36,4 +45,15 @@ if Check.frontend('ht3.gui'):
         h = GetTaskBarHandle()
         left, top, width, height = GetWindowRect(h)
         ht3.gui.cmd_win_set_rect(0, 0, width, height)
+
+        def to_front(*args):
+            ht3.gui.cmd_win_to_front()
+
+        # Hack because after Docking, The mouse click activation doesn't work
+        ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
+        ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
+        ht3.gui.GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)
+        ht3.gui.GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
+
         SetParent(c, h)
+

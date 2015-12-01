@@ -5,40 +5,48 @@ Things that need to be done sometime:
 
 ## Soon
 
+
 License:
 *   GPL all the files
 
 Code Cleanup
 *   Make all of it PEP8
 
-GUI:
-*   Most things
-
+*   Collect all scripts, load at once
 
 ## Sometime
 
+### Setup
+
+*   setup.py
+
+    `dirname $0`/../scripts
+    look for scripts in ~/.config/ht3/
+
+
 ### Documentation
 What functions to overwrite:
-*	CLI_PROMPT
-*	`_command_not_found_hoot`
+*   `cli_prompt`
+*   `command_not_found_hook`
+*   `handle_exception`
 
 More Examples
+Generate Examples.md from scripts/
+
 
 ### Features
 
-*	setup.py
-
-* 	ArgParsing:
-	*   getopt
-	*   getlongopt
-	*   The weird spec for which a stub exists
+*   ArgParsing:
+*   getopt
+*   getlongopt
+*   The weird spec for which a stub exists
 
 ### Stabillity
 
 Create Unit Tests tht test:
 *   Argparsers
-*	`parse_command` and `run_command`
 *   `load_script` sorting
+
 
 TestScript:
 *   Script which uses many functionallity of HT3,

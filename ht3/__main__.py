@@ -1,6 +1,9 @@
 import sys
 
 from . import lib
+from .command import run_command
+from .env import Env
+from .env import initial
 
 HELP= """ look in the README.md under _COMMAND LINE_ or _Environment_ for help !  """
 
@@ -18,7 +21,7 @@ def main(args):
             elif a == '-e':
                 k = next(arg_iter)
                 v = next(arg_iter)
-                lib.Env[k]= v
+                Env[k]= v
             elif a == '-f':
                 f = next(arg_iter)
                 lib.load_frontend(f)
@@ -28,7 +31,7 @@ def main(args):
                 _r = True
             elif a == '-x':
                 s = next(arg_iter)
-                lib.run_command(s)
+                run_command(s)
                 _x = True
             else:
                 if a not in ['-h','--help','/?','/help']:
@@ -43,7 +46,7 @@ def main(args):
             lib.run_frontends()
         return 0
     except:
-        if lib.Env.get('DEBUG',False):
+        if Env.get('DEBUG',False):
             import pdb
             pdb.post_mortem()
         raise

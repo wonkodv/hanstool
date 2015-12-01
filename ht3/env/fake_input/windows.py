@@ -1,5 +1,5 @@
 from ctypes import windll
-from ..keycodes import KEY_CODES
+from ht3.keycodes import KEY_CODES
 import time
 
 
