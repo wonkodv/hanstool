@@ -107,25 +107,7 @@ wrapper does not apear anywhere else.
     *   `vb xp` starts a specific virtualbox which has winxp in it.
     *   `mdel` deletes the currently playing Song from the playlist, saves that playlist
     *   `|` opens that one game where you lay out waterpipes. (cant remember what its called)
-*   Argument Parsing Strategies:
-    *   `0` no arguments (the default) the command `foo` results in the python statement
-        `COMMANDS['foo']()`. If the name of the command is the same as the command-fucntion (default)
-        this is equal to the python statement `foo()`. The examples below assume this.
-    *   `1` passes the entire string that follows the command-name to the command-function
-        `foo bar -baz="42'+3"   ` is the same as the python statement `foo('bar -baz="42\'+3"')`
-        raises a value error if there is no argument (`foo` and `foo    `)
-    *   `?` is like the above but does not raise an error
-        `foo arg` makes `foo('arg')`
-        `foo    ` makes `foo()`
-    *   `shell` does shell like parsing (considering whitespaces and quotes, no variable expansion)
-        `foo bar "baz " "'5 + "4'2'` makes `foo("bar", "baz", "5 + 42")
-    *   `getopt` to make things very shell like, if you know what getopt is, there 
-        will be no suprises for you there, if not, you better stay away from it.
-    *   `getlongopt` like `getopt` but even more so.
-    *   `set` like `1` but has to be one of a set of args
-    *   `dict` like `set` but has to be a key of a dictionary. The lookup value is passed to the fucntion
-    *   `path` like `1`. Must be an absolute or relative (to the current dir) path. Is passed as a Path object.
-    *   a callable like `int` or `float`: will take the entire string pass it through the function an pass result as the 1 argument.
+*   Arguments to `!` should be parsed with the `shell` strategy
 *   Function: A Command-function is a normal python function with a `cmd` decorator. The decorator
     takes some optional keyword arguments with which you specify:
     *   Name: defautls to the function Name
@@ -133,6 +115,29 @@ wrapper does not apear anywhere else.
     *   more kwargs that are passed to the Argument parser
     *   more kwargs that become attributes of the command, which can be scanned by other componentes (e.g. Hotkeys, ...)
 
+Argument Parsing Methods
+-------------------------
+
+*   `0` no arguments (the default) the command `foo` results in the python statement
+    `COMMANDS['foo']()`. If the name of the command is the same as the command-fucntion (default)
+    this is equal to the python statement `foo()`. The examples below assume this.
+*   `1` passes the entire string that follows the command-name to the command-function
+    `foo bar -baz="42'+3"   ` is the same as the python statement `foo('bar -baz="42\'+3"')`
+    raises a value error if there is no argument (`foo` and `foo    `)
+*   `?` is like the above but does not raise an error
+    `foo arg` makes `foo('arg')`
+    `foo    ` makes `foo()`
+*   `shell` does shell like parsing (considering whitespaces and quotes, no variable expansion)
+    `foo bar "baz " "'5 + "4'2'` makes `foo("bar", "baz", "5 + 42")
+*   `getopt` to make things very shell like, if you know what getopt is, there 
+    will be no suprises for you there, if not, you better stay away from it.
+*   `getlongopt` like `getopt` but even more so.
+*   `set` like `1` but has to be one of a set of args
+*   `dict` like `set` but has to be a key of a dictionary. The lookup value is passed to the fucntion
+*   `path` like `1`. Must be an absolute or relative (to the current dir) path. Is passed as a Path object.
+*   a callable like `int` or `float`: will take the entire string pass it through the function an pass result as the 1 argument.
+
+Most argument parsers accept a `default`.
 
 The one unified Namespace `Env`
 -------------------------------
@@ -159,22 +164,32 @@ name on module level. But it still beats `bash` ([1]).
 Some Default Commands
 -----------------
 
-*   `!` executes programms. `! gvim ~/txt` opens txt in gvim.
-    The `!` comand has argument parsing strategy `shell` so the command-function
-    is invoked with 2 arguments, the strings `gvim` and `~/txt`. It
-    executes the first one, an passes the second as argument. gvim
-    has to deal with he tilde character. Since vim is awesome, this works. If you
-    used this with notepad.exe, which is not awesome, it would not work.
+*   `l` List all commands
+*   `exit` Close the tool
+*   `=` evaluate a python statment and show the result: `= 1+1*1+1`
+*   `;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
+*   `?` help on commands or python objects: `? exit` `? sys`
+*   `+` open the editor where a command or other function was defined
+*   `++ [s] [c]` open the script that matches `s`. If given, add template for a new command
+    named `c`
 *   `$` calls the Shell. `$ wc -l ~/txt > ~/txt-len` writes the length of txt to txt-len
     The `$` command has argumennt parsing `1` because the function wants the entire
     text after the dolalr sign, open a shell, and let that shell figure out what to
     do with the string.
-*   `l` List all commands
-*   `exit` Close the tool
-*   `;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
-*   `=` evaluate and print a python statment: `= 1+1*1+1`
-*   '?' help on commands or python objects: `? exit` `? sys`
-
+*   `!` executes programms. `! gvim ~/txt` opens txt in gvim.
+    The `!` comand has argument parsing strategy `shell` so the command-function
+    is invoked with 2 arguments, the strings `gvim` and `~/txt`. It
+    executes the first one, an passes the second as argument. `gvim`
+    has to deal with he tilde character. Since vim is awesome, this works. If you
+    used this with notepad.exe, which is not awesome, it would not work.
+    Note that on windows, argument parsing can be rather weird, for example
+    `! explorer "/select,C:\Program Files\Notepad++\Notepad++.exe"` does not work
+    but `$ explorer /select,"C:\Program Files\Notepad++\Notepad++.exe"` works.
+*   `#` open the target command's file in explorer. If you have a command that
+    executes "notepad++", the `# n++` command would open explorer with the
+    notepad++.exe selected.  Works by inspecting the code of a command function
+    and taking the first string constant names an existing file. Only on
+    windows.
 
 Frontends
 -----------
@@ -198,9 +213,9 @@ At least one Frontend should put the following functions in `Env`:
 A Frontend should propably provide a function (decorator) so scripts can register functions
 that are executed at the start of the frontend's `loop` after some initialization happened.
 
-Frontends should mainly call the following functions from `ht3.lib`:
-*   `run_command(string)`   to do what the user typed
-*   `get_completion(string)` to complete what the user started to type
+Frontends should mainly call the following functions:
+*   `ht3.command.run_command(string)`   to do what the user typed
+*   `ht3.complete.get_completion(string)` to complete what the user started to type
 
 Frontends can get information (names, doc, hotkey, ...) about registered commands from `ht3.lib.COMMANDS`
 
@@ -213,6 +228,8 @@ Some Behaviour can be configured by setting things in the `Env`.
     not specify a command. Defaults to evaluating or executing as python code.
 *   `CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
 *   `RL_HISTORY`: a string that points to a file with the history of the repl.
+*   `DEBUG`: set to true to do post mortem pdb debugging and show traces with all
+        `log` and `show` messages
 
 Strings can be configured via environment, but require a `HT3_` prefix, for
 example in `.bashrc`:
@@ -254,3 +271,24 @@ into your Environment and glue them to the `command_not_found_hook`.
 
 [2]: https://amoffat.github.io/sh/
 [3]: https://plumbum.readthedocs.org/en/latest/
+
+
+TEST
+-----
+
+There is a set of `unittest.TestCase` unit tests `test` that can be run with
+`python -m unittest` or `py.test` or other `unittest`-compatible test runners.
+
+There is also an integration test using `test_scripts` which defines some
+commands which can be run (once) with the `test` command to test that they were registered
+in the expected way.
+
+Use `test` command to quickly run the integration test:
+
+    python -m ht3 -s test_scripts -x test
+
+use `test` and `ht3.cli` to run tests and open a prompt where you can enter more stuff:
+
+    python -m ht3 -s test_scripts -x 'test' -f ht3.cli
+
+I mapped this to `<F5>` in my editor.

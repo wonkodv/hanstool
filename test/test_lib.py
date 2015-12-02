@@ -64,8 +64,6 @@ class Test_check(unittest.TestCase):
             #TODO: assert Check.os.linux
 
     def test_currnet_frontend(self):
-        with self.assertRaises(AttributeError):
-            lib.Check.current_frontend('ht3.cli')
         with patch('ht3.lib.FRONTEND_LOCAL') as fl:
             fl.frontend='testfe'
             assert lib.Check.current_frontend('testfe')

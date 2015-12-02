@@ -18,8 +18,6 @@ Code Cleanup
 
 ### Setup
 
-*   setup.py
-
     `dirname $0`/../scripts
     look for scripts in ~/.config/ht3/
 
@@ -43,12 +41,19 @@ Generate Examples.md from scripts/
 
 ### Stabillity
 
-Create Unit Tests tht test:
+Unittests:
 *   Argparsers
-*   `load_script` sorting
+*   Documentation of Commands
+*   all params of `register_command`
+*   `execute_command`
 
 
-TestScript:
-*   Script which uses many functionallity of HT3,
-    has a cmd test which invokes some of them plus unittests
+Integration Tests:
+*   showing and logging of return values
 
+Automated Tests with Travis:
+*   .travis.yml
+
+    python:  3.5
+    install: python setup.py install
+    script:  python -m ht3 -s test_scripts -x "test" -s "unittest"
