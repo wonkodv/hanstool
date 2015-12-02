@@ -122,8 +122,9 @@ def load_scripts(path):
             c = f.read()
         c = compile(c, str(path), "exec")
         try:
-            env.Env.__FILE__ = str(path.absolute())
+            env.Env['__FILE__'] = str(path.absolute())
             exec (c, env.Env.dict)
+            del env.Env['__FILE__']
         except NotImplementedError:
             # Script wanted to be ignored
             pass

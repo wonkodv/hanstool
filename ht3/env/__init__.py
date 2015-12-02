@@ -20,6 +20,9 @@ class Env_class:
     def __setitem__(self, key, val):
         self.dict[key] = val
 
+    def __delitem__(self, key):
+        del self.dict[key]
+
     def get(self, key, default=None):
         return self.dict.get(key, default)
 

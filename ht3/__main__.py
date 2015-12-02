@@ -5,9 +5,36 @@ from .command import run_command
 from .env import Env
 from .env import initial
 
-HELP= """ look in the README.md under _COMMAND LINE_ or _Environment_ for help !  """
+
+DEFAULT_SCRIPTS_TEXT='''Using the default scripts. You should copy them to ~/.config/ht3
+and modify them:
+    sh$ mkdir -p ~/.config/ht3/
+    sh$ cp "%s/*" ~/.config/ht3/
+    sh$ touch ~/.config/tools.50.py
+    sh$ ht
+    ht> l
+    ht> e
+    ht> ++ tools newComand
+If you already have script(s), use them with -s.  '''
+HELP= """call ht with the following arguments:
+    -s SCRIPT   Load a script
+    -s FOLDER   Load several scripts
+    -f FRONTEND Load a frontend (dont start it yet)
+    -e VAR VAL  Set a Variable to a string value
+    -x COMMAND  execute a command
+    -r          Run all loaded Frontends """
 
 def main(args):
+    if not args:
+        import pathlib
+        p = pathlib.Path('~/.config/ht3')
+        if p.is_dir():
+            lib.load_scripts(p)
+        else:
+            import pkg_resources
+            s = pkg_resources.resource_filename(__name__,'default_scripts')
+            print(DEFAULT_SCRIPTS_TEXT % s)
+            args = ['-s', s]
     try:
         _x = False
         _f = False
@@ -42,6 +69,7 @@ def main(args):
         if (not _r and _f):
             lib.run_frontends()
         elif (not _f and not _x):
+            print("Loading default frontend `ht3.cli` Load others with `-f`")
             lib.load_frontend('ht3.cli')
             lib.run_frontends()
         return 0

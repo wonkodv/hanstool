@@ -1,5 +1,13 @@
+TL;DR
+-----
+
+    pip install git+https://github.com/wonkodv/hanstool
+    ht
+
+
 HansTool 3
 ========
+
 
 A third attempt, this time with python:)
 

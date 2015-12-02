@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-
-d="$0"
-d="`readlink -f "$d"`"
-d="`dirname "$d"`"
-d="`dirname "$d"`"
-export PYTHONPATH="$d:$PYTHONPATH"
-exec python3 -m ht3 -s "$d/scripts/" -f ht3.gui "$@"

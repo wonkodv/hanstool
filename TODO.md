@@ -12,14 +12,7 @@ License:
 Code Cleanup
 *   Make all of it PEP8
 
-*   Collect all scripts, load at once
-
 ## Sometime
-
-### Setup
-
-    `dirname $0`/../scripts
-    look for scripts in ~/.config/ht3/
 
 
 ### Documentation
@@ -34,12 +27,17 @@ Generate Examples.md from scripts/
 
 ### Features
 
+*   Execute respecting PATH and `.exe` under windows
+*   ShellEscape under Windows
+*   Hotkeys under XServer
 *   ArgParsing:
 *   getopt
 *   getlongopt
 *   The weird spec for which a stub exists
 
 ### Stabillity
+
+*   Automated Tests with Travis
 
 Unittests:
 *   Argparsers
@@ -51,9 +49,3 @@ Unittests:
 Integration Tests:
 *   showing and logging of return values
 
-Automated Tests with Travis:
-*   .travis.yml
-
-    python:  3.5
-    install: python setup.py install
-    script:  python -m ht3 -s test_scripts -x "test" -s "unittest"
