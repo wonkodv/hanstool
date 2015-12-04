@@ -284,7 +284,7 @@ into your Environment and glue them to the `command_not_found_hook`.
 TEST
 -----
 
-![Build Status](https://travis-ci.org/wonkodv/hanstool.svg)
+[![Build Status](https://travis-ci.org/wonkodv/hanstool.svg)](https://travis-ci.org/wonkodv/hanstool)
 
 There is a set of `unittest.TestCase` unit tests `test` that can be run with
 `python -m unittest` or `py.test` or other `unittest`-compatible test runners.
