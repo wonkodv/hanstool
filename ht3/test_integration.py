@@ -8,4 +8,4 @@ class TestIntegration(unittest.TestCase):
     from ht3.env import initial
 
     load_scripts(pkg_resources.resource_filename(__name__,'test_scripts'))
-    assert run_command('test') == 'Integration Tests ran'
+    assert run_command('test silent') == 'Integration Tests ran'
