@@ -30,7 +30,7 @@ elif Check.os.posix:
 
 fake_types = (
     ("WHITESPACE",  r"\s+"),
-    ("MOVE",        r"(?P<x>\d+)x(?P<y>\d+)"),
+    ("MOVE",        r"(?P<x>[\d]+.?[\d]*)[x/:,](?P<y>[\d]+.?[\d]*)"),
     ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
     ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
     ("STRING1",     r"'(?P<s1>[^']*)'"),
@@ -65,22 +65,29 @@ def fake(string,interval=10):
     sequence = []
     def a(f, *a):
         sequence.append((f, a, m))
+
+    logs=[]
+    def log(s, *args):
+        logs.append(s%args)
+
     for m in fake_re.finditer(string):
         if   m.group("WHITESPACE"):
             pass
 
         elif m.group("MOVE"):
-            x = int(m.group('x'))
-            y = int(m.group('y'))
+            x = float(m.group('x'))
+            y = float(m.group('y'))
             a(impl.mouse_move, x, y)
-
+            log("MouseMove to x=%.1f y=%.1f", x, y)
         elif m.group("MBTN"):
             ud = m.group('mud')
             btn= int(m.group('btn'))
             if ud != '-':
                 a(impl.mouse_down, btn)
+                log("MouseDown b=%d", btn)
             if ud != '+':
                 a(impl.mouse_up, btn)
+                log("MouseUp b=%d", btn)
 
         elif m.group("KEY"):
             ud = m.group('kud')
@@ -88,25 +95,30 @@ def fake(string,interval=10):
             key= impl.KEY_CODES[key.upper()]
             if ud != '-':
                 a(impl.key_down, key)
+                log("KeyDown vk=%d", key)
             if ud != '+':
                 a(impl.key_up, key)
+                log("KeyUp vk=%d", key)
 
         elif m.group("STRING1"):
             s = m.group('s1')
             a(impl.type_string, s, interval)
-
+            log("String Input: %s", s)
         elif m.group("STRING2"):
             s = m.group('s2')
             a(impl.type_string, s, interval)
-
+            log("String Input: %s", s)
         elif m.group("SLEEP"):
             t = float(m.group('sleep'))/1000
             a(time.sleep, t)
+            log("Sleep for %dms", t)
 
         elif m.group("INVALID"):
             raise ValueError("Invalid Token", m.group(0))
         else:
             assert False, m
+
+    Env.log("Fake: " +"\n      ".join(logs))
 
     for c, a, m in sequence:
         if interval:
