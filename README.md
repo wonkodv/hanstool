@@ -177,7 +177,22 @@ This gets problematic if you define stuff on module level in your script,
 use it from your command and another script uses different things with the same
 name on module level. But it still beats `bash` ([1]).
 
+Scripts
+-----------
 
+If you place your scripts into the `~/.config/ht3` folder, they are loaded
+automatically. Otherwise, you can specify a single script or a folder full of
+scripts. To start, you can copy the default scripts, shipped with HT3 from
+`ht3/default_scripts` into your folder.  When a folder of scripts is loaded,
+only files named `*.py` are considered, and they are sorted, so you have
+control which ones overwrite definitions from otherones.  For sorting, the
+number between the last two periods of the file name is used:
+
+1.  z.2.py
+2.  W.10.py
+3.  a.30.py
+4.  b.30.py
+5.  a.1.2.3.z.40.py
 
 Some Default Commands
 -----------------
