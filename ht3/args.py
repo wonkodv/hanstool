@@ -110,7 +110,7 @@ class DictArgs(SetArgs):
             return [self.default],{}
         raise ValueError (string, self.sets)
 
-class CallableConverter(ArgParser):
+class CallableArgParser(ArgParser):
     """ Takes a String that is accepted by %s() """
     def __init__(self, call, default=_DEFAULT, **kwargs):
         self.call = call
@@ -119,7 +119,7 @@ class CallableConverter(ArgParser):
 
     def __call__(self, string):
         if not self.default is _DEFAULT and string.strip() == '':
-            return [self.kwargs['default']],{}
+            return [self.default],{}
         return [self.call(string)],{}
 
 def Args(spec, **kwargs):
@@ -173,7 +173,7 @@ def Args(spec, **kwargs):
         return DictArgs([spec], **kwargs)
 
     if callable(spec):
-        return CallableConverter(spec, **kwargs)
+        return CallableArgParser(spec, **kwargs)
     raise ValueError(spec)
 
 def ParseArgSpecString(spec, **kwargs):
