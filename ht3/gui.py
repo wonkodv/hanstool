@@ -212,7 +212,12 @@ class UserInterface():
             self.window = tk.Toplevel(self.master)
             self.window.title("Log")
             self.text=tk.Text(self.window)
+            self.scrollbar = tk.Scrollbar(self.window)
+            self.scrollbar.pack(side='right',fill='y')
             self.text.pack(fill='both', expand=1)
+            self.text.config(yscrollcommand=self.scrollbar.set)
+            self.scrollbar.config(command=self.text.yview)
+
             self.window.protocol('WM_DELETE_WINDOW', self.hide)
             self.visible = False
             self.window.withdraw()
