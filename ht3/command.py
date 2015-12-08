@@ -4,6 +4,7 @@ import functools
 import inspect
 import re
 import textwrap
+import threading
 
 
 from .args import Args
@@ -22,9 +23,6 @@ def register_command(func, *, origin_stacked, args=None, name=_DEFAULT,
     origin = origin[0:2]
 
     arg_parser = Args(args, **attrs)
-
-    if async:
-        raise NotImplementedError()
 
     if func_name is _DEFAULT:
         func_name = func.__name__
@@ -52,6 +50,17 @@ def register_command(func, *, origin_stacked, args=None, name=_DEFAULT,
     def Command(arg_string=""):
         """ The function that will be executed """
         args, kwargs = arg_parser(arg_string)
+        if async:
+            def CommandThread():
+                try:
+                    env.Env.log("Command Thread %s started", name)
+                    r = func(*args, **kwargs)
+                    env.Env.log("Command Thread %s Finished: %r", name, r)
+                except Exception as e:
+                    env.Env.handle_exception(e)
+            t = threading.Thread(target=CommandThread, name=name)
+            t.start()
+            return t
         r = func(*args, **kwargs)
         return r
 
