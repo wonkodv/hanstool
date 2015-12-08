@@ -1,4 +1,5 @@
 import sys
+import pathlib
 
 from . import lib
 from .command import run_command
@@ -25,26 +26,18 @@ HELP= """call ht with the following arguments:
     -r          Run all loaded Frontends """
 
 def main(args):
-    if not args:
-        import pathlib
-        p = pathlib.Path('~/.config/ht3')
-        if p.is_dir():
-            lib.load_scripts(p)
-        else:
-            import pkg_resources
-            s = pkg_resources.resource_filename(__name__,'default_scripts')
-            print(DEFAULT_SCRIPTS_TEXT % s)
-            args = ['-s', s]
     try:
         _x = False
         _f = False
         _r = False
+        _s = False
         arg_iter = iter(args)
 
         for a in arg_iter:
             if a == '-s':
                 s = next(arg_iter)
                 lib.load_scripts(s)
+                _s = True
             elif a == '-e':
                 k = next(arg_iter)
                 v = next(arg_iter)
@@ -66,6 +59,15 @@ def main(args):
                 print (HELP)
 
                 return 1
+        if not _s:
+            p = pathlib.Path('~/.config/ht3')
+            if p.is_dir():
+                lib.load_scripts(p)
+            else:
+                import pkg_resources
+                s = pkg_resources.resource_filename(__name__,'default_scripts')
+                print(DEFAULT_SCRIPTS_TEXT % s)
+                lib.load_scripts(s)
         if (not _r and _f):
             lib.run_frontends()
         elif (not _f and not _x):

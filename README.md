@@ -25,8 +25,9 @@ Components:
     offer a few functions to the commands.
     *   CLI: This one is really almost a shell
     *   A little Window
-    *   Hotkeys: (Probably runs paralell to anotherone) which has systemwide hotkeys for some commands
-    *   Awesome WM Client: Like the MOD+R Prompt
+    *   Hotkeys: (Probably runs paralell to anotherone) which has
+        systemwide hotkeys for some commands
+    *   Awesome WM Client: Like the MOD+R Prompt (Coming real soon)
     *   more are easily implemented
 *   Plattform aware functions. depending on the executing os, a different set of 
     functions is made available in the Namespace. For example in windows, there is the
@@ -34,11 +35,11 @@ Components:
 
 [1]: I Once wrote a Shell script to do some things when i start my computer,
     e.g. start music, open firefox, mail and 3 terminals I called this script
-    `as` so i would not have to type as much because I'm lazy. After some
-    weeks, i had to compile something and it didnt work, but music started to
-    play and 3 terminals opend because `gcc` invokes the assmebler which is
-    called `as` because many people before me where just as lazy.
-    I like clean namespaces.
+    `as` instead of `auto_start`, so I would not have to type as much because
+    I'm lazy. After some weeks, I had to compile something and it didnt work,
+    but music started to play and 3 terminals opend. `gcc` invokes the
+    assmebler which is called `as` because many people before me where just as
+    lazy. Now I like clean namespaces.
 
 Command
 -----
@@ -47,11 +48,14 @@ Commands are the concept of python functions, executed by a short name.
 for clarification:
 *   command-string: The text (including Arguments) you type to execute a command
 *   command-name: The text before any arguments you type to execute a command
-*   command-arguments: The argumetn part of the command-string  you type to execute a command
+*   command-arguments: The argumetn part of the command-string  you type to execute
+    a command
 *   command-function: The command function the python function in which things happen
 *   command-wrapper: The wrapper arround the command-function. This wrapper
-    takes command-arguments, parses them and then calls the command-function with the parsed arguments.
-*   command-attribute:  Attributes of the command (name, hotkey, ...). These are stored as Attributes of the wrapper.
+    takes command-arguments, parses them and then calls the command-function with
+    the parsed arguments.
+*   command-attribute:  Attributes of the command (name, hotkey, ...). These are
+    stored as Attributes of the wrapper.
 
 
 Command Strings
@@ -67,11 +71,18 @@ The String you type to get things done as EBNF:
     WS:         SPACE | TAB
     ARGUMENT:   (~RETURN)+
 
-and as some examples
+and as plaintext:
+
+    all (printable) characters that are not whitespaces make the command name, the rest
+    of the line is the argument to the command
+
+and as some examples:
 
     foo
     foo bar
     foo         bar baz!
+    foo -bar --baz=42
+    : +SHIFT A -SHIFT
     |
     $ cat ~/txt | /dev/null
     < some/file.ht
@@ -80,19 +91,20 @@ and as some examples
 Command-Functions
 ---
 
-
-Commands are python functions with some additional attributes. A python function becomes a command-function
-by passing it to `cmd(kwargs)(the function)` or `cmd(the function)` usually in the form of a decorator.
+Commands are python functions with some additional attributes. A python
+function becomes a command-function by passing it to `cmd(kwargs)(the
+function)` or `cmd(the function)` usually in the form of a decorator.
 
     @cmd(name='!', args='shell', **MoreKWArgs)
     def execute_things(program, *arguments)
         log("Executing Program %s with arguments %s",program, arguments)
         subprocess.execute(list(programm,*arguments))
 
-The effect is something like:
+The `@cmd` decorator has more or less the following effect:
 
     def execute_things(programm, *arguments):
-        ...
+        log("Executing Program %s with arguments %s",program, arguments)
+        subprocess.execute(list(programm,*arguments))
 
     def wrapper(string)
         args = Parse_Shell_Args(string)
@@ -104,24 +116,22 @@ The effect is something like:
     COMMANDS['!'] = wrapper
     del wrapper
 
-Note that, the function is stored itself under its own name in the namespace, not the wrapper.
-The wrapper is stored under the command-name in the `COMMANDS` dictionary. The
-wrapper does not apear anywhere else.
+Note that, the function is stored itself under its own name in the namespace,
+not the wrapper.  The wrapper is stored under the command-name in the
+`COMMANDS` dictionary. The wrapper does not apear anywhere else.
+The command has the following properties:
 
-
-*   Name: Often the function name, but can be different. For Example:
-    *   `ff` opens firefox
-    *   `vb` opens virtualbox
-    *   `vb xp` starts a specific virtualbox which has winxp in it.
-    *   `mdel` deletes the currently playing Song from the playlist, saves that playlist
-    *   `|` opens that one game where you lay out waterpipes. (cant remember what its called)
-*   Arguments to `!` should be parsed with the `shell` strategy
-*   Function: A Command-function is a normal python function with a `cmd` decorator. The decorator
-    takes some optional keyword arguments with which you specify:
-    *   Name: defautls to the function Name
-    *   args: defines, how a the argument part of the command-string is parsed and passed on to the command-function.
-    *   more kwargs that are passed to the Argument parser
-    *   more kwargs that become attributes of the command, which can be scanned by other componentes (e.g. Hotkeys, ...)
+*   Name is `!`. This would often be the function name, but can be different.
+    Any sequence of printable, non-whitespace characters works.
+*   Arguments to `!` should be parsed with the `shell` strategy. The complete text
+    after `!` is parsed into a list of strings in the way unix shells parse
+    argument strings. (see docu of `shlex.split()` for details.)
+*   Function: The `execute_things` function will be called when the user types runs the `!`
+    command. The command-argument is parsed and passed to the function as 
+    positional arguments. For example the following commands are equal to the python calls:
+    *   `! a b "c"` =>  `execute_things('a', 'b', 'c')`
+    *   `! ` =>  `execute_things()`
+    *   `! rm -rf /` =>  `execute_things('rm', '-rf', '/')`
 
 Argument Parsing Methods
 -------------------------
@@ -228,28 +238,13 @@ Frontends should mainly call the following functions:
 Frontends can get information (names, doc, hotkey, ...) about registered commands from `ht3.lib.COMMANDS`
 
 
-Configure Things
----------------
-
-Some Behaviour can be configured by setting things in the `Env`.
-*   `command_not_found_hook` is executed if the command-string does
-    not specify a command. Defaults to evaluating or executing as python code.
-*   `CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
-*   `RL_HISTORY`: a string that points to a file with the history of the repl.
-*   `DEBUG`: set to true to do post mortem pdb debugging and show traces with all
-        `log` and `show` messages
-
-Strings can be configured via environment, but require a `HT3_` prefix, for
-example in `.bashrc`:
-    export HT3_RL_HISTORY=~/.config/hanstool/readline_history
-Other python objects and strings can be configured in scripts. The default
-values are set very early by `ht3.lib`. Scripts are run in the order they appear on
-the command line.
-
 Command Line
 -----------
 
-Execute with `python3 -m ht ARGUMENTS` where arguments are zero or more of the following:
+The HT3 entry point is `ht3.__main__` so you can run it with `python -m ht3`.
+when installing with `pip`, a script named `ht` is added to your `PATH` to do that.
+
+You can pass any number of the following arguments:
 *   `--help`        Display this text
 *   `-e KEY VALUE`  add a variable to the environment
 *   `-s FILE`       execute a script
@@ -260,11 +255,46 @@ Execute with `python3 -m ht ARGUMENTS` where arguments are zero or more of the f
 Arguments are processed in the order they are passed. You should propably put
 them in the order they appear above to put things in the environment, then load
 scripts, then load frontends, then execute some commands and finally start the
-frontends. When processing `-r`, all the frontends that were loaded by
-previous `-f` are started.  Once one interface exits, all others are stopped as
-well and the argument after `-r` is processed.  Multiple `-r` will start
-the frontends multiple times. At the end, if there was `-f` but not `-r` the frontends are started.
-If there was no `-f` and no `-x`, the `ht3.cli` frontend is started.
+frontends. When processing `-r`, all the frontends that were loaded by previous
+`-f` are started.  Once one interface exits, all others are stopped as well and
+the argument after `-r` is processed.  Multiple `-r` will start the frontends
+multiple times.
+
+After processing all passed arguments, the following default actions happen:
+
+*   If no script was loaded with `-s`:
+    *   If `~/.config/ht3` exists, the scripts from there are loaded
+    *   else, the `default_scripts` are loaded and a message is shown.
+*   If one or more frontends were loaded with `-f` but not run with `-r`,
+    they are run.
+*   If no frontend was loaded with `-f` and no command executed with `-x`, then
+    the `ht3.cli` frontend is loaded and run.
+
+After setting up scripts in `~/.config/ht3` it should be enough to execute the
+HT3 without any arguments.
+
+
+Configure Things
+---------------
+
+Some Behaviour can be configured by setting things in the `Env`.
+*   `command_not_found_hook` is executed if the command-string does
+    not specify a command. Defaults to evaluating or executing as python code.
+*   `CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
+*   `EDITOR`: a list of strings that should be an editor with parameters.
+    It is used by the `edit_file` function in the `default_scripts`.
+*   `RL_HISTORY`: a string that points to a file with the history of the repl.
+*   `DEBUG`: set to true to do post mortem pdb debugging and show traces with all
+        `log` and `show` messages
+
+String variables can be configured via environment, but require a `HT3_` prefix, for
+example in `.bashrc`:
+    export HT3_RL_HISTORY=~/.config/ht3/readline_history
+    export HT3_DEBUG=1
+Other python objects and strings can be configured in scripts. The default
+values are set very early by `ht3.lib`. Scripts are run in the order they appear on
+the command line.
+
 
 Tipps
 -----
