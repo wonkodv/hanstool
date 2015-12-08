@@ -219,9 +219,17 @@ def restart(*more_args):
     os.execv(sys.executable, args)
 
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
+    _httofront_time=0
     @cmd(HotKey="F8")
     def httofront():
-        ht3.gui.cmd_win_to_front()
+        """ Show the input and, if executed twice within short time, show log win """
+        global _httofront_time
+        import time
+        if time.monotonic() - _httofront_time > 0.25:
+            ht3.gui.cmd_win_to_front()
+            _httofront_time = time.monotonic()
+        else:
+            ht3.gui.log_win_to_front()
 
 if Check.frontend('ht3.gui'):
     @ht3.gui.do_on_start

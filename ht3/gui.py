@@ -42,7 +42,7 @@ class UserInterface():
 
     def show(self, *args, **kwargs):
         self.log(*args, **kwargs)
-        self.log_win.show()
+        self.log_win.to_front()
 
     def run_command(self, string):
         if string:
@@ -217,17 +217,19 @@ class UserInterface():
             self.visible = False
             self.window.withdraw()
 
+            self.window.bind('<KeyPress-Escape>', lambda e: self.hide())
+
         def log(self, msg):
             self.text.insert('end', msg+'\n')
             self.text.yview('end')
 
         def toggle(self):
             if not self.visible:
-                self.show()
+                self.to_front()
             else:
                 self.hide()
 
-        def show(self):
+        def to_front(self):
             self.visible = True
             self.window.deiconify()
             self.window.focus_set()
@@ -305,6 +307,9 @@ def cmd_win_stay_on_top():
 
 def cmd_win_to_front():
     GUI.cmd_win.to_front()
+
+def log_win_to_front():
+    GUI.log_win.to_front()
 
 def cmd_win_set_rect(left, top, width, height):
     GUI.cmd_win.set_rect(left, top, width, height)
