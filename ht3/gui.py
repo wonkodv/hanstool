@@ -295,7 +295,7 @@ def help(obj):
 @Env
 def handle_exception(exc):
     if GUI:
-        show(traceback.format_exc())
+        show("%s", traceback.format_exc())
     else:
         raise exc
 

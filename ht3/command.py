@@ -113,7 +113,11 @@ def run_command(string):
     try:
         c = COMMANDS[cmd]
     except KeyError:
-        r = env.Env.command_not_found_hook(string)
+        try:
+            r = env.Env.command_not_found_hook(string)
+        except Exception as e:
+            # prevent this exception from being chained to the KeyError
+            raise e from None
     else:
         r = c(arg)
     if r is not None:
