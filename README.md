@@ -295,10 +295,4 @@ in the expected way.
 
 Use `test` command to quickly run the integration test:
 
-    python -m ht3 -s test_scripts -x test
-
-use `test` and `ht3.cli` to run tests and open a prompt where you can enter more stuff:
-
-    python -m ht3 -s test_scripts -x 'test' -f ht3.cli
-
-I mapped this to `<F5>` in my editor.
+    python -m ht3 -s ht3/test_scripts -x test
