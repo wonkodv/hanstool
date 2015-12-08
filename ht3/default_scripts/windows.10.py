@@ -5,7 +5,11 @@ if not Check.os.win:
 def shellexecute(s):
     """ Shell Execute, windows's all purpose opening function for files and programms """
     from ctypes import windll
-    windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
+    r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
+    if r > 32:
+        return None
+    else:
+        raise OSError("ShellExecute returned an error: %d" % r)
 
 @cmd(args="1", complete=complete_command, name="#")
 def explore_command(cmd):
