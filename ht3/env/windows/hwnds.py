@@ -1,5 +1,6 @@
 import ctypes
-from ctypes.wintypes import RECT
+from ctypes.wintypes import RECT, POINT
+from ctypes import c_wchar
 from ht3.env import Env
 
 @Env
@@ -24,6 +25,25 @@ def GetWindowRect(hwnd):
 @Env
 def SetParent(child, parent):
     return ctypes.windll.user32.SetParent(child, parent)
+
+@Env
+def SetForegroundWindow(wnd):
+    return ctypes.windll.user32.SetForegroundWindow(wnd)
+
+@Env
+def WindowFromPoint(p=None):
+    if p is None:
+        p = GetCursorPos()
+    elif not isinstance(p, POINT):
+        p = POINT(*p)
+    return ctypes.windll.user32.WindowFromPoint(p)
+
+@Env
+def GetClassName(wnd):
+    name = (c_wchar * 100)()
+    ctypes.windll.user32.GetClassNameW(wnd, name, 100)
+    return name.value
+
 
 @Env
 def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., flags=0):
