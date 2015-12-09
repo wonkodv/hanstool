@@ -6,7 +6,8 @@ from ht3.keycodes import KEY_CODES
 from ht3.env import Env
 
 __all__ = [
-        'mouse_move',
+        'mouse_move_abs',
+        'mouse_move_rel',
         'mouse_down',
         'mouse_up',
         'mouse_wheel',
@@ -30,7 +31,8 @@ elif Check.os.posix:
 
 fake_types = (
     ("WHITESPACE",  r"\s+"),
-    ("MOVE",        r"(?P<x>[\d]+.?[\d]*)[x/:,](?P<y>[\d]+.?[\d]*)"),
+    ("MOVEABS",     r"(?P<xa>[\d]+)[x/:,](?P<ya>[\d]+)"),
+    ("MOVEREL",     r"(?P<xr>[\d]+.?[\d]*)%(?P<yr>[\d]+.?[\d]*)"),
     ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
     ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
     ("STRING1",     r"'(?P<s1>[^']*)'"),
@@ -46,7 +48,8 @@ def fake(string,interval=10):
     """ Fake a sequence of Events, specified by a string in the
         following mini language:
         *   Whitespaces are ignored
-        *   123X456 moves the mouse to x=123 and y=456, see mouse_move
+        *   123X456 moves the mouse to x=123 and y=456, see mouse_move_abs
+        *   50.2%7 moves the mouse to x=50.2% and y=7%, see mouse_move_rel
         *   M1      Does a Mouse Click at the current mouse position
                     With the left button. 2=Middle, 3=right, 4, 5
         *   +M2     Press but do not release the middle mouse button
@@ -74,11 +77,16 @@ def fake(string,interval=10):
         if   m.group("WHITESPACE"):
             pass
 
-        elif m.group("MOVE"):
-            x = float(m.group('x'))
-            y = float(m.group('y'))
-            a(impl.mouse_move, x, y)
-            log("MouseMove to x=%.1f y=%.1f", x, y)
+        elif m.group("MOVEREL"):
+            x = float(m.group('xr'))
+            y = float(m.group('yr'))
+            a(impl.mouse_move_rel, x, y)
+            log("MouseMove rel to x=%.1f y=%.1f", x, y)
+        elif m.group("MOVEABS"):
+            x = int(m.group('xa'))
+            y = int(m.group('ya'))
+            a(impl.mouse_move_abs, x, y)
+            log("MouseMove abs to x=%.1f y=%.1f", x, y)
         elif m.group("MBTN"):
             ud = m.group('mud')
             btn= int(m.group('btn'))
@@ -109,8 +117,8 @@ def fake(string,interval=10):
             a(impl.type_string, s, interval)
             log("String Input: %s", s)
         elif m.group("SLEEP"):
-            t = float(m.group('sleep'))/1000
-            a(time.sleep, t)
+            t = int(m.group('sleep'))
+            a(time.sleep, t/1000)
             log("Sleep for %dms", t)
 
         elif m.group("INVALID"):

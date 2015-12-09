@@ -10,6 +10,8 @@ class Test_fake(unittest.TestCase):
         with patch("time.sleep") as mockSleep:
             mockSleep.side_effect=lambda t: s.append(['s', t])
             with patch("ht3.env.fake_input.impl") as fake_in:
+                fake_in.mouse_move_abs =lambda x,y  : s.append(["ma", x, y])
+                fake_in.mouse_move_rel =lambda x,y  : s.append(["mr", x, y])
                 fake_in.mouse_move =    lambda x,y  : s.append(["m", x, y])
                 fake_in.mouse_down =    lambda b    : s.append(["md", b])
                 fake_in.mouse_up =      lambda b    : s.append(["mu", b])
@@ -23,7 +25,19 @@ class Test_fake(unittest.TestCase):
 
     def test_all(self):
         k = KEY_CODES
-        s = self.runSequence("""+Shift A (100) -Shift 'A\SD"F' "GH'I" 37.2x42.67 50/50 M1 """,0)
+        s = self.runSequence("""
+            +Shift
+            A
+            (100)
+            -Shift
+            'A\SD"F'
+            "GH'I"
+            1000x2000
+            01/250
+            0.1%2.2
+            50%50
+            M1
+            """,0)
         exp = [
             ['kd',k['SHIFT']],
             ['kd',k['A']],
@@ -32,8 +46,10 @@ class Test_fake(unittest.TestCase):
             ['ku',k['SHIFT']],
             ['t', 'A\SD"F', 0],
             ['t', "GH'I", 0],
-            ['m', 37.2, 42.67],
-            ['m', 50, 50],
+            ['ma', 1000, 2000],
+            ['ma', 1, 250],
+            ['mr', 0.1, 2.2],
+            ['mr', 50, 50],
             ['md', 1],
             ['mu', 1],
         ]

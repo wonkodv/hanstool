@@ -3,7 +3,7 @@ from ht3.keycodes import KEY_CODES
 import time
 
 
-__all__ = ['type_string', 'mouse_wheel', 'mouse_move', 'mouse_down', 'mouse_up', 'key_down', 'key_up']
+__all__ = ['type_string', 'mouse_wheel', 'mouse_move_rel', 'mouse_move_abs', 'mouse_down', 'mouse_up', 'key_down', 'key_up']
 
 
 mouse_event = windll.user32.mouse_event
@@ -27,10 +27,13 @@ MOUSEEVENTF_XUP         = 0x0100
 MOUSEEVENTF_WHEEL       = 0x0800
 MOUSEEVENTF_HWHEEL      = 0x01000
 
-def mouse_move(x, y):
+def mouse_move_rel(x, y):
     x = round(x / 100 * 0xFFFF)
     y = round(y / 100 * 0xFFFF)
     mouse_event(MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE, x, y, 0, 0)
+
+def mouse_move_abs(x, y):
+    windll.user32.SetCursorPos(x, y)
 
 def mouse_down(b):
     f, d = _btn(b, False)
