@@ -256,6 +256,11 @@ class UserInterface():
         def log_subprocess(self, p, current_command=None, frontend=None):
             self.log("Spawned process %d: %r" % (p.pid, p.args))
 
+        def log_subprocess_finished(self, p, current_command=None, frontend=None):
+            if p.returncode > 0:
+                self.to_front()
+            self.log("Process finished %d: %r" % (p.pid, p.returncode))
+
         def log_thread(self, t, current_command=None, frontend=None):
             self.log("Spawned thread %d: %s" % (t.ident, t.name))
 
@@ -291,22 +296,14 @@ def stop():
 #logging
 
 def _do_log(m, *args):
+    tls = lib.THREAD_LOCAL
+    cc = getattr(tls,'command',None)
+    cf = getattr(tls,'frontend',None)
     if GUI:
         l = getattr(GUI.log_win, m)
-        l(*args,
-            current_command=lib.THREAD_LOCAL.command,
-            frontend=lib.THREAD_LOCAL.frontend)
+        l(*args, current_command=cc, frontend=cf)
     else:
-        _stored_log.append(
-            [
-                m,
-                args,
-                {
-                    'current_command':lib.THREAD_LOCAL.command,
-                    'frontend':lib.THREAD_LOCAL.frontend
-                }
-            ]
-        )
+        _stored_log.append( [ m, args, { 'current_command': cc, 'frontend': cf } ])
 
 @Env
 def show(o):
@@ -336,6 +333,10 @@ def log(s):
 @Env
 def log_subprocess(p):
     _do_log('log_subprocess', p)
+
+@Env
+def log_subprocess_finished(p):
+    _do_log('log_subprocess_finished', p)
 
 @Env
 def log_thread(t):

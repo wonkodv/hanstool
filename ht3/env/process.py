@@ -2,8 +2,10 @@ import subprocess
 import functools
 import shlex
 
+
 from . import Env
 from ht3.command import register_command
+from ht3.processwatch import watch
 
 @Env
 def shellescape(string):
@@ -21,6 +23,7 @@ def shell(string, cwd=None, env=None):
     """ pass a string to a shell. The shell will parse it. """
     p = subprocess.Popen(string, shell=True, cwd=cwd, env=env)
     Env.log_subprocess(p)
+    watch(p, lambda p: Env.log_subprocess_finished(p))
     return p
 
 @Env
@@ -28,6 +31,7 @@ def execute(*args, cwd=None, env=None):
     """ Execute a programm with arguments """
     p = subprocess.Popen(args, shell=False, cwd=cwd, env=env)
     Env.log_subprocess(p)
+    watch(p, lambda p: Env.log_subprocess_finished(p))
     return p
 
 @Env

@@ -51,24 +51,8 @@ if Check.frontend('ht3.cli'):
         p = execute(*args)
         return p
 else:
-    # Programms should run in background when invoked from other frontends
-    @cmd(name="$", args=1)
-    def _shell(arg):
-        p = shell(arg)
-        sleep(0.1)
-        r = p.poll()
-        if not r in [ None, 0]:
-            show("Shell returned with error: %d" % r)
-        return p
-
-    @cmd(name="!", args='shell')
-    def _execute(arg):
-        p = execute(arg)
-        sleep(0.1)
-        r = p.poll()
-        if not r in [ None, 0]:
-            show("process returned with error: %d" % r)
-        return p
+    cmd(name="$", args=1)(shell)
+    cmd(name="!", args='shell')(execute)
 
 def _():
     import os

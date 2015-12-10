@@ -31,6 +31,11 @@ def log_subprocess(p):
         print("spawned process: %d, %r" % (p.pid, p.args))
 
 @Env
+def log_subprocess_finished(p):
+    if p.returncode > 0 or Env.get('DEBUG', False):
+        print("process finished: %d with %d" % (p.pid, p.returncode))
+
+@Env
 def log_thread(t):
     if Env.get('DEBUG', False):
         print("spawned thread: %d, %r" % (t.pid, t.target))
