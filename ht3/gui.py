@@ -212,11 +212,6 @@ class UserInterface():
 
             self.window.bind('<KeyPress-Escape>', lambda e: self.hide())
 
-        def log(self, msg):
-            assert isinstance(msg, str)
-            self.text.insert('end', msg+'\n')
-            self.text.yview('end')
-
         def toggle(self):
             if not self.visible:
                 self.to_front()
@@ -233,35 +228,39 @@ class UserInterface():
             self.window.withdraw()
             self.ui.cmd_win.to_front()
 
+        def log(self, msg, current_command=None, frontend=None):
+            assert isinstance(msg, str)
+            self.text.insert('end', msg+'\n')
+            self.text.yview('end')
 
-        def log_show(self, o):
+
+        def log_show(self, o, current_command=None, frontend=None):
             self.log(str(o))
             self.to_front()
 
-        def log_command(self, cmd):
-            i, c, p = lib.THREAD_LOCAL.command
-            f = lib.THREAD_LOCAL.frontend
-            self.log("Command %d from %s: %s" % (i, f, cmd))
+        def log_command(self, cmd, current_command=None, frontend=None):
+            i, c, p = current_command
+            self.log("Command %d from %s: %s" % (i, frontend, cmd))
 
-        def log_command_finished(self, result):
+        def log_command_finished(self, result, current_command=None, frontend=None):
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
-            i, c, p = lib.THREAD_LOCAL.command
+            i, c, p = current_command
             self.log("Result %d: %r" % (i, result))
 
-        def log_error(self, e):
+        def log_error(self, e, current_command=None, frontend=None):
             self.log(traceback.format_exc())
             self.to_front()
 
-        def log_subprocess(self, p):
+        def log_subprocess(self, p, current_command=None, frontend=None):
             self.log("Spawned process %d: %r" % (p.pid, p.args))
 
-        def log_thread(self, t):
+        def log_thread(self, t, current_command=None, frontend=None):
             self.log("Spawned thread %d: %s" % (t.ident, t.name))
 
-        def log_thread_finished(self, result):
-            i, c, p = lib.THREAD_LOCAL.command
+        def log_thread_finished(self, result, current_command=None, frontend=None):
+            i, c, p = current_command
             self.log("ThreadResult %d: %r" % (i, result))
 
 # Frontend API
@@ -273,8 +272,9 @@ def loop():
     try:
         GUI = UserInterface()
 
-        for m, a in _stored_log:
-            _do_log(m, *a)
+        for m, a, k in _stored_log:
+            l = getattr(GUI.log_win, m)
+            l(*a, **k)
         _stored_log.clear()
 
         for c in _do_on_start:
@@ -292,9 +292,21 @@ def stop():
 
 def _do_log(m, *args):
     if GUI:
-        getattr(GUI.log_win, m)(*args)
+        l = getattr(GUI.log_win, m)
+        l(*args,
+            current_command=lib.THREAD_LOCAL.command,
+            frontend=lib.THREAD_LOCAL.frontend)
     else:
-        _stored_log.append([m, args])
+        _stored_log.append(
+            [
+                m,
+                args,
+                {
+                    'current_command':lib.THREAD_LOCAL.command,
+                    'frontend':lib.THREAD_LOCAL.frontend
+                }
+            ]
+        )
 
 @Env
 def show(o):
