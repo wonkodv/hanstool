@@ -212,7 +212,7 @@ def restart(*more_args):
         else:
             raise ValueError("Unsupported Argument", a)
 
-
+    print ("\n==================== RESTART ===================\n")
     os.execv(sys.executable, args)
 
 if Check.frontend('ht3.gui', 'ht3.hotkey'):
