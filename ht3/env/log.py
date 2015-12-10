@@ -1,3 +1,4 @@
+import traceback
 from . import Env
 
 @Env
@@ -18,7 +19,10 @@ def log_command_finished(result):
 
 @Env
 def log_error(e):
-    print(traceback.format_exc())
+    t = type(e)
+    tb = e.__traceback__
+    for s in traceback.format_exception(t, e, tb):
+        print(s)
 
 @Env
 def log(s):

@@ -250,7 +250,9 @@ class UserInterface():
             self.log("Result %d: %r" % (i, result))
 
         def log_error(self, e, current_command=None, frontend=None):
-            self.log(traceback.format_exc())
+            t = type(e)
+            tb = e.__traceback__
+            self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
         def log_subprocess(self, p, current_command=None, frontend=None):
@@ -319,11 +321,10 @@ def log_command_finished(result):
 
 @Env
 def log_error(e):
-    if GUI:
-        _do_log('log_error', e)
-    else:
-        raise e
-    print(traceback.format_exc())
+    _do_log('log_error', e)
+    if  not GUI:
+        import ht3.env.log
+        ht3.env.log.log_error(e)
 
 @Env
 def log(s):

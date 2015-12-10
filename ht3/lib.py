@@ -92,7 +92,7 @@ def run_frontends():
             finally:
                 evt.set()
         for fe in frontends:
-            t = threading.Thread(target=run_fe, args=[fe])
+            t = threading.Thread(target=run_fe, args=[fe], name=fe.__name__)
             t.start()
             threads.append((t, fe))
 
