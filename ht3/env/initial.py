@@ -2,6 +2,8 @@ from . import Env
 Env.__ = []
 Env._  = None
 
+
+
 import os
 for k, v in os.environ.items():
     if k[:4] == 'HT3_':
@@ -20,11 +22,13 @@ Env(cmd)
 Env.COMMANDS = COMMANDS
 Env(run_command)
 
-from ht3.lib import Check, evaluate_py_expression, execute_py_expression
+from ht3.lib import Check, evaluate_py_expression, execute_py_expression, start_thread
 Env.Check = Check
 Env(evaluate_py_expression)
 Env(execute_py_expression)
+Env(start_thread)
 
+from . import log
 from . import handler
 from . import fake_input
 from . import process

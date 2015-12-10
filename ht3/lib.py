@@ -19,7 +19,10 @@ from . import check
 
 FRONTENDS = []
 FRONTEND_MODULES = []
-FRONTEND_LOCAL = threading.local()
+
+THREAD_LOCAL = threading.local()
+THREAD_LOCAL.command = None
+THREAD_LOCAL.frontend = None
 
 SCRIPTS = []
 
@@ -35,7 +38,7 @@ if os.name == 'nt':
 
 Check.os = check.Group(OS)
 Check.frontend = check.Group(FRONTENDS)
-Check.current_frontend = check.Value(lambda:FRONTEND_LOCAL.frontend)
+Check.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
 
 def import_recursive(name):
     m = __import__(name)
@@ -65,26 +68,27 @@ def run_frontends():
 
     if len(frontends) == 1:     # Shortcut if there is no need for threading stuff
         fe = frontends[0]
-        FRONTEND_LOCAL.frontend = fe.__name__
+        THREAD_LOCAL.frontend = fe.__name__
         try:
             fe.loop()
         except Exception as e:
-            env.Env.handle_exception(e)
+            env.Env.log_error(e)
         try:
             fe.stop()
         except Exception as e:
-            env.Env.handle_exception(e)
-        del FRONTEND_LOCAL.frontend
+            env.Env.log_error(e)
+        THREAD_LOCAL.frontend = None
     else:
         threads = []
         evt = threading.Event()
 
         def run_fe(fe):
-            FRONTEND_LOCAL.frontend = fe.__name__
+            THREAD_LOCAL.frontend = fe.__name__
+            THREAD_LOCAL.command = None
             try:
                 fe.loop()
             except Exception as e:
-                env.Env.handle_exception(e)
+                env.Env.log_error(e)
             finally:
                 evt.set()
         for fe in frontends:
@@ -100,7 +104,7 @@ def run_frontends():
                 try:
                     f.stop()
                 except Exception as e:
-                    env.Env.handle_exception(e)
+                    env.Env.log_error(e)
 
             # wait for all frontends to finish.
             for t, f in threads:
@@ -153,7 +157,33 @@ def execute_py_expression(s):
     return eval(c, env.Env.dict)
 
 def evaluate_py_expression(s):
-    """ Evaluate a python expression, show result """
+    """ Evaluate a python expression """
     c = compile(s, "<input>", "eval")
     r = eval(c, env.Env.dict)
     return r
+
+def start_thread(func, args=[], kwargs={}, name=None, on_exception=None, on_finish=None):
+    """ Start a thread that copys the thread local information
+        active frontend and active command and then executes `func`.
+        Calls `on_finished` with the function result or/and on_exception
+        on error.
+    """
+    if name is None:
+        name = func.__name__
+    if on_finish is None:
+        on_finish = env.Env.log_thread_finished
+    if on_exception is None:
+        on_exception = env.Env.log_error
+    fe = THREAD_LOCAL.frontend
+    cmd = THREAD_LOCAL.command
+    def target():
+        THREAD_LOCAL.frontend = fe
+        THREAD_LOCAL.command = cmd
+        try:
+            r = func(*args, **kwargs)
+            on_finish(r)
+        except Exception as e:
+            on_exception(e)
+    t = threading.Thread(target=target, name=name)
+    t.start()
+    return t

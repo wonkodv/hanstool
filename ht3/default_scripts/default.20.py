@@ -11,12 +11,8 @@ cmd(name=':', args=1)(fake)
 @cmd(name='=',args='?', complete=complete_py)
 def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
-    if s:
-        r = evaluate_py_expression(s)
-        Env._ = r
-        Env.__.append(r)
-    else:
-        r = None
+    r = evaluate_py_expression(s)
+    Env._ = r
     show(r)
     return None
 
@@ -62,7 +58,7 @@ else:
         sleep(0.1)
         r = p.poll()
         if not r in [ None, 0]:
-            show("Shell returned an error: %d", r)
+            show("Shell returned with error: %d" % r)
         return p
 
     @cmd(name="!", args='shell')
@@ -71,7 +67,7 @@ else:
         sleep(0.1)
         r = p.poll()
         if not r in [ None, 0]:
-            show("Shell returned an error: %d", r)
+            show("process returned with error: %d" % r)
         return p
 
 def _():
@@ -151,7 +147,8 @@ def run_command_file(p):
 def debug(what):
     """ Debug a Command """
     import pdb, ht3.command
-    pdb.runcall(ht3.command.run_command, what)
+    pdb.set_trace()
+    ht3.command.run_command(what)
 
 
 @cmd
@@ -173,7 +170,7 @@ def restart(*more_args):
         try:
             compile(c, str(path), "exec")
         except Exception as e:
-            handle_exception(e)
+            log_error(e)
             return
     args = []
     if Check.os.win:

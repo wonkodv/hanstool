@@ -36,28 +36,16 @@ class UserInterface():
     def close_soon(self):
         self.closed_evt.set()
 
-    def log(self, *args, **kwargs):
-        msg = lib.format_log_message(*args, **kwargs)
-        self.log_win.log(msg)
-
-    def show(self, *args, **kwargs):
-        self.log(*args, **kwargs)
-        self.log_win.to_front()
-
     def run_command(self, string):
         if string:
             self.cmd_win._set_state("Working")
-            self.log("Run Cmd: %s", string)
             try:
                 result = run_command(string)
             except Exception as e:
                 self.cmd_win._set_state("Error")
-                e = traceback.format_exc()
-                show("Exception: %s", e)
+                log_error(e)
                 return string
             else:
-                if result is not None:
-                    self.log("Result: %r", result)
                 self.cmd_win._set_state("Waiting")
                 return ""
         else:
@@ -225,6 +213,7 @@ class UserInterface():
             self.window.bind('<KeyPress-Escape>', lambda e: self.hide())
 
         def log(self, msg):
+            assert isinstance(msg, str)
             self.text.insert('end', msg+'\n')
             self.text.yview('end')
 
@@ -244,6 +233,37 @@ class UserInterface():
             self.window.withdraw()
             self.ui.cmd_win.to_front()
 
+
+        def log_show(self, o):
+            self.log(str(o))
+            self.to_front()
+
+        def log_command(self, cmd):
+            i, c, p = lib.THREAD_LOCAL.command
+            f = lib.THREAD_LOCAL.frontend
+            self.log("Command %d from %s: %s" % (i, f, cmd))
+
+        def log_command_finished(self, result):
+            if result is None:
+                if not Env.get('DEBUG', False):
+                    return
+            i, c, p = lib.THREAD_LOCAL.command
+            self.log("Result %d: %r" % (i, result))
+
+        def log_error(self, e):
+            self.log(traceback.format_exc())
+            self.to_front()
+
+        def log_subprocess(self, p):
+            self.log("Spawned process %d: %r" % (p.pid, p.args))
+
+        def log_thread(self, t):
+            self.log("Spawned thread %d: %s" % (t.ident, t.name))
+
+        def log_thread_finished(self, result):
+            i, c, p = lib.THREAD_LOCAL.command
+            self.log("ThreadResult %d: %r" % (i, result))
+
 # Frontend API
 
 _stored_log=[]
@@ -253,11 +273,8 @@ def loop():
     try:
         GUI = UserInterface()
 
-        for s_l, s, args, kwargs in _stored_log:
-            if s_l:
-                GUI.show(s, *args, **kwargs)
-            else:
-                GUI.log(s, *args, **kwargs)
+        for m, a in _stored_log:
+            _do_log(m, *a)
         _stored_log.clear()
 
         for c in _do_on_start:
@@ -271,33 +288,55 @@ def stop():
     if not GUI is None:
         GUI.close_soon()
 
+#logging
 
-# Mandatory User API
-# TODO: These all print on stdout. Make them use windows
+def _do_log(m, *args):
+    if GUI:
+        getattr(GUI.log_win, m)(*args)
+    else:
+        _stored_log.append([m, args])
 
 @Env
-def show(s, *args, **kwargs):
-    if GUI:
-       GUI.show(s, *args, **kwargs)
-    else:
-        _stored_log.append([True, s, args, kwargs])
+def show(o):
+    _do_log('log_show', o)
 
 @Env
-def log(s, *args, **kwargs):
+def log_command(cmd):
+    _do_log('log_command', cmd)
+
+@Env
+def log_command_finished(result):
+    _do_log('log_command_finished', result)
+
+@Env
+def log_error(e):
     if GUI:
-       GUI.log(s, *args, **kwargs)
+        _do_log('log_error', e)
     else:
-        _stored_log.append([False, s, args, kwargs])
+        raise e
+    print(traceback.format_exc())
+
+@Env
+def log(s):
+    _do_log('log', s)
+
+
+@Env
+def log_subprocess(p):
+    _do_log('log_subprocess', p)
+
+@Env
+def log_thread(t):
+    _do_log('log_thread', t)
+
+@Env
+def log_thread_finished(result):
+    _do_log('log_thread_finished', result)
+
 @Env
 def help(obj):
     show(obj.__doc__)
 
-@Env
-def handle_exception(exc):
-    if GUI:
-        show("%s", traceback.format_exc())
-    else:
-        raise exc
 
 # Extended User API
 

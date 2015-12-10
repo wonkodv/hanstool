@@ -19,14 +19,16 @@ def shellescape(string):
 @Env
 def shell(string, cwd=None, env=None):
     """ pass a string to a shell. The shell will parse it. """
-    Env.log("Running Shell with: "+string)
-    return subprocess.Popen(string, shell=True, cwd=cwd, env=env)
+    p = subprocess.Popen(string, shell=True, cwd=cwd, env=env)
+    Env.log_subprocess(p)
+    return p
 
 @Env
 def execute(*args, cwd=None, env=None):
     """ Execute a programm with arguments """
-    Env.log("executing: "+str(args))
-    return subprocess.Popen(args, shell=False, cwd=cwd, env=env)
+    p = subprocess.Popen(args, shell=False, cwd=cwd, env=env)
+    Env.log_subprocess(p)
+    return p
 
 @Env
 def execute_cmd(name, *args, **kwargs):

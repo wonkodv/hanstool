@@ -9,9 +9,12 @@ import threading
 
 from .args import Args
 from . import env
+from .lib import THREAD_LOCAL, start_thread
 
 COMMANDS = {}
 _DEFAULT = object()
+
+_COMMAND_RUN_ID = 0
 
 def register_command(func, *, origin_stacked, args=None, name=_DEFAULT,
                      func_name=_DEFAULT,
@@ -51,15 +54,7 @@ def register_command(func, *, origin_stacked, args=None, name=_DEFAULT,
         """ The function that will be executed """
         args, kwargs = arg_parser(arg_string)
         if async:
-            def CommandThread():
-                try:
-                    env.Env.log("Command Thread %s started", name)
-                    r = func(*args, **kwargs)
-                    env.Env.log("Command Thread %s Finished: %r", name, r)
-                except Exception as e:
-                    env.Env.handle_exception(e)
-            t = threading.Thread(target=CommandThread, name=name)
-            t.start()
+            t = start_thread(func, args=args, kwargs=kwargs)
             return t
         r = func(*args, **kwargs)
         return r
@@ -108,8 +103,34 @@ def parse_command(string):
 
     return cmd, sep, arg
 
+def run_command_func(c, *args, **kwargs):
+    global _COMMAND_RUN_ID
+    _COMMAND_RUN_ID += 1
+
+    parent = THREAD_LOCAL.command
+    THREAD_LOCAL.command = [_COMMAND_RUN_ID, c.name, parent]
+
+    env.Env.log_command(c.name)
+    r = c()
+    env.Env.log_command_finished(r)
+
+    _, _, p = THREAD_LOCAL.command
+    THREAD_LOCAL.command = p
+
+    env.Env.__.append(r)
+    if r is not None:
+        env.Env._ = r
+    return r
+
 def run_command(string):
+    global _COMMAND_RUN_ID
+    _COMMAND_RUN_ID += 1
+
+    parent = THREAD_LOCAL.command
+    THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, parent]
+
     cmd, sep, arg = parse_command(string)
+    env.Env.log_command(string)
     try:
         c = COMMANDS[cmd]
     except KeyError:
@@ -120,7 +141,12 @@ def run_command(string):
             raise e from None
     else:
         r = c(arg)
+    env.Env.log_command_finished(r)
+
+    _, _, p = THREAD_LOCAL.command
+    THREAD_LOCAL.command = p
+
+    env.Env.__.append(r)
     if r is not None:
         env.Env._ = r
-        env.Env.__.append(r)
     return r

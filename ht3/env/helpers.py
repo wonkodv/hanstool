@@ -1,5 +1,6 @@
 import textwrap
 from . import Env
+from ht3.lib import THREAD_LOCAL
 
 @Env
 def list_commands():
@@ -27,3 +28,4 @@ def help_command(exp):
     else:
         obj = Env.evaluate_py_expression(exp)
     Env.help(obj)
+

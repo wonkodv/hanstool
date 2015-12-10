@@ -92,14 +92,6 @@ def setup_readline():
 
 # Basic API
 
-@Env
-def show(s, *args, **kwargs):
-    print (str(s) % args)
-
-@Env
-def log(s, *args, **kwargs):
-    print (str(s) % args)
-
 Env['help'] = help
 
 # Extended API
