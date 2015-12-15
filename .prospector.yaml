@@ -1,0 +1,51 @@
+strictness: medium
+
+test-warnings: true
+doc-warnings: true
+
+ignore-patterns:
+#    - (^|/)\..+
+    - .*scripts/
+
+dodgy:
+    # Looks at Python code to search for things which look "dodgy"
+    # such as passwords or git conflict artifacts
+    run: true
+
+mccabe:
+    # complexity checking.
+    run: true
+
+pep257:
+    # docstring checking
+    run: true
+
+pep8:
+    # style checking
+    run: true
+    options:
+        max-line-length: 100
+
+pyflakes:
+    run: true
+
+pylint:
+    # static analysis and then some
+    run: true
+    options:
+        dummy-variables-rgx: '_$|__$|dummy'
+        max-line-length: 100
+        ignored-classes: pytest
+    disable:
+        # Too many lines in module
+        - C0302
+        # Used * or ** magic
+        - W0142
+
+#pyroma:
+#    # checks setup.py
+#    run: true
+
+#vulture:
+#    # this tool finds unused code.
+#    run: true

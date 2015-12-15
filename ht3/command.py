@@ -1,10 +1,7 @@
-import threading
-import traceback
+"""Register commands."""
 import functools
 import inspect
-import re
-import textwrap
-import threading
+import traceback
 
 
 from .args import Args
@@ -111,7 +108,7 @@ def run_command_func(c, *args, **kwargs):
     THREAD_LOCAL.command = [_COMMAND_RUN_ID, c.name, parent]
 
     env.Env.log_command(c.name)
-    r = c()
+    r = c(*args, **kwargs);
     env.Env.log_command_finished(r)
 
     _, _, p = THREAD_LOCAL.command
@@ -129,7 +126,7 @@ def run_command(string):
     parent = THREAD_LOCAL.command
     THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, parent]
 
-    cmd, sep, arg = parse_command(string)
+    cmd, _, arg = parse_command(string)
     env.Env.log_command(string)
     try:
         c = COMMANDS[cmd]

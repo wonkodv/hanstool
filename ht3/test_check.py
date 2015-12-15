@@ -1,7 +1,8 @@
 import unittest
+from unittest.mock import patch
 import os
 
-from ht3.check import Group, Value
+from ht3.check import Group, Value, CHECK
 
 class TestGroup(unittest.TestCase):
     def test_all(self):
@@ -12,7 +13,7 @@ class TestGroup(unittest.TestCase):
         assert not g.z
 
         assert 'x' in g
-        assert not 'z' in g
+        assert 'z' not in g
 
         assert g('x','y')
         assert not g('x', 'y', 'z')
@@ -20,13 +21,34 @@ class TestGroup(unittest.TestCase):
 
 class TestValue(unittest.TestCase):
     def test_all(self):
-        x = True
+        x = 1
         v = Value(lambda:x)
 
-        assert x
-        x = False
-        assert not x
+        assert v
+        x = 0
+        import pdb; pdb.set_trace() ########## TODO ##########
+        assert not v
 
         x = 7
-        assert x != 5
-        assert x == 7
+        assert v != 5
+        assert v == 7
+
+class Test_check(unittest.TestCase):
+    def test_basic_os(self):
+        assert os.name in CHECK.os
+        assert CHECK.os(os.name)
+
+    def test_specific_os(self):
+        if os.name == 'nt':
+            assert CHECK.os.win
+            assert CHECK.os.windows
+            assert CHECK.os.nt
+        elif os.name == 'posix':
+            assert CHECK.os.posix
+            #TODO: assert CHECK.os.linux
+
+    def test_currnet_frontend(self):
+        with patch('ht3.lib.THREAD_LOCAL') as fl:
+            fl.frontend='testfe'
+            assert CHECK.current_frontend('testfe')
+

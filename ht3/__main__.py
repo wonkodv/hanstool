@@ -1,10 +1,14 @@
+"""The ht3 main programm."""
 import sys
-import pathlib
+import os.path
 
 from . import lib
 from .command import run_command
 from .env import Env
-from .env import initial
+from .scripts import load_scripts
+
+__import__('ht3.env.initial')
+
 
 HELP= """call ht with the following arguments:
     -s SCRIPT   Load a script
@@ -15,6 +19,7 @@ HELP= """call ht with the following arguments:
     -r          Run all loaded Frontends """
 
 def main(args):
+    """Run the Hans Tool."""
     try:
         _x = False
         _f = False
@@ -25,7 +30,8 @@ def main(args):
         for a in arg_iter:
             if a == '-s':
                 s = next(arg_iter)
-                lib.load_scripts(s)
+                s = os.path.expanduser(s)
+                load_scripts(s)
                 _s = True
             elif a == '-e':
                 k = next(arg_iter)
@@ -49,18 +55,17 @@ def main(args):
 
                 return 1
         if not _s:
-            import os.path
             s = Env.get('SCRIPTS', False)
             if s:
                 for p in s.split(':'): #TODO use ; on Win
-                    lib.load_scripts(os.path.expanduser(p))
+                    load_scripts(os.path.expanduser(p))
             else:
                 import pkg_resources
                 s = pkg_resources.resource_filename(__name__,'default_scripts')
-                lib.load_scripts(s)
+                load_scripts(s)
                 s = os.path.expanduser('~/.config/ht3')
                 if os.path.exists(s):
-                    lib.load_scripts(s)
+                    load_scripts(s)
         if (not _r and _f):
             lib.run_frontends()
         elif (not _f and not _x):

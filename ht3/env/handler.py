@@ -1,3 +1,5 @@
+"""Default handler."""
+
 from . import Env
 
 @Env

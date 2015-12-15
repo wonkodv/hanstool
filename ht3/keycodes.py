@@ -1,3 +1,5 @@
+"""Provides a map of Key Name to Key Code"""
+
 KEY_CODES = {
     "LBUTTON":              0x01,
     "RBUTTON":              0x02,

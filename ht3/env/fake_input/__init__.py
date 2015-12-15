@@ -1,31 +1,27 @@
+"""
+Fake Input
+
+Provides a set of functions in Env that simulate User
+input (mouse moves, Key Strokes, etc).
+``fake(s)`` parses the string s and generates fake input from that.
+"""
+
 import re
 import time
 
-from ht3.lib import Check
+from ht3.check import CHECK;
 from ht3.keycodes import KEY_CODES
 from ht3.env import Env
 
-__all__ = [
-        'mouse_move_abs',
-        'mouse_move_rel',
-        'mouse_down',
-        'mouse_up',
-        'mouse_wheel',
-        'key_down',
-        'key_up',
-        'type_string',
-        'KEY_CODES',
-        'fake']
-
-impl = object()
-
-if Check.os.win:
+if CHECK.os.win:
     from . import windows as impl
-elif Check.os.posix:
+elif CHECK.os.posix:
     try:
         from . import xserver as impl
     except NotImplementedError:
-        pass
+        impl = object()
+
+__all__ = ('KEY_CODES', 'fake')
 
 
 
@@ -45,24 +41,26 @@ fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in fake_types))
 
 @Env
 def fake(string,interval=10):
-    """ Fake a sequence of Events, specified by a string in the
-        following mini language:
-        *   Whitespaces are ignored
-        *   123X456 moves the mouse to x=123 and y=456, see mouse_move_abs
-        *   50.2%7 moves the mouse to x=50.2% and y=7%, see mouse_move_rel
-        *   M1      Does a Mouse Click at the current mouse position
+    """
+    Fake a sequence of Events, specified by a string.
+
+    Parses the following mini language:
+    *   Whitespaces are ignored
+    *   ``123X456`` moves the mouse to x=123 and y=456, see mouse_move_abs
+    *   ``50.2%7``  moves the mouse to x=50.2% and y=7%, see mouse_move_rel
+    *   ``M1``      Does a Mouse Click at the current mouse position
                     With the left button. 2=Middle, 3=right, 4, 5
-        *   +M2     Press but do not release the middle mouse button
-        *   -M3     Release the right mouse button
-        *   'hans@fred.com'  Type hans' email address. No escaping any char
-            except the closing quote is allowed in the string. You can use
-            single or double quotes for text that contains the other quote.
-        *   +Key    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL,... see KEY_CODES
-        *   -A  Release A
-        *   A   Press, then release A
-        *   (10.3) sleep 10.3 ms
-        if an interval (in ms) is given, wait this long before every event (thus
-        twice when pressing and releasing keys/buttons). also before sleeps.
+    *   ``+M2``     Press but do not release the middle mouse button
+    *   ``-M3``     Release the right mouse button
+    *   ``'hans@fred.com'``  Type hans' email address. No escaping any char
+                    except the closing quote is allowed in the string. You can use
+                    single or double quotes for text that contains the other quote.
+    *   ``+Key``    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL,... see KEY_CODES
+    *   ``-A``      Release A
+    *   ``A``       Press, then release A
+    *   ``(10.3)``  Sleep 10.3 ms
+    Waits for ``interval`` milliseconds between every event. (thus
+    twice when pressing and releasing keys/buttons). also before sleeps.
     """
 
     sequence = []
@@ -76,17 +74,16 @@ def fake(string,interval=10):
     for m in fake_re.finditer(string):
         if   m.group("WHITESPACE"):
             pass
-
         elif m.group("MOVEREL"):
-            x = float(m.group('xr'))
-            y = float(m.group('yr'))
-            a(impl.mouse_move_rel, x, y)
-            log("MouseMove rel to x=%.1f y=%.1f", x, y)
+            xr = float(m.group('xr'))
+            yr = float(m.group('yr'))
+            a(impl.mouse_move_rel, xr, yr)
+            log("MouseMove rel to x=%.1f y=%.1f", xr, yr)
         elif m.group("MOVEABS"):
-            x = int(m.group('xa'))
-            y = int(m.group('ya'))
-            a(impl.mouse_move_abs, x, y)
-            log("MouseMove abs to x=%.1f y=%.1f", x, y)
+            xa = int(m.group('xa'))
+            ya = int(m.group('ya'))
+            a(impl.mouse_move_abs, xa, ya)
+            log("MouseMove abs to x=%.1f y=%.1f", xa, ya)
         elif m.group("MBTN"):
             ud = m.group('mud')
             btn= int(m.group('btn'))
@@ -96,7 +93,6 @@ def fake(string,interval=10):
             if ud != '+':
                 a(impl.mouse_up, btn)
                 log("MouseUp b=%d", btn)
-
         elif m.group("KEY"):
             ud = m.group('kud')
             key= m.group('key')
@@ -107,7 +103,6 @@ def fake(string,interval=10):
             if ud != '+':
                 a(impl.key_up, key)
                 log("KeyUp vk=%d", key)
-
         elif m.group("STRING1"):
             s = m.group('s1')
             a(impl.type_string, s, interval)
@@ -120,11 +115,9 @@ def fake(string,interval=10):
             t = int(m.group('sleep'))
             a(time.sleep, t/1000)
             log("Sleep for %dms", t)
-
-        elif m.group("INVALID"):
-            raise ValueError("Invalid Token", m.group(0))
         else:
-            assert False, m
+            assert m.group("INVALID")
+            raise ValueError("Invalid Token", m.group(0))
 
     Env.log("Fake: " +"\n      ".join(logs))
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+"""Install ht3."""
 
 from setuptools import setup, find_packages
 

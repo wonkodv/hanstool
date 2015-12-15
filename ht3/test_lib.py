@@ -1,8 +1,7 @@
 import unittest
 import unittest.mock
 import time
-import os
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 
 from ht3 import lib
 
@@ -48,23 +47,4 @@ class Test_frontends(unittest.TestCase):
 
         self.assertGreater(fe1.i, 100)
         self.assertGreater(fe2.i, 100)
-
-class Test_check(unittest.TestCase):
-    def test_basic_os(self):
-        assert os.name in lib.Check.os
-        assert lib.Check.os(os.name)
-
-    def test_basic_os(self):
-        if os.name == 'nt':
-            assert lib.Check.os.win
-            assert lib.Check.os.windows
-            assert lib.Check.os.nt
-        elif os.name == 'posix':
-            assert lib.Check.os.posix
-            #TODO: assert Check.os.linux
-
-    def test_currnet_frontend(self):
-        with patch('ht3.lib.THREAD_LOCAL') as fl:
-            fl.frontend='testfe'
-            assert lib.Check.current_frontend('testfe')
 

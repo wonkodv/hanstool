@@ -1,3 +1,4 @@
+"""Functions that deal with Windows Windows."""
 import ctypes
 from ctypes.wintypes import RECT, POINT
 from ctypes import c_wchar
@@ -33,7 +34,7 @@ def SetForegroundWindow(wnd):
 @Env
 def WindowFromPoint(p=None):
     if p is None:
-        p = GetCursorPos()
+        p = Env.GetCursorPos()
     elif not isinstance(p, POINT):
         p = POINT(*p)
     return ctypes.windll.user32.WindowFromPoint(p)

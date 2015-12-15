@@ -1,9 +1,10 @@
-if not Check.os.win:
+"""Some default commands on Windows."""
+if not CHECK.os.win:
     raise NotImplementedError()
 
 @cmd(name='o', args=1)
 def shellexecute(s):
-    """ Shell Execute, windows's all purpose opening function for files and programms """
+    """Shell Execute, windows's all purpose opening function for files and programms."""
     from ctypes import windll
     r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
     if r > 32:
@@ -13,7 +14,7 @@ def shellexecute(s):
 
 @cmd(args="1", complete=complete_command, name="#")
 def explore_command(cmd):
-    """ Show the directory or file used in the target commands source in explorer"""
+    """Show the directory or file used in the target commands source in explorer."""
     from pathlib import Path
     import functools
 
@@ -36,15 +37,17 @@ def explore_command(cmd):
     except:
         pass
 
-if Check.frontend('ht3.gui'):
+if CHECK.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _place_cmd_win_over_taskbar_toolbar():
+        """Find a toolbar named ``hanstool`` and place the command window over it."""
         h = GetTaskBarHandle()
         r = GetWindowRect(h)
         ht3.gui.cmd_win_set_rect(*r)
 
     @Env
     def DockInTaskbar():
+        """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
         c = ht3.gui.GUI.cmd_win.window.winfo_id()
         h = GetTaskBarHandle()
         left, top, width, height = GetWindowRect(h)
@@ -53,7 +56,7 @@ if Check.frontend('ht3.gui'):
         def to_front(*args):
             ht3.gui.cmd_win_to_front()
 
-        # Hack because after Docking, The mouse click activation doesn't work
+        # Hack so after docking, the windows isnt moved arround.
         ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
         ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
         ht3.gui.GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)

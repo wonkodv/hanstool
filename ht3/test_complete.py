@@ -1,7 +1,7 @@
 import unittest
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch, Mock
 
-from ht3.complete import *
+from ht3.complete import complete_py, complete_command
 
 
 class Test_Completion(unittest.TestCase):
@@ -19,41 +19,33 @@ class Test_Completion(unittest.TestCase):
             self.assertListEqual(complete_command('c1 ar'), ['c1 arg1'])
 
     def test_py_completion(self):
-        with patch("ht3.env.Env") as mockEnv:
-            with patch("ht3.complete.__builtins__", {
-                    'dict':dict,
-                    'len':len,
-                    'filter':filter,
-                    'sorted':sorted,
-                    'dir':dir}):
-                mockEnv.dict = {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}
+        with patch("ht3.complete.SCOPE", {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}):
+            c = complete_py('FO')
+            self.assertListEqual(c, [])
 
-                c = complete_py('FO')
-                self.assertListEqual(c, [])
+            c = complete_py('FO ')
+            self.assertListEqual(c, [])
 
-                c = complete_py('FO ')
-                self.assertListEqual(c, [])
+            c = complete_py('FO BAR')
+            self.assertListEqual(c, [])
 
-                c = complete_py('FO BAR')
-                self.assertListEqual(c, [])
+            c = complete_py('t')
+            self.assertListEqual(c, ['text', 'three', 'two'])
 
-                c = complete_py('t')
-                self.assertListEqual(c, ['text', 'three', 'two'])
+            c = complete_py('text')
+            self.assertListEqual(c, ['text'])
 
-                c = complete_py('text')
-                self.assertListEqual(c, ['text'])
+            c = complete_py('text ')
+            self.assertListEqual(c, []) # Is a command, not py, dont py complete
 
-                c = complete_py('text ')
-                self.assertListEqual(c, []) # Is a command, not py, dont py complete
+            c = complete_py('text foo')
+            self.assertListEqual(c, []) # Is a command, not py, dont py complete
 
-                c = complete_py('text foo')
-                self.assertListEqual(c, []) # Is a command, not py, dont py complete
+            c = complete_py('text.')
+            self.assertIn('text.startswith', c)
+            self.assertIn('text.capitalize', c)
 
-                c = complete_py('text.')
-                self.assertIn('text.startswith', c)
-                self.assertIn('text.capitalize', c)
-
-                c = complete_py('text.s')
-                self.assertIn('text.startswith', c)
-                self.assertIn('text.strip', c)
+            c = complete_py('text.s')
+            self.assertIn('text.startswith', c)
+            self.assertIn('text.strip', c)
 

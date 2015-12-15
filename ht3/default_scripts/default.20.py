@@ -1,3 +1,4 @@
+"""The default commands that make the HT3 usable."""
 
 # Helpers
 cmd(name='l')(list_commands)
@@ -24,19 +25,19 @@ def exit():
 
 # Execute Programms and Shell
 
-if Check.frontend('ht3.cli'):
+if CHECK.frontend('ht3.cli'):
     # Programms should run in foreground when invoked from CLI
     @cmd(name="$", args=1)
     def _shell(arg):
         p = shell(arg)
-        if Check.current_frontend('ht3.cli'):
+        if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
     @cmd(name="!", args="shell")
     def _execute(args):
         p = execute(*args)
-        if Check.current_frontend('ht3.cli'):
+        if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
@@ -61,12 +62,12 @@ def _():
     if 'EDITOR' in os.environ:
         import shlex
         e = shlex.split(os.environ['EDITOR'])
-    elif Check.os.posix:
-        if Check.frontend('ht3.cli'):
+    elif CHECK.os.posix:
+        if CHECK.frontend('ht3.cli'):
             EDITOR=['vim']
         else:
             EDITOR=['gvim']
-    elif Check.os.win:
+    elif CHECK.os.win:
         e = r"C:\Program Files (x86)\Notepad++\notepad++.exe"
         if os.path.exists(e):
             e = [e]
@@ -88,7 +89,7 @@ def edit_file(file_name, line=1):
     else:
         args = EDITOR + [f]
     p = execute(*args)
-    if Check.current_frontend == 'ht3.cli':
+    if CHECK.current_frontend == 'ht3.cli':
         p.wait()
 
 @cmd(name="+", args="1", complete=complete_all)
@@ -105,8 +106,8 @@ def edit_command(c):
     edit_file(f, l)
 
 def _complete_script_names(s):
-    from ht3.lib import SCRIPTS
-    return sorted(p.name for p in SCRIPTS if p.name.startswith(s))
+    from ht3.scripts import SCRIPTS
+    return filter_completions(s, (p.name for p in SCRIPTS))
 
 @cmd(name="++", args="shell", complete=_complete_script_names)
 def add_command(script, name=None):
@@ -120,7 +121,7 @@ def add_command(script, name=None):
         4. you should restart for the new command to be activated.
 
     """
-    from ht3.lib import SCRIPTS
+    from ht3.scripts import SCRIPTS
     import pathlib
     for s in SCRIPTS:
         if s.name.find(script) >= 0:
@@ -177,7 +178,7 @@ def restart(*more_args):
         -f, -s and -r args, NOT -x.
     """
     import os, sys
-    for path in ht3.lib.SCRIPTS:
+    for path in ht3.scripts.SCRIPTS:
         with path.open("rt") as f:
             c = f.read()
         try:
@@ -186,7 +187,7 @@ def restart(*more_args):
             log_error(e)
             return
     args = []
-    if Check.os.win:
+    if CHECK.os.win:
         args.append('"' + sys.executable + '"')
     else:
         args.append(sys.executable)
@@ -228,7 +229,7 @@ def restart(*more_args):
     print ("\n==================== RESTART ===================\n")
     os.execv(sys.executable, args)
 
-if Check.frontend('ht3.gui', 'ht3.hotkey'):
+if CHECK.frontend('ht3.gui', 'ht3.hotkey'):
     _httofront_time=0
     @cmd(HotKey="F8")
     def httofront():
@@ -241,7 +242,7 @@ if Check.frontend('ht3.gui', 'ht3.hotkey'):
         else:
             ht3.gui.log_win_to_front()
 
-if Check.frontend('ht3.gui'):
+if CHECK.frontend('ht3.gui'):
     @ht3.gui.do_on_start
     def _():
         ht3.gui.cmd_win_stay_on_top()

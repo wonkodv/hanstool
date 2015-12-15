@@ -1,26 +1,23 @@
-import sys
+"""The Command Line Frontend. Like a shell."""
 import traceback
 import os
 import atexit
-import configparser
 import os.path
-import logging
 import threading
 
-from . import lib
 from .env import Env
 from .command import run_command
 from .complete import complete_all
 
 try:
     import readline
-except:
+except ImportError:
     readline = None
 
 _evt = threading.Event()
 
 def loop():
-    setup_readline()
+    _setup_readline()
     _evt.clear()
     for c in _do_on_start:
         c()
@@ -29,7 +26,7 @@ def loop():
             prompt = Env.CLI_PROMPT
             if callable(prompt):
                 prompt = prompt()
-            s = input(prompt)
+            s = input(prompt) #TODO: let this be interrupted from stop.
         except KeyboardInterrupt:
             continue
         except EOFError:
@@ -42,7 +39,7 @@ def loop():
             except SystemExit:
                 print("\nQuitting")
                 raise
-            except:
+            except Exception:
                 traceback.print_exc()
             else:
                 if result is not None:
@@ -52,7 +49,7 @@ def stop():
     _evt.set()
 
 
-def setup_readline():
+def _setup_readline():
     if not readline:
         return False
 
@@ -81,9 +78,8 @@ def setup_readline():
         if n == 0:
             try:
                 completion_cache = list(complete_all(text))
-            except:
-                traceback.print_exc()
-            #print("\nCompletion of %s, cache: %s\n--> %s" % (text, completion_cache, text),end='')
+            except Exception as e:
+                Env.log_error(e) # readline ignores all exceptions
         return completion_cache[n]
     readline.set_completer(rl_complete)
     readline.set_completer_delims('')

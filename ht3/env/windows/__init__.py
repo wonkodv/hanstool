@@ -1,7 +1,7 @@
+"""Various functions to work with Windows."""
+from ht3.check import CHECK
 
-from ht3.lib import Check
-
-if Check.os.win:
+if CHECK.os.win:
     from . import message_box
     from . import default
     from . import hwnds

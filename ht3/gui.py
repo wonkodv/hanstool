@@ -1,14 +1,17 @@
+"""The Graphical user interface.
+
+Has a small window where you enter Text
+and a larger one that will be mostly hidden wher log messages appear.
+"""
 import tkinter as tk
-import sys
 import traceback
-import os
-import queue
 import threading
 
 from . import lib
 from .env import Env
 from .command import run_command
 from .complete import complete_all
+from .check import CHECK
 
 GUI = None
 
@@ -38,18 +41,18 @@ class UserInterface():
 
     def run_command(self, string):
         if string:
-            self.cmd_win._set_state("Working")
+            self.cmd_win.set_state("Working")
             try:
-                result = run_command(string)
+                run_command(string)
             except Exception as e:
-                self.cmd_win._set_state("Error")
+                self.cmd_win.set_state("Error")
                 log_error(e)
                 return string
             else:
-                self.cmd_win._set_state("Waiting")
+                self.cmd_win.set_state("Waiting")
                 return ""
         else:
-            self.cmd_win._set_state("Waiting")
+            self.cmd_win.set_state("Waiting")
             return string
 
     class CommandWindow():
@@ -97,10 +100,6 @@ class UserInterface():
             self._has_focus = f
             self._update_color()
 
-        def _set_state(self, state):
-            self._state = state
-            self._update_color()
-
         def _update_color(self):
             if self._state == 'Waiting':
                 if self._has_focus:
@@ -114,6 +113,10 @@ class UserInterface():
             else:
                 assert False
             self.master.update_idletasks()
+
+        def set_state(self, state):
+            self._state = state
+            self._update_color()
 
         def to_front(self):
             self.window.deiconify()
@@ -259,9 +262,14 @@ class UserInterface():
             self.log("Spawned process %d: %r" % (p.pid, p.args))
 
         def log_subprocess_finished(self, p, current_command=None, frontend=None):
-            if p.returncode > 0:
-                self.to_front()
             self.log("Process finished %d: %r" % (p.pid, p.returncode))
+            if p.returncode > 0:
+                if CHECK.os.win:
+                    if not p.shell:
+                        # The return code for "single instance" programms
+                        # like explorer or firefox is often zero without any errors
+                        return
+                self.to_front()
 
         def log_thread(self, t, current_command=None, frontend=None):
             self.log("Spawned thread %d: %s" % (t.ident, t.name))
@@ -292,7 +300,7 @@ def loop():
         GUI = None
 
 def stop():
-    if not GUI is None:
+    if GUI is not None:
         GUI.close_soon()
 
 #logging

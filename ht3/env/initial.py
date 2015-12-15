@@ -1,41 +1,56 @@
+"""Fills the initial environment."""
+import os
+import time
+import os.path
+
+import ht3
 from . import Env
+from ht3.check import CHECK
+import ht3.check
+import ht3.complete
+import ht3.command
+
+
+def import_element( mod, name):
+    """add the element ``name`` from module ``mod``"""
+    Env.dict[name] = getattr(mod, name)
+
 Env.__ = []
 Env._  = None
 
+Env['ht3'] = ht3
 
-
-import os
 for k, v in os.environ.items():
     if k[:4] == 'HT3_':
         Env[k[4:]] = v
 
-import time
-Env(time.sleep)
 
-from ht3.complete import complete_all, complete_py, complete_command
-Env(complete_py)
-Env(complete_command)
-Env(complete_all)
 
-from ht3.command import cmd, COMMANDS, run_command
-Env(cmd)
-Env.COMMANDS = COMMANDS
-Env(run_command)
+import_element(ht3.check, 'CHECK')
 
-from ht3.lib import Check, evaluate_py_expression, execute_py_expression, start_thread
-Env.Check = Check
-Env(evaluate_py_expression)
-Env(execute_py_expression)
-Env(start_thread)
+import_element(ht3.complete, 'complete_all')
+import_element(ht3.complete, 'complete_py')
+import_element(ht3.complete, 'complete_command')
+import_element(ht3.complete, 'filter_completions')
 
-import os.path
-Env(os.path.expanduser)
+import_element(ht3.command, 'cmd');
+import_element(ht3.command, 'COMMANDS');
+import_element(ht3.command, 'run_command');
 
-from . import log
-from . import handler
-from . import fake_input
-from . import process
-from . import helpers
+import_element(ht3.lib, 'evaluate_py_expression');
+import_element(ht3.lib, 'execute_py_expression');
+import_element(ht3.lib, 'start_thread');
 
-if Check.os.windows:
-    from . import windows
+import_element(time, 'sleep')
+import_element(os.path, 'expanduser')
+
+if CHECK.os.windows:
+    __import__('ht3.env.windows')
+
+__import__('ht3.env.log')
+__import__('ht3.env.handler')
+__import__('ht3.env.fake_input')
+__import__('ht3.env.process')
+__import__('ht3.env.helpers')
+
+

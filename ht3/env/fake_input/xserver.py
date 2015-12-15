@@ -1,5 +1,6 @@
-__all__ = ['mouse_move', 'mouse_down', 'mouse_up', 'key_down', 'key_up']
+"""Fake Input for the X11."""
 
+__all__ = ('mouse_move', 'mouse_down', 'mouse_up', 'key_down', 'key_up')
 
 mouse_move = None
 mouse_down = None

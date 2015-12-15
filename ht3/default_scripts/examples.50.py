@@ -1,5 +1,6 @@
+"""Soome example commands and configuration."""
 
-if Check.frontend('ht3.cli'):
+if CHECK.frontend('ht3.cli'):
     @ht3.cli.do_on_start
     def _():
         try:
@@ -13,8 +14,7 @@ def txt():
     edit_file(expanduser("~/txt"))
 
 @cmd(args=float, default=3, async=True)
-def tea(t):
+def timer(t):
     """ Tea timer """
-    import time
-    time.sleep(t*60)
-    MessageBox("Tee", "tee fertig", "TOPMOST SETFOREGROUND SYSTEMMODAL OK ICONINFORMATION")
+    sleep(t*60)
+    MessageBox("Timer", "Done (%.1f)"%t, "TOPMOST SETFOREGROUND SYSTEMMODAL OK ICONINFORMATION")

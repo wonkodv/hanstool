@@ -4,7 +4,7 @@ from unittest.mock import Mock, patch
 
 from ht3 import processwatch
 
-def MockProcess(id, lifetime):
+def MockProcess(pid, lifetime):
     lifetime = float(lifetime)
     starttime = time.monotonic()
     def poll():
@@ -14,7 +14,7 @@ def MockProcess(id, lifetime):
         else:
             return 42
     p = Mock()
-    p.pid = id
+    p.pid = pid
     p.poll = poll
     return p
 
@@ -28,9 +28,12 @@ class TestProcessWatch(unittest.TestCase):
         assert p.pid == 1
 
     def test_watch(self):
-        """ This Test is based on sleeping the right time and thus,
-            a bit shaky. to be more accurate, multiply each time eith
-            10 but then the test is slow.
+        """
+        Test that processwatch.watch calls callbacks within expected time
+
+        This Test is based on sleeping the right time and thus,
+        a bit shaky. to be more accurate, multiply each time eith
+        10 but then the test is slow.
         """
         with patch('ht3.processwatch.SHORT_SLEEP',0.001):
 

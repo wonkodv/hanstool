@@ -1,3 +1,9 @@
+"""Provide the CHECK object to test the current environment"""
+import os
+import sys
+
+__all__ = ('CHECK', )
+
 class Group:
     def __init__(self, collection):
         self.collection = collection
@@ -21,6 +27,9 @@ class Value:
     def __ne__(self, other):
         return self.call() != other
 
+    def __bool__(self):
+        return bool(self.call())
+
     def __call__(self, *val):
         if len(val) == 1:
             return self.call() == val[0]
@@ -30,3 +39,16 @@ class Value:
 
 class Check:
     pass
+
+
+CHECK = Check()
+
+OS = set()
+OS.add(os.name)
+OS.add(sys.platform)
+
+if os.name == 'nt':
+    OS.add("win")
+    OS.add("windows")
+
+CHECK.os = Group(OS)

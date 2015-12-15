@@ -1,3 +1,8 @@
+"""The default logging functions.
+
+They print to console and should be overwritten by
+frontends that dont use stdin/out to do that.
+"""
 import traceback
 from . import Env
 
@@ -45,7 +50,7 @@ def log_thread(t):
         print("spawned thread: %d, %r" % (t.pid, t.target))
 
 @Env
-def log_thread_finished(r):
+def log_thread_finished(result):
     if result is None:
         if not Env.get('DEBUG', False):
             return

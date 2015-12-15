@@ -1,18 +1,7 @@
-import collections
-import functools
-import os
-import os.path
-import pathlib
-import re
-import shlex
-import subprocess
-import sys
-import textwrap
-import threading
-import time
-import traceback
-import warnings
+"""Module for loading frontends, scripts and miscelaneous functions"""
 
+import sys
+import threading
 
 from . import env
 from . import check
@@ -24,43 +13,35 @@ THREAD_LOCAL = threading.local()
 THREAD_LOCAL.command = None
 THREAD_LOCAL.frontend = None
 
-SCRIPTS = []
 
-Check = check.Check()
+check.CHECK.frontend = check.Group(FRONTENDS)
+check.CHECK.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
 
-OS = set()
-OS.add(os.name)
-OS.add(sys.platform)
-
-if os.name == 'nt':
-    OS.add("win")
-    OS.add("windows")
-
-Check.os = check.Group(OS)
-Check.frontend = check.Group(FRONTENDS)
-Check.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
 
 def import_recursive(name):
-    m = __import__(name)
-    s = name.split('.')
-    env.Env[s[0]] = m
-    for p in s[1:]:
-        m = getattr(m, p)
-    return m
+    """Import and return a leaf-module"""
+    __import__(name)
+    return sys.modules[name]
+
 
 def load_frontend(name):
+    """Load a the frontend with wualified name: ``name``"""
     mod = import_recursive(name)
     assert callable(mod.loop)
     assert callable(mod.stop)
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
 
-def run_frontends():
-    """ Start all loaded frontends in seperate threads. If any frontend returns
-    from its loop() method, call stop() of all frontends (from the main thread
-    so stop must be threadsafe) and wait for all threads to finish.
-    """
 
+def run_frontends():
+    """
+    Start all loaded frontends.
+
+    Execute the ``loop`` function of every loaded Frontend in a seperate thread.
+    If any frontend returns from its ``loop``,``stop()`` of all
+    frontends is called (from the main thread so stop must be threadsafe) after all threads finished
+    (the ``loop`` functions return), this function returns.
+    """
     frontends = list(FRONTEND_MODULES) # avoid concurrency
 
     if not frontends:
@@ -82,7 +63,7 @@ def run_frontends():
         threads = []
         evt = threading.Event()
 
-        def run_fe(fe):
+        def _run_fe(fe):
             THREAD_LOCAL.frontend = fe.__name__
             THREAD_LOCAL.command = None
             try:
@@ -92,7 +73,7 @@ def run_frontends():
             finally:
                 evt.set()
         for fe in frontends:
-            t = threading.Thread(target=run_fe, args=[fe], name=fe.__name__)
+            t = threading.Thread(target=_run_fe, args=[fe], name=fe.__name__)
             t.start()
             threads.append((t, fe))
 
@@ -110,70 +91,26 @@ def run_frontends():
             for t, f in threads:
                 t.join()
 
-def load_scripts(path):
-    if not isinstance(path, pathlib.Path):
-        path = str(path)
-        path = os.path.expanduser(path)
-        path = pathlib.Path(path)
-    if path.is_dir():
-        l = path.glob('*.py')
-        # sort c.py before b.5.py before a.20.py
-        def key(p):
-            if len(p.suffixes)>1:
-                s = p.suffixes[-2][1:]
-                try:
-                    return int(s), p
-                except:
-                    pass
-            return 0, p
-
-        l = sorted(l, key=key)
-        for p in l:
-            load_scripts(p)
-    elif path.is_file():
-        with path.open("rt") as f:
-            c = f.read()
-        c = compile(c, str(path), "exec")
-        try:
-            exec (c, env.Env.dict)
-        except NotImplementedError:
-            # Script wanted to be ignored
-            pass
-        SCRIPTS.append(path)
-    else:
-        raise Exception("neither file nor dir in load_Scripts", path)
-
-def format_log_message(msg, *args, **kwargs):
-    if isinstance(msg, str):
-        if kwargs:
-            if args:
-                raise ValueError("args or kwargs")
-            msg = msg % kwargs
-        else:
-            msg = msg % args
-    else:
-        msg = repr(msg)
-    if env.Env.get('DEBUG',False):
-        msg = "".join(traceback.format_stack()) + "\n" + msg
-    return msg
-
-
 def execute_py_expression(s):
-    """ Execute a python expression """
+    """Execute a python expression"""
     c = compile(s, "<input>", "exec")
     return eval(c, env.Env.dict)
 
+
 def evaluate_py_expression(s):
-    """ Evaluate a python expression """
+    """Evaluate a python expression"""
     c = compile(s, "<input>", "eval")
     r = eval(c, env.Env.dict)
     return r
 
-def start_thread(func, args=[], kwargs={}, name=None, on_exception=None, on_finish=None):
-    """ Start a thread that copys the thread local information
-        active frontend and active command and then executes `func`.
-        Calls `on_finished` with the function result or/and on_exception
-        on error.
+
+def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_finish=None):
+    """
+    Start a thread that is HT3 aware
+
+    Copys the thread local information active frontend and active command and
+    then executes `func`.  Calls `on_finished` with the function result or/and
+    on_exception on error.
     """
     if name is None:
         name = func.__name__
@@ -181,6 +118,10 @@ def start_thread(func, args=[], kwargs={}, name=None, on_exception=None, on_fini
         on_finish = env.Env.log_thread_finished
     if on_exception is None:
         on_exception = env.Env.log_error
+    if args is None:
+        args=tuple()
+    if kwargs is None:
+        kwargs = dict()
     fe = THREAD_LOCAL.frontend
     cmd = THREAD_LOCAL.command
     def target():

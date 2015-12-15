@@ -1,7 +1,7 @@
+"""Show the MessageBox."""
 import ctypes
-from ht3.env import Env
 from functools import reduce
-import operator
+from ht3.env import Env
 
 _MessageBoxFlags={
     # Buttons
@@ -61,9 +61,16 @@ _MessageBoxResults = [
 
 @Env
 def MessageBox(title, text, flags):
+    """ Show the Message Box
+
+    Shows a messagebox with ``title``, ``text`` and some buttons,
+    defined by ``flags`` (either a whitespace seperated list of
+    Constants, or an integer bit mask).
+    """
     try:
         flags = int(flags)
-    except:
-        flags = reduce(lambda x,y: x|y, (_MessageBoxFlags[x.strip().upper()] for x in flags.split(" ")))
+    except ValueError:
+        s = flags.split(" ")
+        flags = reduce(lambda x,y: x|y, (_MessageBoxFlags[x.strip().upper()] for x in s))
     x = ctypes.windll.user32.MessageBoxW(0, text, title, flags)
     return _MessageBoxResults[x]

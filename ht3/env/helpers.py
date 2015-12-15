@@ -1,6 +1,9 @@
+"""Various helper functions"""
 import textwrap
+import functools
+import shlex
 from . import Env
-from ht3.lib import THREAD_LOCAL
+from ht3.command import register_command
 
 @Env
 def list_commands():
@@ -29,3 +32,11 @@ def help_command(exp):
         obj = Env.evaluate_py_expression(exp)
     Env.help(obj)
 
+@Env
+def cmd_func(name, func, *args, **kwargs):
+    """Define a command that calls a function with arguments"""
+    register_command(functools.partial(func, *args, **kwargs),
+        name=name,
+        func_name=name,
+        doc='executes\n'+" ".join(shlex.quote(x) for x in args),
+        origin_stacked=3)

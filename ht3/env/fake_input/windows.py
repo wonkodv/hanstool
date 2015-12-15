@@ -1,9 +1,20 @@
+"""Fake Input on windows"""
+
 from ctypes import windll
 from ht3.keycodes import KEY_CODES
 import time
 
 
-__all__ = ['type_string', 'mouse_wheel', 'mouse_move_rel', 'mouse_move_abs', 'mouse_down', 'mouse_up', 'key_down', 'key_up']
+__all__ = (
+    'type_string',
+    'mouse_wheel',
+    'mouse_move_rel',
+    'mouse_move_abs',
+    'mouse_down',
+    'mouse_up',
+    'key_down',
+    'key_up'
+)
 
 
 mouse_event = windll.user32.mouse_event
@@ -63,7 +74,7 @@ def _btn(b, up):
         f = MOUSEEVENTF_RIGHTDOWN
     else:
         f = MOUSEEVENTF_XDOWN
-        d = x-2
+        d = b-2
 
     if up:
         f = f << 1

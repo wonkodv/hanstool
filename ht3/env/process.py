@@ -1,15 +1,16 @@
-import subprocess
-import functools
-import shlex
+"""Functions to spawn subprocesses."""
 
+import subprocess
+import shlex
+import warnings
 
 from . import Env
-from ht3.command import register_command
 from ht3.processwatch import watch
+from ht3.check import CHECK
 
 @Env
 def shellescape(string):
-    if Check.os.posix:
+    if CHECK.os.posix:
         return shlex.quote(string)
 
     #TODO: make this safe!
@@ -33,11 +34,3 @@ def execute(*args, cwd=None, env=None):
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
     return p
-
-@Env
-def execute_cmd(name, *args, **kwargs):
-    register_command(functools.partial(execute, *args, **kwargs),
-        name=name,
-        func_name=name,
-        doc='executes\n'+" ".join(shlex.quote(x) for x in args),
-        origin_stacked=3)

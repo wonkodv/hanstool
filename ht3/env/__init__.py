@@ -1,4 +1,6 @@
-__all__ = ['Env']
+"""The `Env` object, access point to the unified namespace."""
+
+__all__ = ('Env', )
 
 class Env_class:
     """ Class to record all variables and functions of

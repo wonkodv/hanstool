@@ -1,6 +1,5 @@
 import unittest
-import time
-from unittest.mock import patch, Mock, MagicMock
+from unittest.mock import patch
 
 from ht3.env.fake_input import fake, KEY_CODES
 

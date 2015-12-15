@@ -1,4 +1,4 @@
-### INTEGRATION TEST
+"""A set of commands that test if scripts and commands work as expected."""
 
 @cmd(args="?")
 def test(silent=False):
