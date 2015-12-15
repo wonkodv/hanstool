@@ -1,3 +1,4 @@
+### INTEGRATION TEST
 
 @cmd(args="?")
 def test(silent=False):
@@ -32,9 +33,15 @@ def test_assertions_enabled():
 #### Script Order
 
 def test_script_order():
-    # Scripts were ordered (overwrite.0.py before do_overwrite.1.py)
+    # The scripts were ordered.
+    # high index after low index after no index alphabetical
+    #   overwritea.py
+    #   overwriteb.10.py
+    #   overwritec.py
+    #   overwrited.5.py
+    #   test.py
     # And scripts run in the same namespace
-    assert Env.OVERWRITE_WORKED
+    assert Env.OVERWRITE == [0, 1, 2, 3]
 
 
 #### @cmd

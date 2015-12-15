@@ -117,8 +117,17 @@ def load_scripts(path):
         path = pathlib.Path(path)
     if path.is_dir():
         l = path.glob('*.py')
-        # sort b.50.py before a.80.py
-        l = sorted(l, key=lambda p: [p.suffixes[-2][1:] if len(p.suffixes)>1 else "",p])
+        # sort c.py before b.5.py before a.20.py
+        def key(p):
+            if len(p.suffixes)>1:
+                s = p.suffixes[-2][1:]
+                try:
+                    return int(s), p
+                except:
+                    pass
+            return 0, p
+
+        l = sorted(l, key=key)
         for p in l:
             load_scripts(p)
     elif path.is_file():
