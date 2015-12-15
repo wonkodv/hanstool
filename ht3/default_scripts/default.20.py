@@ -104,22 +104,51 @@ def edit_command(c):
         f, l = inspect.getsourcefile(o), o.__code__.co_firstlineno
     edit_file(f, l)
 
+def _complete_script_names(s):
+    from ht3.lib import SCRIPTS
+    return sorted(p.name for p in SCRIPTS if p.name.startswith(s))
 
-@cmd(name="++", args="shell")
+@cmd(name="++", args="shell", complete=_complete_script_names)
 def add_command(script, name=None):
-    """ Add a new command to a script.
-        First argument is matched against all scripts,
-        second is used as command name
+    """ define a command in a script.
+        1.  If `script` is a part of a script that was already loaded,
+            that one is edited, otherwise a new script with the name
+            (it must end in .py) is created in the directory of
+            the most recently loaded script.
+        2. If `name` is given, a command definition is added with the name.
+        3. The script is edited.
+        4. you should restart for the new command to be activated.
+
     """
-    import ht3.lib
-    for s in ht3.lib.SCRIPTS:
+    from ht3.lib import SCRIPTS
+    import pathlib
+    for s in SCRIPTS:
         if s.name.find(script) >= 0:
-            if name:
-                with s.open("ta") as f:
-                    f.write("\n@cmd(name='"+name+"', args=0)\ndef "+name+"():\n    pass")
-            with s.open("rt") as f:
-                l = len(list(f))
-            edit_file(s, l)
+            break
+    else:
+        if not script.endswith('.py'):
+            raise ValueError('The first arg must either match a loaded script'
+                ' or be a valid name of a new one (foo.10.py)')
+        s = SCRIPTS[-1].parent
+        if s.name == 'default_scripts':
+            s = expanduser('~/.config/ht3')
+            s = pathlib.Path(s)
+            if not s.exists():
+                show("Creating Directory "+str(s))
+                s.mkdir(parents=True)
+        s = s / script
+        assert not s.exists() # s should have matched above.
+        show("New Script "+str(s))
+        with s.open('wt') as f:
+            f.write('"""" A new Script """')
+
+    if name:
+        with s.open("ta") as f:
+            f.write("\n@cmd(name='"+name+"', args=0)\ndef "+name+"():\n    pass")
+
+    with s.open("rt") as f:
+        l = len(list(f))
+    edit_file(s, l)
 
 @cmd(name="<", args='path')
 def run_command_file(p):

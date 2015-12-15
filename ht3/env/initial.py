@@ -28,6 +28,9 @@ Env(evaluate_py_expression)
 Env(execute_py_expression)
 Env(start_thread)
 
+import os.path
+Env(os.path.expanduser)
+
 from . import log
 from . import handler
 from . import fake_input

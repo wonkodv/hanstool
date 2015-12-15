@@ -1,8 +1,15 @@
 TL;DR
 -----
 
-    pip install git+https://github.com/wonkodv/hanstool
-    ht
+    sh: pip install git+https://github.com/wonkodv/hanstool
+    sh: ht
+    ht> ++ tools.80.py web
+    vim
+        @cmd(name="web")
+        def web():
+            execute("/usr/bin/firefox")
+    ht> web
+    ht>
 
 
 HansTool 3
@@ -180,19 +187,34 @@ name on module level. But it still beats `bash` ([1]).
 Scripts
 -----------
 
-If you place your scripts into the `~/.config/ht3` folder, they are loaded
-automatically. Otherwise, you can specify a single script or a folder full of
-scripts. To start, you can copy the default scripts, shipped with HT3 from
-`ht3/default_scripts` into your folder.  When a folder of scripts is loaded,
-only files named `*.py` are considered, and they are sorted, so you have
-control which ones overwrite definitions from otherones.  For sorting, the
-number between the last two periods of the file name is used:
+Scripts are python scripts that are all executed in the same namespace.
+You can define functions variables and most important, commands there.
+The way you load scripts:
+1.  Specify one or more scripts or directories with scripts on the commandline
+2.  If no scripts were loaded on the commandline,
+    The ':' seperated directories from the `SCRIPTS` variable are loaded (from the
+    `Env`. Use the `HT3_SCRIPTS` environment variable from outside ht3.)
+3.  If no `SCRIPTS` variable is defined, use `ht3/default_scripts`
+    which definitely exists and `~/.config/ht3` if exists.
 
-1.  z.2.py
+Since `~/.config` looks a bit silly on windows, you might want to name
+your script folder (and propably the default scripts) explicitly using the
+1st or 2nd form from a batch file.
+
+The order in which scripts are loaded matters if they overwrite things that
+other scripts defined. Your scripts can for example redefine commands that
+the default scripts already defined.
+
+Inside a directory, scripts are sorted by a numeric index before the `.py` suffix.
+1.  a.py
+1.  z.py
 2.  W.10.py
 3.  a.30.py
 4.  b.30.py
 5.  a.1.2.3.z.40.py
+
+The default scripts might change. If you dont like that, copy them to your
+script directory and pass it explicitly.
 
 Some Default Commands
 -----------------
@@ -203,8 +225,8 @@ Some Default Commands
 *   `;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
 *   `?` help on commands or python objects: `? exit` `? sys`
 *   `+` open the editor where a command or other function was defined
-*   `++ [s] [c]` open the script that matches `s`. If given, add template for a new command
-    named `c`
+*   `++ s [c]` open the script that matches `s` or a new script named `s`.
+    If given, add template for a new command named `c`
 *   `$` calls the Shell. `$ wc -l ~/txt > ~/txt-len` writes the length of txt to txt-len
     The `$` command has argumennt parsing `1` because the function wants the entire
     text after the dolalr sign, open a shell, and let that shell figure out what to
@@ -278,16 +300,16 @@ multiple times.
 After processing all passed arguments, the following default actions happen:
 
 *   If no script was loaded with `-s`:
-    *   If `~/.config/ht3` exists, the scripts from there are loaded
-    *   else, the `default_scripts` are loaded and a message is shown.
+    *   If there is an `Env.SCRIPTS` the scripts from there are loaded (
+        multiple paths are seperated by `:`)
+    *   else, the `default_scripts` are loaded and, if exists, the scripts from
+        `~/.config/ht3`
 *   If one or more frontends were loaded with `-f` but not run with `-r`,
     they are run.
 *   If no frontend was loaded with `-f` and no command executed with `-x`, then
     the `ht3.cli` frontend is loaded and run.
 
-After setting up scripts in `~/.config/ht3` it should be enough to execute the
-HT3 without any arguments.
-
+It should usually be enough to just call `ht` without arguments, or with `-f`.
 
 Configure Things
 ---------------
@@ -301,11 +323,14 @@ Some Behaviour can be configured by setting things in the `Env`.
 *   `RL_HISTORY`: a string that points to a file with the history of the repl.
 *   `DEBUG`: set to true to do post mortem pdb debugging and show traces with all
         `log` and `show` messages
+*   `SCRIPTS` If no script is passed on the command line, this variable can specify
+     scripts, seperated by `:` that will be loaded.
 
 String variables can be configured via environment, but require a `HT3_` prefix, for
 example in `.bashrc`:
     export HT3_RL_HISTORY=~/.config/ht3/readline_history
     export HT3_DEBUG=1
+    export HT3_SCRIPTS=/opt/imported/scripts:~/__config/ht3
 Other python objects and strings can be configured in scripts. The default
 values are set very early by `ht3.lib`. Scripts are run in the order they appear on
 the command line.

@@ -6,17 +6,6 @@ from .command import run_command
 from .env import Env
 from .env import initial
 
-
-DEFAULT_SCRIPTS_TEXT='''Using the default scripts. You should copy them to ~/.config/ht3
-and modify them:
-    sh$ mkdir -p ~/.config/ht3/
-    sh$ cp "%s/*" ~/.config/ht3/
-    sh$ touch ~/.config/tools.50.py
-    sh$ ht
-    ht> l
-    ht> e
-    ht> ++ tools newComand
-If you already have script(s), use them with -s.  '''
 HELP= """call ht with the following arguments:
     -s SCRIPT   Load a script
     -s FOLDER   Load several scripts
@@ -60,14 +49,18 @@ def main(args):
 
                 return 1
         if not _s:
-            p = pathlib.Path('~/.config/ht3')
-            if p.is_dir():
-                lib.load_scripts(p)
+            import os.path
+            s = Env.get('SCRIPTS', False)
+            if s:
+                for p in s.split(':'): #TODO use ; on Win
+                    lib.load_scripts(os.path.expanduser(p))
             else:
                 import pkg_resources
                 s = pkg_resources.resource_filename(__name__,'default_scripts')
-                print(DEFAULT_SCRIPTS_TEXT % s)
                 lib.load_scripts(s)
+                s = os.path.expanduser('~/.config/ht3')
+                if os.path.exists(s):
+                    lib.load_scripts(s)
         if (not _r and _f):
             lib.run_frontends()
         elif (not _f and not _x):

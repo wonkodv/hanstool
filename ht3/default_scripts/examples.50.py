@@ -10,8 +10,7 @@ if Check.frontend('ht3.cli'):
 
 @cmd
 def txt():
-    import os.path
-    edit_file(os.path.expanduser("~/txt"),1)
+    edit_file(expanduser("~/txt"))
 
 @cmd(args=float, default=3, async=True)
 def tea(t):
