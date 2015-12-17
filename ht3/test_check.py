@@ -26,7 +26,6 @@ class TestValue(unittest.TestCase):
 
         assert v
         x = 0
-        import pdb; pdb.set_trace() ########## TODO ##########
         assert not v
 
         x = 7
