@@ -13,8 +13,8 @@ if CHECK.frontend('ht3.cli'):
 def txt():
     edit_file(expanduser("~/txt"))
 
-@cmd(args=float, default=3, async=True)
-def timer(t):
+@cmd(async=True)
+def timer(t:float=3):
     """ Tea timer """
     sleep(t*60)
     MessageBox("Timer", "Done (%.1f)"%t, "TOPMOST SETFOREGROUND SYSTEMMODAL OK ICONINFORMATION")

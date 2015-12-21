@@ -73,21 +73,25 @@ def _():
             e = [e]
         else:
             e = ['notepad.exe']
-    Env.EDITOR = e
+    Env.EDITOR = tuple(e) # make unmodifiable
 _()
 
-def edit_file(file_name, line=1):
+@cmd(name='e')
+def edit_file(file_name:Path, line:int=0):
     f = str(file_name) # allow pathlib.Path
     l = int(line)
-    e = Env.EDITOR[0]
+    e = EDITOR[0]
     if e[-4:] == '.exe':
         e = e[:-4]
-    if e.endswith('vim'):
-        args = Env.EDITOR + [f, '+%d'%l ]
-    elif e.endswith('notepad++'):
-        args = Env.EDITOR + ['-n%d'%l, f]
-    else:
-        args = EDITOR + [f]
+
+
+    args = EDITOR + [f]
+    if line:
+        if e.endswith('vim'):
+            args = Env.EDITOR + [f, '+%d'%l ]
+        elif e.endswith('notepad++'):
+            args = Env.EDITOR + ['-n%d'%l, f]
+
     p = execute(*args)
     if CHECK.current_frontend == 'ht3.cli':
         p.wait()
@@ -109,7 +113,7 @@ def _complete_script_names(s):
     from ht3.scripts import SCRIPTS
     return filter_completions(s, (p.name for p in SCRIPTS))
 
-@cmd(name="++", args="shell", complete=_complete_script_names)
+@cmd(name="++", args="auto", complete=_complete_script_names)
 def add_command(script, name=None):
     """ define a command in a script.
         1.  If `script` is a part of a script that was already loaded,
@@ -145,7 +149,7 @@ def add_command(script, name=None):
 
     if name:
         with s.open("ta") as f:
-            f.write("\n@cmd(name='"+name+"', args=0)\ndef "+name+"():\n    pass")
+            f.write("\n@cmd(name='"+name+"', args='auto')\ndef "+name+"():\n    pass")
 
     with s.open("rt") as f:
         l = len(list(f))

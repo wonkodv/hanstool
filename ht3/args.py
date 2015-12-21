@@ -2,13 +2,14 @@
 
 import shlex
 import pathlib
+import inspect
 
 __all__ = ('Args', )
 
 _DEFAULT=object()
 
 class ArgParser:
-    def __init__(self, **kwargs):
+    def __init__(self):
         pass
 
     def __call__(self, string):
@@ -40,7 +41,7 @@ class NoOrOneArgs(ArgParser):
 
 class AllArgs(ArgParser):
     """Takes one argument of arbitrary format."""
-    def __init__(self, default=_DEFAULT, **kwargs):
+    def __init__(self, default=_DEFAULT):
         self.default=default
 
     def __call__ (self, string):
@@ -66,8 +67,8 @@ class PathArgs(ArgParser):
 
 class GetOptsArgs(ArgParser):
     """Takes the following "getopt" arguments:\n%s."""
-    def __init__(self, opts, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, opts):
+        super().__init__()
         self.opts = opts
         self.__doc__ = self.__doc__ % (opts,)
 
@@ -76,8 +77,8 @@ class GetOptsArgs(ArgParser):
 
 class SetArgs(ArgParser):
     """Takes one of a set of arguments."""
-    def __init__(self, sets, default=_DEFAULT, **kwargs):
-        super().__init__(**kwargs)
+    def __init__(self, sets, default=_DEFAULT):
+        super().__init__()
         self.sets=sets
         self.default=default
 
@@ -100,8 +101,8 @@ class SetArgs(ArgParser):
 
 class DictArgs(SetArgs):
     """Takes one of a set of arguments."""
-    def __init__(self, dicts, default=_DEFAULT, **kwargs):
-        super().__init__(dicts, **kwargs)
+    def __init__(self, dicts, default=_DEFAULT):
+        super().__init__(dicts)
         self.default = default
 
     def __call__(self, string):
@@ -115,7 +116,7 @@ class DictArgs(SetArgs):
 
 class CallableArgParser(ArgParser):
     """Takes a String that is accepted by %s()."""
-    def __init__(self, call, default=_DEFAULT, **kwargs):
+    def __init__(self, call, default=_DEFAULT):
         self.call = call
         self.default = default
         self.__doc__ = self.__doc__ % (call,)
@@ -125,70 +126,78 @@ class CallableArgParser(ArgParser):
             return [self.default],{}
         return [self.call(string)],{}
 
+
 class AutoArgs(ArgParser):
     """Parses shell style args and converts to annotated types"""
-    def __init__(self, command, defaults=_DEFAULT, **kwargs):
-        self.command = command
-        if defaults is _DEFAULT:
-            defaults = []
-        self.defaults = defaults
+    def __init__(self, command):
+        self.command = command;
 
     def __call__(self, string):
-        t = self.command.__wrapped__.__annotations__
-        raise NotImplementedError()
+        sig = inspect.signature(self.command)
+        values = iter(shlex.split(string))
 
+        args=[]
+        for name, p in sig.parameters.items():
+            t = p.annotation
+            if t == p.empty:
+                t = str
+            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
+                try:
+                    v = next(values)
+                except StopIteration:
+                    break
+                v = t(v)
+                args.append(v)
+            elif p.kind == p.VAR_POSITIONAL:
+                for v in values:
+                    v = t(v)
+                    args.append(v)
+                break
+        return args, {}
 
 def Args(spec, **kwargs):
     if not spec:
-        return NoArgs(**kwargs)
+        return NoArgs()
 
     if spec in ['1', 1, 'all']:
-        return AllArgs(**kwargs)
+        return AllArgs()
 
     if isinstance(spec, str):
         if spec == '?':
-            return NoOrOneArgs(**kwargs)
+            return NoOrOneArgs()
 
         if spec == 'shell':
-            return ShellArgs(**kwargs)
+            return ShellArgs()
 
         if spec == 'path':
-            return PathArgs(**kwargs)
+            return PathArgs()
 
         if spec == 'set':
-            d= []
-            if 'set' in kwargs:
-                d.append(kwargs['set'])
-            if 'sets' in kwargs:
-                d.extend(kwargs['sets'])
-            return SetArgs(d, **kwargs)
+            return SetArgs(kwargs['set'])
 
         if spec == 'dict':
-            d= []
-            if 'dict' in kwargs:
-                d.append(kwargs['dict'])
-            if 'dicts' in kwargs:
-                d.extend(kwargs['dicts'])
-            return DictArgs(d, **kwargs)
+            return DictArgs(kwargs['dict'])
 
         if spec.startswith(':'):
-            return GetOptsArgs(spec[1:], **kwargs)
+            return GetOptsArgs(spec[1:])
 
         if spec == 'auto':
-            return AutoArgs(**kwargs)
+            return AutoArgs(kwargs['_command'])
 
+    #TODO: Use Abstract base types:
     if isinstance(spec, list):
-        return SetArgs([spec], **kwargs)
+        return SetArgs(spec)
 
     if isinstance(spec, tuple):
-        return SetArgs([spec], **kwargs)
+        return SetArgs(spec)
 
     if isinstance(spec, set):
-        return SetArgs([spec], **kwargs)
+        return SetArgs(spec)
 
     if isinstance(spec, dict):
-        return DictArgs([spec], **kwargs)
+        return DictArgs(spec)
 
     if callable(spec):
-        return CallableArgParser(spec, **kwargs)
+        return CallableArgParser(spec)
+
     raise ValueError(spec)

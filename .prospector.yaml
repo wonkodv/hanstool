@@ -1,7 +1,7 @@
 strictness: medium
 
-test-warnings: true
-doc-warnings: true
+#test-warnings: true
+#doc-warnings: true
 
 ignore-patterns:
 #    - (^|/)\..+

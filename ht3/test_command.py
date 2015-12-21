@@ -26,9 +26,17 @@ class TestCmd(unittest.TestCase):
         COMMANDS['someCommand']("42")
         assert x==42
 
+    def test_origin(self):
+        @cmd
+        def someCommand():
+            pass
+
+        f, l = COMMANDS['someCommand'].origin
+        assert f == __file__
+        assert l == 30
+
 
 class Test_parse_command(unittest.TestCase):
-
     def test_noarg(self):
         ca = parse_command("cmd")
         self.assertTupleEqual(ca, ('cmd',"", ''))

@@ -143,7 +143,7 @@ The command has the following properties:
 Argument Parsing Methods
 -------------------------
 
-*   `0` no arguments (the default) the command `foo` results in the python statement
+*   `0` no arguments the command `foo` results in the python statement
     `COMMANDS['foo']()`. If the name of the command is the same as the command-fucntion (default)
     this is equal to the python statement `foo()`. The examples below assume this.
 *   `1` passes the entire string that follows the command-name to the command-function
@@ -161,8 +161,14 @@ Argument Parsing Methods
 *   `dict` like `set` but has to be a key of a dictionary. The lookup value is passed to the fucntion
 *   `path` like `1`. Must be an absolute or relative (to the current dir) path. Is passed as a Path object.
 *   a callable like `int` or `float`: will take the entire string pass it through the function an pass result as the 1 argument.
+*   `auto` This is the default. It is like `shell` but uses the annotation of function
+    arguments as callables to convert the argument, or str if there is no annotation.
+    `foo(i:int, p:pathlib.Path)` will accept exactly 2 arguments, the first is passed
+    through `int` and the second is made a `Path` before passing to the command-function.
 
-Most argument parsers accept a `default`.
+The argument parsers `set`, `dict` and "callable" accept a `default` which is used
+if the argument string is empty or only whitespaces. They do not use the fucntion
+parameter default value from the function signature.
 
 The one unified Namespace `Env`
 -------------------------------
