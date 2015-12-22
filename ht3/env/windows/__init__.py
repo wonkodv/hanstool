@@ -2,6 +2,6 @@
 from ht3.check import CHECK
 
 if CHECK.os.win:
-    from . import message_box
-    from . import default
-    from . import hwnds
+    __import__('ht3.env.windows.message_box')
+    __import__('ht3.env.windows.default')
+    __import__('ht3.env.windows.hwnds')
