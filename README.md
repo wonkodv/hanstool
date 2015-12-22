@@ -34,7 +34,10 @@ Components:
     *   A little Window
     *   Hotkeys: (Probably runs paralell to anotherone) which has
         systemwide hotkeys for some commands
-    *   Awesome WM Client: Like the MOD+R Prompt (Coming real soon)
+    *   a Daemon: listens on a socket for commands. commands can be sent with
+        `python -m ht3.client "command 1" "command 2"`.
+        Only on UNIX.
+    *   Awesome WM Client: A piece of lua that runs `ht3.client` is coming really soon!
     *   more are easily implemented
 *   Plattform aware functions. depending on the executing os, a different set of 
     functions is made available in the Namespace. For example in windows, there is the

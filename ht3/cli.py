@@ -17,8 +17,8 @@ except ImportError:
 _evt = threading.Event()
 
 def loop():
+    _evt.clear() # should be put somewhere else, can be race condition with stop
     _setup_readline()
-    _evt.clear()
     for c in _do_on_start:
         c()
     while not _evt.is_set():
