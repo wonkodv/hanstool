@@ -2,6 +2,7 @@
 import os
 import time
 import os.path
+import pathlib
 
 import ht3
 from . import Env
@@ -43,6 +44,7 @@ import_element(ht3.lib, 'start_thread');
 
 import_element(time, 'sleep')
 import_element(os.path, 'expanduser')
+import_element(pathlib, 'Path')
 
 if CHECK.os.windows:
     __import__('ht3.env.windows')
