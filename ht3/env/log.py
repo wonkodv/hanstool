@@ -5,10 +5,11 @@ frontends that dont use stdin/out to do that.
 """
 import traceback
 from . import Env
+import pprint
 
 @Env
 def show(s):
-    print(s)
+    pprint.pprint(s)
 
 @Env
 def log_command(cmd):
@@ -20,7 +21,7 @@ def log_command_finished(result):
     if result is None:
         if not Env.get('DEBUG', False):
             return
-    print("Result: " + repr(result))
+    print("Result:\n" + pprint.pformat(result))
 
 @Env
 def log_error(e):

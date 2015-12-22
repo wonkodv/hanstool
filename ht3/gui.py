@@ -6,6 +6,7 @@ and a larger one that will be mostly hidden wher log messages appear.
 import tkinter as tk
 import traceback
 import threading
+import pprint
 
 from . import lib
 from .env import Env
@@ -238,7 +239,7 @@ class UserInterface():
 
 
         def log_show(self, o, current_command=None, frontend=None):
-            self.log(str(o))
+            self.log(pprint.pformat(o))
             self.to_front()
 
         def log_command(self, cmd, current_command=None, frontend=None):
@@ -250,7 +251,7 @@ class UserInterface():
                 if not Env.get('DEBUG', False):
                     return
             i, c, p = current_command
-            self.log("Result %d: %r" % (i, result))
+            self.log("Result %d: %s" % (i, pprint.pformat(result)))
 
         def log_error(self, e, current_command=None, frontend=None):
             t = type(e)
