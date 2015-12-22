@@ -9,9 +9,7 @@ SCOPE = ChainMap(env.Env.dict, __builtins__)
 def filter_completions(s, prop):
     """Sort and Filter out proposals that don't start with ``s``""";
     l = len(s)
-    def _f(p):
-        return p[:l] == s
-    return sorted(filter(_f, prop))
+    return sorted(p for p in prop if p[:l] == s)
 
 
 def complete_all(string):

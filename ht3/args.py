@@ -78,8 +78,7 @@ class GetOptsArgs(ArgParser):
 
 class SetArgs(ArgParser):
     """Takes one of a set of arguments."""
-    def __init__(self, sets, default=_DEFAULT):
-        super().__init__()
+    def __init__(self, *sets, default=_DEFAULT):
         self.sets=sets
         self.default=default
 
@@ -100,20 +99,27 @@ class SetArgs(ArgParser):
                 if e.startswith(string):
                     yield e
 
-class DictArgs(SetArgs):
+class DictArgs(ArgParser):
     """Takes one of a set of arguments."""
-    def __init__(self, dicts, default=_DEFAULT):
-        super().__init__(dicts)
+    def __init__(self, *dicts, default=_DEFAULT):
         self.default = default
+        self.dicts = dicts
 
     def __call__(self, string):
         string = string.strip()
-        for s in self.sets:
+        for s in self.dicts:
             if string in s:
                 return [s[string]], {}
         if self.default is not _DEFAULT:
             return [self.default],{}
-        raise ValueError (string, self.sets)
+        raise ValueError ("Key not in dicts, no default", string, self.dicts)
+
+    def complete(self, string):
+        string = string.strip()
+        for s in self.dicts:
+            for e in s:
+                if e.startswith(string):
+                    yield e
 
 class CallableArgParser(ArgParser):
     """Takes a String that is accepted by %s()."""
@@ -174,10 +180,24 @@ def Args(spec, **kwargs):
             return PathArgs()
 
         if spec == 'set':
-            return SetArgs(kwargs['set'])
+            s = []
+            if 'set' in kwargs:
+                s.append(kwargs['set'])
+            if 'sets' in kwargs:
+                s.extend(kwargs['sets'])
+            if not s:
+                raise KeyError('Pass a set in `set` or `sets`')
+            return SetArgs(*s)
 
         if spec == 'dict':
-            return DictArgs(kwargs['dict'])
+            d = []
+            if 'dict' in kwargs:
+                d.append(kwargs['dict'])
+            if 'dicts' in kwargs:
+                d.extend(kwargs['dicts'])
+            if not d:
+                raise KeyError('Pass a dict in `dict` or `dicts`')
+            return DictArgs(*d)
 
         if spec == 'callable':
             return CallableArgParser(kwargs['call'])

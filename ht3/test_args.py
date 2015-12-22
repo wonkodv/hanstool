@@ -31,9 +31,54 @@ class TestArgs(unittest.TestCase):
 
     def test_dict_args(self):
         d = {'a': 1, 'b':2}
-        a = Args('dict', dict=[d])
+        a = Args(d)
 
         assert a('a') == ([1],{})
+    def test_dict_args_explicit(self):
+        d = {'a': 1, 'b':2}
+        a = Args('dict', dict=d)
+
+        assert a('a') == ([1],{})
+
+    def test_dict_multiple(self):
+        d1 = {'a': 1, 'b':2}
+        d2 = {'c': 3, 'd':4}
+        a = Args('dict', dicts=[d1,d2])
+
+        assert a('a') == ([1],{})
+        assert a('c') == ([3],{})
+
+    def test_dict_args_compl(self):
+        d = {'foo': 1, 'bar':2, 'baz':3}
+        a = Args('dict', dict=d)
+        assert set(a.complete('')) == {'foo','bar','baz'}
+        assert set(a.complete('b')) == {'bar','baz'}
+
+    def test_set_args(self):
+        s = {'a', 'b'}
+        a = Args(s)
+
+        assert a('a') == (['a'],{})
+
+    def test_set_args_explicit(self):
+        s = {'a', 'b'}
+        a = Args('set', set=s)
+
+        assert a('a') == (['a'],{})
+
+    def test_set_multiple(self):
+        s1 = {'a', 'b'}
+        s2 = {'c', 'd'}
+        a = Args('set', sets=[s1, s2])
+
+        assert a('a') == (['a'], {})
+        assert a('c') == (['c'], {})
+
+    def test_set_args_compl(self):
+        s = {'foo', 'bar', 'baz'}
+        a = Args('set', set=s)
+        assert set(a.complete('')) == {'foo','bar','baz'}
+        assert set(a.complete('b')) == {'bar','baz'}
 
 
     def test_auto_full(self):
