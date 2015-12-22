@@ -3,6 +3,7 @@
 import shlex
 import pathlib
 import inspect
+import collections.abc
 
 __all__ = ('Args', )
 
@@ -178,24 +179,23 @@ def Args(spec, **kwargs):
         if spec == 'dict':
             return DictArgs(kwargs['dict'])
 
+        if spec == 'callable':
+            return CallableArgParser(kwargs['call'])
+
         if spec.startswith(':'):
             return GetOptsArgs(spec[1:])
 
         if spec == 'auto':
             return AutoArgs(kwargs['_command'])
 
-    #TODO: Use Abstract base types:
-    if isinstance(spec, list):
-        return SetArgs(spec)
+    if isinstance(spec, ArgParser):
+        return spec
 
-    if isinstance(spec, tuple):
-        return SetArgs(spec)
-
-    if isinstance(spec, set):
-        return SetArgs(spec)
-
-    if isinstance(spec, dict):
+    if isinstance(spec, collections.abc.Mapping):
         return DictArgs(spec)
+
+    if isinstance(spec, collections.abc.Container):
+        return SetArgs(spec)
 
     if callable(spec):
         return CallableArgParser(spec)
