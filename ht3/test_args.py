@@ -122,3 +122,18 @@ class TestArgs(unittest.TestCase):
         args, kwargs = a('a')
         assert kwargs == {}
         assert args == ['a']
+
+
+    def test_getopt(self):
+        a = Args(':ab:c')
+
+        args, kwargs = a('-ac -aa -b foo bar baz')
+        assert args == ['bar', 'baz']
+        assert kwargs == {'a': 3, 'c': 1, 'b': 'foo'}
+
+    def test_getopt_explicit(self):
+        a = Args('getopt', opt='abc')
+
+        args, kwargs = a('-ac -aa -b foo bar baz')
+        assert args == ['foo', 'bar', 'baz']
+        assert kwargs == {'a': 3, 'c': 1, 'b': 1}

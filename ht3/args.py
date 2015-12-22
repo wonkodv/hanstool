@@ -4,6 +4,7 @@ import shlex
 import pathlib
 import inspect
 import collections.abc
+import getopt
 
 __all__ = ('Args', )
 
@@ -67,14 +68,30 @@ class PathArgs(ArgParser):
         return [pathlib.Path(string)],{}
 
 class GetOptsArgs(ArgParser):
-    """Takes the following "getopt" arguments:\n%s."""
+    """Takes "getopt" arguments: %s."""
     def __init__(self, opts):
         super().__init__()
         self.opts = opts
         self.__doc__ = self.__doc__ % (opts,)
 
     def __call__(self, string):
-        raise NotImplementedError()
+        args = string.split()
+        optlist, args = getopt.gnu_getopt(args, self.opts)
+        kwargs = {}
+        for k, v in optlist:
+            k = k[1:]
+            if v == '':
+                # opts a:b, args -a '' -a '' will give a:2 but who would do such a thing
+                if k in kwargs:
+                    v = kwargs[k] + 1
+                else:
+                    v = 1
+            else:
+                if k in kwargs:
+                    raise ValueError("option -%s occured multiple times" % k)
+            kwargs[k] = v
+
+        return args, kwargs
 
 class SetArgs(ArgParser):
     """Takes one of a set of arguments."""
@@ -201,6 +218,9 @@ def Args(spec, **kwargs):
 
         if spec == 'callable':
             return CallableArgParser(kwargs['call'])
+
+        if spec == 'getopt':
+            return GetOptsArgs(kwargs['opt'])
 
         if spec.startswith(':'):
             return GetOptsArgs(spec[1:])
