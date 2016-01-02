@@ -16,8 +16,10 @@ except ImportError:
 
 _evt = threading.Event()
 
+def start():
+    _evt.clear()
+
 def loop():
-    _evt.clear() # should be put somewhere else, can be race condition with stop
     _setup_readline()
     for c in _do_on_start:
         c()
@@ -41,9 +43,6 @@ def loop():
                 raise
             except Exception:
                 traceback.print_exc()
-            else:
-                if result is not None:
-                    print(result)
 
 def stop():
     _evt.set()

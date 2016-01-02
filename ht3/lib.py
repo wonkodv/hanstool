@@ -27,6 +27,7 @@ def import_recursive(name):
 def load_frontend(name):
     """Load a the frontend with wualified name: ``name``"""
     mod = import_recursive(name)
+    assert callable(mod.start)
     assert callable(mod.loop)
     assert callable(mod.stop)
     FRONTEND_MODULES.append(mod)
@@ -50,6 +51,7 @@ def run_frontends():
     if len(frontends) == 1:     # Shortcut if there is no need for threading stuff
         fe = frontends[0]
         THREAD_LOCAL.frontend = fe.__name__
+        fe.start()
         try:
             fe.loop()
         except Exception as e:
@@ -63,6 +65,8 @@ def run_frontends():
         threads = []
         evt = threading.Event()
 
+        for fe in frontends:
+            fe.start()
         def _run_fe(fe):
             THREAD_LOCAL.frontend = fe.__name__
             THREAD_LOCAL.command = None

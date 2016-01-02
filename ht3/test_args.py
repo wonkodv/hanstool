@@ -85,7 +85,7 @@ class TestArgs(unittest.TestCase):
         typ = Mock()
         cmd = Mock()
 
-        def f(s : str, n, t : typ, *args:int, kwa=42):
+        def f(s : str, n, t: typ, *args:int, kwa=42):
             assert s == 'Hans'
             assert kwa == 42
             assert len(args) == 4
@@ -104,7 +104,7 @@ class TestArgs(unittest.TestCase):
 
         assert s == 'Hans'
         assert n == 'fred'
-        typ.assert_was_called_once_with('typ')
+        typ.assert_called_once_with('typ')
         assert t is typ('Some String')
         assert a0 == 0
         assert a1 == 1

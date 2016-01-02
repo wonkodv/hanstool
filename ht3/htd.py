@@ -8,20 +8,24 @@ from ht3.env import Env
 
 _evt = threading.Event()
 
+def start():
+    _evt.clear()
+
 def loop():
-    _evt.clear() # should be put somewhere else, can be race condition with stop
     fn = Env.get('SOCKET', os.path.expanduser('~/.config/ht3/socket'))
     if os.path.exists(fn):
         os.remove(fn)
-    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as sock:
 
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as sock:
         sock.bind(fn)
         sock.settimeout(0.5)
 
-        while not _evt.is_set():
+        while True:
             try:
                 b = sock.recv(1024)
             except socket.timeout:
+                if _evt.is_set():
+                    return
                 continue
 
             s = b.decode('utf-8')

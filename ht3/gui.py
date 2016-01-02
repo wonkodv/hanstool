@@ -283,6 +283,9 @@ class UserInterface():
 
 _stored_log=[]
 
+def start():
+    pass
+
 def loop():
     global GUI
     try:

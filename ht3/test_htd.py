@@ -1,3 +1,4 @@
+import os.path
 import threading
 import unittest
 from unittest.mock import patch
@@ -16,19 +17,27 @@ class TestDaemon(unittest.TestCase):
             sname = tmpd +'/socket'
             Env.SOCKET = sname
 
+            ht3.htd.start()
             t = threading.Thread(target=ht3.htd.loop)
             t.start()
 
-            time.sleep(0.01)
+            while not os.path.exists(sname):
+                time.sleep(0.05)
 
             s = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
             s.connect(sname)
 
-            s.send(b'Test Fooo')
+            s.send(b'Test Foo')
+            time.sleep(0.05)
             s.send(b'Test Bar')
+
+            time.sleep(0.05)
+
             s.close()
 
             ht3.htd.stop()
 
-        run_command.assert_was_called_with('Test Foo')
-        run_command.assert_was_called_with('Test Bar')
+            t.join()
+
+        run_command.assert_any_call('Test Foo')
+        run_command.assert_any_call('Test Bar')
