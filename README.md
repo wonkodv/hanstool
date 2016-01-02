@@ -30,15 +30,6 @@ Components:
 *   Completion for Commands, their arguments, and simple python statements
 *   Frontends: They ask the user for input, offer completion and
     offer a few functions to the commands.
-    *   CLI: This one is really almost a shell
-    *   A little Window
-    *   Hotkeys: (Probably runs paralell to anotherone) which has
-        systemwide hotkeys for some commands
-    *   a Daemon: listens on a socket for commands. commands can be sent with
-        `python -m ht3.client "command 1" "command 2"`.
-        Only on UNIX.
-    *   Awesome WM Client: A piece of lua that runs `ht3.client` is coming really soon!
-    *   more are easily implemented
 *   Plattform aware functions. depending on the executing os, a different set of 
     functions is made available in the Namespace. For example in windows, there is the
     `MessageBox` function, taken right out of user32.dll, under linux, there isnt.
@@ -147,53 +138,11 @@ Argument Parsing Methods
 -------------------------
 
 There are multiple argument parsing strategies implemented.
-You select which one your command uses by passing its name in the `args` parameter of
-`@cmd`. Some Argument parsers need additional arguments that are passed as keyword
-argument to `@cmd`.
+The default one does shell like parsing and passes the strings as positional
+arguments to your function. If the parameters are annotated, that annotation
+should be a callable that converts a string into your expected type (like `int` or `float`).
 
-*   `0` `None` or `False`: no arguments. The command `foo` results in the python statement
-    `COMMANDS['foo']()`. Raises an error if the argument has any non whitespace chars.
-    this is equal to the python statement `foo()`. The examples below assume this.
-*   `1` or `'all'`: passes the entire string that follows the command-name to the
-    command-function `foo bar -baz="42'+3"   ` is the same as the python statement
-    `foo('bar -baz="42\'+3"')` raises a value error if there is no argument
-    (`foo` and `foo    `)
-*   `?` is like `1` but does not raise an error
-    `foo arg` makes `foo('arg')`
-    `foo    ` makes `foo()`
-*   `shell` does shell like parsing (considering whitespaces and quotes,
-    no variable expansion)
-    `foo bar "baz " "'5 + "4'2'` makes `foo("bar", "baz", "5 + 42")
-*   `getopt` to make things very shell like.
-    Pass the options in `opt` or, prefixed with `:`, directly in `args`.
-    Note that options without a value, or where you explicitly pass a value of
-    `''` are counted and passed as int, so multiple occurences are fine,
-    options with value may occur only once. GNU style is used, so non-opt
-    arguments and opt-arguments can be mixed.  The options are passed as kwargs
-    so an option of `a:b` and args `-b spam -a bacon -bbb eggs` will result in the
-    python call `function('spam', 'eggs', a='bacon', b=4)`
-*   `set` with a set in `set` or many in `sets`. Like `1` but only arguments in the set(s)
-    are accepted.
-*   `dict` like `set` but has to be a key of a dictionary. The lookup value
-    is passed to the fucntion. The dictionary(s) are passed as `dict` or `dicts`
-*   `path` like `1`. Must be an absolute or relative (to the current dir) path.
-    Is passed as a Path object.
-*   `call`: with a callable like `int` or `float` in `call` will take the entire
-    string pass it through the function an pass result as the single argument.
-*   `auto` This is the default. It is like `shell` but uses the annotation of function
-    arguments as callables to convert the argument, or str if there is no annotation.
-    `foo(i:int, p:pathlib.Path)` will accept exactly 2 arguments, the first is passed
-    through `int` and the second is made a `Path` before passing to the command-function.
-
-The argument parsers `set`, `dict` and "callable" accept a `default` which is used
-if the argument string is empty or only whitespaces. They do not use the fucntion
-parameter default value from the function signature.
-
-Instead of the name of an argparser, the `args` of `@cmd` can be:
-* a dict (an instance of collections.abc.Mapping)
-* a set (an instance of collections.abc.Container)
-* a string starting with `:` for getopts
-* a callable
+More in [Argument Parsing](./docs/ARGUMENTS.rst)
 
 The one unified Namespace `Env`
 -------------------------------
@@ -250,6 +199,8 @@ script directory and pass it explicitly.
 Some Default Commands
 -----------------
 
+The default scripts define some commands:
+
 *   `l` List all commands
 *   `exit` Close the tool
 *   `=` evaluate a python statment and show the result: `= 1+1*1+1`
@@ -280,30 +231,17 @@ Some Default Commands
 Frontends
 -----------
 
-Any packet can be a HT-Fronend. The user chooses which one(s) to load.
+Any packet can be a HT-Fronend. The user chooses which one(s) to load on the commandline.
 
-A Frontend must specify at module level:
-*   a `loop()` method. This is called from a frontend specific thread and should start the frontend and ask
-    the user for input. Place a REPL's while loop or a GUI's MessagePump in
-    this function. If the user closes the frontend, `loop should return and
-    further stuff may happen. Raise `SystemExit` to stop the program.
-*   a `stop()` function which is called from the main thread and should notify the `loop function to return soon.
-    this may be called after `loop` returned.
-
-At least one Frontend should put the following functions in `Env`:
-*   `show(text, *args, **kwargs)` put `text%args` to the users attention (Notification, Messagebox, print, ...)
-*   `log(text, *args, **kwargs)` put `text%args` somewhere the user can look it up. (TextArea in some window, print, ...)
-*   `help(topic)` Display help on a command or python topic (Invoke `less`, display a large text window, ...)
-*   `handle_exception` Tell the user a command or Frontend or ... did something bad.
-
-A Frontend should propably provide a function (decorator) so scripts can register functions
-that are executed at the start of the frontend's `loop` after some initialization happened.
-
-Frontends should mainly call the following functions:
-*   `ht3.command.run_command(string)`   to do what the user typed
-*   `ht3.complete.get_completion(string)` to complete what the user started to type
-
-Frontends can get information (names, doc, hotkey, ...) about registered commands from `ht3.lib.COMMANDS`
+*   CLI: This one is really almost a shell
+*   A little Window
+*   Hotkeys: (Probably runs paralell to anotherone) which has
+	systemwide hotkeys for some commands
+*   a Daemon: listens on a socket for commands. commands can be sent with
+	`python -m ht3.client "command 1" "command 2"`.
+	Only on UNIX.
+*   [Awesome WM Client](./docs/AWESOME.rst): A piece of lua that runs `ht3.htd`
+*   more are easily implemented, see [Frontends](./docs/FRONTENDS.rst)
 
 
 Command Line
@@ -381,19 +319,7 @@ into your Environment and glue them to the `command_not_found_hook`.
 [2]: https://amoffat.github.io/sh/
 [3]: https://plumbum.readthedocs.org/en/latest/
 
+Developing
+----------
 
-TEST
------
-
-[![Build Status](https://travis-ci.org/wonkodv/hanstool.svg)](https://travis-ci.org/wonkodv/hanstool)
-
-There is a set of `unittest.TestCase` unit tests `test` that can be run with
-`python -m unittest` or `py.test` or other `unittest`-compatible test runners.
-
-There is also an integration test using `test_scripts` which defines some
-commands which can be run (once) with the `test` command to test that they were registered
-in the expected way.
-
-Use `test` command to quickly run the integration test:
-
-    python -m ht3 -s ht3/test_scripts -x test
+You are welcome to contribute, see [here](./docs/DEVELOPE.rst).
