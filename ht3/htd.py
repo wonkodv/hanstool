@@ -13,22 +13,25 @@ def loop():
     fn = Env.get('SOCKET', os.path.expanduser('~/.config/ht3/socket'))
     if os.path.exists(fn):
         os.remove(fn)
-    sock = socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
+    with socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM) as sock:
 
-    sock.bind(fn)
-    sock.settimeout(0.5)
+        sock.bind(fn)
+        sock.settimeout(0.5)
 
+        while not _evt.is_set():
+            try:
+                b = sock.recv(1024)
+            except socket.timeout:
+                continue
 
-    while not _evt.is_set():
-        try:
-            b = sock.recv(1024)
-        except socket.timeout:
-            continue
-
-        s = b.decode('utf-8')
-        run_command(s)
-
-    sock.close()
+            s = b.decode('utf-8')
+            try:
+                run_command(s)
+            except (KeyboardInterrupt, SystemExit):
+                raise
+            except Exception as e:
+                Env.log_error(e)
+                pass
 
 def stop():
     _evt.set()
