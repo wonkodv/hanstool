@@ -2,7 +2,7 @@ Awesome WM Widget
 =================
 
 To send commands to the `ht3.htd`, you can put something like the 
-following into your ``rc.lua``. Press ``Mod4 + F8`` type a command string
+following into your `rc.lua`. Press `Mod4 + F8` type a command string
 and hit Enter.
 
     awful.key({ modkey }, "F8",
