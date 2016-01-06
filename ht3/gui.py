@@ -239,7 +239,9 @@ class UserInterface():
 
 
         def log_show(self, o, current_command=None, frontend=None):
-            self.log(pprint.pformat(o))
+            if not isinstance(o, str):
+                o = pprint.pformat(o)
+            self.log(o)
             self.to_front()
 
         def log_command(self, cmd, current_command=None, frontend=None):

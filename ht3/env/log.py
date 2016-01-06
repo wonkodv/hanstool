@@ -9,7 +9,10 @@ import pprint
 
 @Env
 def show(s):
-    pprint.pprint(s)
+    if isinstance(s, str):
+        print(s)
+    else:
+        pprint.pprint(s)
 
 @Env
 def log_command(cmd):
