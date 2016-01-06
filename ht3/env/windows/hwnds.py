@@ -48,7 +48,7 @@ def GetClassName(wnd):
 
 @Env
 def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., flags=0):
-    after = dict(BOTTOM=1,NOTOPMOST=1,TOP=0,TOPMOST=-1).get(after,after)
+    after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2).get(after,after)
     flags = dict(SHOW=0x40,HIDE=0x80,NOACTIVATE=0x10,).get(flags,flags)
 
     if left is ... or top is ...:
@@ -77,5 +77,8 @@ def GetTaskBarHandle():
     h = FindWindow(parent=h, cls='ToolbarWindow32', title='hanstool')
     if not h:
         raise ctypes.WinError()
-
     return h
+
+@Env
+def GetForegroundWindow():
+    return ctypes.windll.user32.GetForegroundWindow()
