@@ -1,9 +1,20 @@
 import unittest
 from unittest.mock import patch
 
-from ht3.env.fake_input import fake, KEY_CODES
+from ht3.env.fake_input import fake, KEY_CODES, fake_re
 
 class Test_fake(unittest.TestCase):
+
+    def test_re_combo(self):
+        s = "CTRL+SHIFT+A"
+        l = list(fake_re.finditer(s))
+        assert len(l) == 1
+        m = l[0]
+        assert m.group('COMBO') == s
+        assert m.group('mod1') == 'CTRL'
+        assert m.group('mod2') == 'SHIFT'
+        assert m.group('modkey') == 'A'
+
     def runSequence(self, string, interval):
         s = []
         with patch("time.sleep") as mockSleep:
@@ -36,6 +47,7 @@ class Test_fake(unittest.TestCase):
             0.1%2.2
             50%50
             M1
+            CTRL+A
             """,0)
         exp = [
             ['kd',k['SHIFT']],
@@ -51,5 +63,9 @@ class Test_fake(unittest.TestCase):
             ['mr', 50, 50],
             ['md', 1],
             ['mu', 1],
+            ['kd',k['CTRL']],
+            ['kd',k['A']],
+            ['ku',k['A']],
+            ['ku',k['CTRL']],
         ]
         self.assertListEqual(s, exp)
