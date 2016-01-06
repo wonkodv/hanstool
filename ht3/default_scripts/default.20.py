@@ -116,8 +116,8 @@ def _complete_script_names(s):
 @cmd(name="++", args="auto", complete=_complete_script_names)
 def add_command(script, name=None):
     """ define a command in a script.
-        1.  If `script` is a part of a script that was already loaded,
-            that one is edited, otherwise a new script with the name
+        1.  If `script` matches a loaded one, it is edited, otherwise
+            a new script with the name
             (it must end in .py) is created in the directory of
             the most recently loaded script.
         2. If `name` is given, a command definition is added with the name.
@@ -127,9 +127,13 @@ def add_command(script, name=None):
     """
     from ht3.scripts import SCRIPTS
     import pathlib
-    for s in SCRIPTS:
-        if s.name.find(script) >= 0:
-            break
+    import difflib
+
+    name_path = dict((p.name, p) for p in SCRIPTS)
+
+    s = difflib.get_close_matches(script, name_path, 1, 0.2)
+    if s:
+        s = name_path[s[0]]
     else:
         if not script.endswith('.py'):
             raise ValueError('The first arg must either match a loaded script'
