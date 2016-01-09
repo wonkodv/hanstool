@@ -85,12 +85,12 @@ def edit_file(file_name:Path, line:int=0):
         e = e[:-4]
 
 
-    args = EDITOR + [f]
+    args = EDITOR + (f, )
     if line:
         if e.endswith('vim'):
-            args = Env.EDITOR + [f, '+%d'%l ]
+            args = Env.EDITOR + (f, '+%d'%l )
         elif e.endswith('notepad++'):
-            args = Env.EDITOR + ['-n%d'%l, f]
+            args = Env.EDITOR + ('-n%d'%l, f)
 
     p = execute(*args)
     if CHECK.current_frontend == 'ht3.cli':
