@@ -52,7 +52,7 @@ def _setup_readline():
     if not readline:
         return False
 
-    history = Env.get('RL_HISTORY', None)
+    history = Env.get('RL_HISTORY', "~/.config/ht3/rlhistory")
     if history:
         history = os.path.expanduser(history)
         try:
