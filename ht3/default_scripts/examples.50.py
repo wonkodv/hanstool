@@ -33,7 +33,7 @@ def _vb_get_vms(s=None):
         if x:
             yield x[0][1:-1]
 
-@cmd(args=1,complete=_vb_get_vms)
+@cmd(args='?', complete=_vb_get_vms)
 def vb(box=None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
