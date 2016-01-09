@@ -123,6 +123,17 @@ class TestArgs(unittest.TestCase):
         assert kwargs == {}
         assert args == ['a']
 
+    def test_auto_noargs(self):
+        cmd = Mock()
+        def f(a=0):
+            pass
+        cmd.__wrapped__ = f
+
+        a = Args('auto', _command=cmd)
+
+        args, kwargs = a('')
+        assert kwargs == {}
+        assert args == []
 
     def test_getopt(self):
         a = Args(':ab:c')

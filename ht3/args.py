@@ -10,6 +10,9 @@ __all__ = ('Args', )
 
 _DEFAULT=object()
 
+class ArgError(ValueError):
+    pass
+
 class ArgParser:
     def __init__(self):
         pass
@@ -29,7 +32,7 @@ class NoArgs(ArgParser):
     def __call__ (self, string):
         string = string.strip()
         if string:
-            raise ValueError("Not expecting an argument!, got: " + string)
+            raise ArgError("Expecting no args, got: " + string)
         return [],{}
 
 class NoOrOneArgs(ArgParser):
@@ -51,7 +54,7 @@ class AllArgs(ArgParser):
         if not string:
             if self.default is not _DEFAULT:
                 return [self.default],{}
-            raise ValueError("Expecting an argument")
+            raise ArgError("Expecting an argument, got none")
         return [string],{}
 
 class ShellArgs(ArgParser):
@@ -88,7 +91,7 @@ class GetOptsArgs(ArgParser):
                     v = 1
             else:
                 if k in kwargs:
-                    raise ValueError("option -%s occured multiple times" % k)
+                    raise ArgError("option -%s occured multiple times" % k)
             kwargs[k] = v
 
         return args, kwargs
@@ -101,13 +104,14 @@ class SetArgs(ArgParser):
 
     def __call__(self, string):
         string = string.strip()
+        if not string:
+            if self.default is _DEFAULT:
+                raise ArgError ("Expected an argument, got none")
+            return [self.default],{}
         for s in self.sets:
             if string in s:
                 return [string],{}
-
-        if self.default is _DEFAULT:
-            raise ValueError (string, self.sets)
-        return [self.default],{}
+        raise ArgError("illegal argument", string, self.sets)
 
     def complete(self, string):
         string = string.strip()
@@ -129,7 +133,7 @@ class DictArgs(ArgParser):
                 return [s[string]], {}
         if self.default is not _DEFAULT:
             return [self.default],{}
-        raise ValueError ("Key not in dicts, no default", string, self.dicts)
+        raise ArgError ("Key not in dicts, no default", string, self.dicts)
 
     def complete(self, string):
         string = string.strip()
@@ -146,17 +150,22 @@ class CallableArgParser(ArgParser):
         self.__doc__ = self.__doc__ % (call,)
 
     def __call__(self, string):
-        if self.default is not _DEFAULT and string.strip() == '':
+        string = string.strip()
+        if not string:
+            if self.default is _DEFAULT:
+                raise ArgError ("Expected an argument, got none")
             return [self.default],{}
         return [self.call(string)],{}
 
 
 class AutoArgs(ArgParser):
-    """Parses shell style args and converts to annotated types"""
+    """Parses shell style args and converts to annotated types."""
     def __init__(self, command):
         self.command = command;
 
     def __call__(self, string):
+        if not string.strip():
+            return [],{}
         sig = inspect.signature(self.command)
         values = iter(shlex.split(string))
 
