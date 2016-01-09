@@ -30,8 +30,10 @@ def loop():
                 prompt = prompt()
             s = input(prompt) #TODO: let this be interrupted from stop.
         except KeyboardInterrupt:
+            print()
             continue
         except EOFError:
+            print()
             return
         if s:
             try:

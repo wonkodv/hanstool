@@ -75,6 +75,8 @@ def main(args):
         return 0
     except:
         if Env.get('DEBUG',False):
+            import traceback
+            traceback.print_exc()
             import pdb
             pdb.post_mortem()
         raise
