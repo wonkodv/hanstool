@@ -7,6 +7,7 @@ import tkinter as tk
 import traceback
 import threading
 import pprint
+import os.path
 
 from . import lib
 from .env import Env
@@ -48,13 +49,13 @@ class UserInterface():
             except Exception as e:
                 self.cmd_win.set_state("Error")
                 log_error(e)
-                return string
+                return False
             else:
                 self.cmd_win.set_state("Waiting")
-                return ""
+                return True
         else:
             self.cmd_win.set_state("Waiting")
-            return string
+            return False
 
     class CommandWindow():
         def __init__(self, ui):
@@ -66,18 +67,6 @@ class UserInterface():
             self.window.overrideredirect(True)
             self.window.geometry("100x20+100+20")
 
-            self.cmd = tk.StringVar()
-            self.text = tk.Entry(self.window, textvariable=self.cmd)
-            self.text.pack(fill='both', expand=1)
-
-            self.text.bind("<KeyPress-Tab>",lambda e: self._set_completion(1))
-            self.text.bind("<Shift-KeyPress-Tab>",lambda e: self._set_completion(-1))
-            self.text.bind("<KeyPress-Return>",self._submit)
-            self.text.bind("<Control-KeyPress-W>", self._delete_word) #TODO
-            self.text.bind("<Control-KeyPress-U>", self._delete_text) #TODO
-            self.text.bind("<KeyPress-Escape>", self._delete_text)
-            self.cmd.trace("w",lambda *args: self._clear_completion())
-
             self.window.bind("<ButtonPress-3>",self._start_resize_move)
             self.window.bind("<ButtonPress-1>",self._start_resize_move)
             self.window.bind("<B1-Motion>",self._move)
@@ -85,18 +74,33 @@ class UserInterface():
 
             self.window.bind("<Double-Button-1>", self._toggle_log)
 
-            self.window.bind("<FocusIn>", lambda e:self._set_focus(True))
-            self.window.bind("<FocusOut>", lambda e:self._set_focus(False))
+            self.cmd = tk.StringVar()
+            self.text = tk.Entry(self.window, textvariable=self.cmd)
+            self.text.pack(fill='both', expand=1)
+            self.text.bind("<KeyPress-Return>",self._submit)
+            self.text.bind("<Control-KeyPress-W>", self._delete_word) #TODO
+            self.text.bind("<Control-KeyPress-U>", self._delete_text) #TODO
+            self.text.bind("<KeyPress-Escape>", self._delete_text)
 
             self._completion_cache = None
             self._completion_iter = None
             self._completion_index = None
             self._uncompleted_string  = None
             self._completion_update = False
+            self.cmd.trace("w",lambda *args: (self._clear_completion(),self._clear_history()))
+            self.text.bind("<KeyPress-Tab>",lambda e: self._set_completion(1))
+            self.text.bind("<Shift-KeyPress-Tab>",lambda e: self._set_completion(-1))
+
+            self._load_history()
+            self._history_update = False
+            self.text.bind("<KeyPress-Up>",lambda e: self._set_history(1))
+            self.text.bind("<KeyPress-Down>",lambda e: self._set_history(-1))
 
             self._state = "Waiting"
             self._has_focus = False
             self._update_color()
+            self.window.bind("<FocusIn>", lambda e:self._set_focus(True))
+            self.window.bind("<FocusOut>", lambda e:self._set_focus(False))
 
         def _set_focus(self, f):
             self._has_focus = f
@@ -180,6 +184,38 @@ class UserInterface():
             self._set_text(ct)
             self._completion_update = False
 
+        def _load_history(self):
+            h = os.path.expanduser(Env.get('GUI_HISTORY', '~/.config/guihistory'))
+            self._history_file = h
+            if os.path.exists(h):
+                with open(h, 'rt') as f:
+                    self._history = [s.strip() for s in f]
+            else:
+                self._history = []
+            self._history_index = -1
+
+        def _set_history(self, i):
+            h = self._history_index + i
+            if self._history_index == -1:
+                self._history_active = self.cmd.get()
+            if  h >= len(self._history):
+                return
+            if h < 0:
+                s = self._history_active
+                self._history_index = -1
+            else:
+                self._history_index = h
+
+                s = self._history[-1-h]
+
+            self._history_update = True
+            self._set_text(s)
+            self._history_update = False
+
+        def _clear_history(self):
+            if not self._history_update:
+                self._history_index = -1
+
         def _set_text(self, text):
             self.text.delete(0, tk.END)
             self.text.insert(0, text)
@@ -196,8 +232,12 @@ class UserInterface():
 
         def _submit(self, event):
             s = self.cmd.get()
-            s = self.ui.run_command(s)
-            self._set_text(s)
+            if self.ui.run_command(s):
+                self._set_text('')
+                self._history.append(s)
+                self._history_index = -1
+                with open(self._history_file, 'at') as f:
+                    f.write(s+"\n")
 
 
     class MessageWindow():
@@ -271,9 +311,10 @@ class UserInterface():
             self.log("Process finished %d: %r" % (p.pid, p.returncode))
             if p.returncode > 0:
                 if CHECK.os.win:
-                    if not p.shell:
+                    #TODO: if not p.shell:
                         # The return code for "single instance" programms
-                        # like explorer or firefox is often zero without any errors
+                        # like explorer or firefox is often non-zero without
+                        # any real errors
                         return
                 self.to_front()
 
@@ -283,6 +324,7 @@ class UserInterface():
         def log_thread_finished(self, result, current_command=None, frontend=None):
             i, c, p = current_command
             self.log("ThreadResult %d: %r" % (i, result))
+
 
 # Frontend API
 
