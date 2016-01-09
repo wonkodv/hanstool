@@ -89,6 +89,7 @@ class UserInterface():
             self.window.bind("<FocusOut>", lambda e:self._set_focus(False))
 
             self._completion_cache = None
+            self._completion_iter = None
             self._completion_index = None
             self._uncompleted_string  = None
             self._completion_update = False
@@ -153,23 +154,25 @@ class UserInterface():
         def _clear_completion(self):
             if not self._completion_update:
                 self._completion_cache = None
+                self._completion_iter = None
 
 
         def _set_completion(self, i):
             if self._completion_cache is None:
                 s = self.cmd.get()
-                self._completion_cache = complete_all(s)
+                self._completion_cache = []
+                self._completion_iter = complete_all(s)
                 self._completion_index = 0
                 self._uncompleted_string = s
             else:
                 self._completion_index += i
 
-            cc = self._completion_cache
-
-            if 0 <= self._completion_index < len(self._completion_cache):
-                s = self.cmd.get()
+            try:
+                while self._completion_index+1 > len(self._completion_cache):
+                    nc = next(self._completion_iter)
+                    self._completion_cache.append(nc)
                 ct = self._completion_cache[self._completion_index]
-            else:
+            except StopIteration:
                 self._completion_index = -1
                 ct = self._uncompleted_string
 

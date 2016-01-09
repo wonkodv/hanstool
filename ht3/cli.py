@@ -73,15 +73,16 @@ def _setup_readline():
     completion_cache=[]
 
     def rl_complete(text, n):
-        nonlocal completion_cache
         if n == 0:
             try:
-                completion_cache = list(complete_all(text))
+                # rl consumes entire list, so no lazy evaluation possible
+                completion_cache.clear()
+                completion_cache.extend(complete_all(text))
             except Exception as e:
                 Env.log_error(e) # readline ignores all exceptions
         return completion_cache[n]
     readline.set_completer(rl_complete)
-    readline.set_completer_delims('')
+    readline.set_completer_delims('') # complete with the whole line
     readline.parse_and_bind('tab: complete')
 
 

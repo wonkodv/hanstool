@@ -13,8 +13,10 @@ def filter_completions(s, prop):
 
 
 def complete_all(string):
-    comp = complete_command(string) + complete_py(string)
-    return comp
+    for s in complete_command(string):
+        yield s
+    for s in complete_py(string):
+        yield s
 
 def complete_command(string):
     cmd, sep, args = command.parse_command(string)
@@ -23,7 +25,7 @@ def complete_command(string):
     if sep and cmd in COMMANDS: # only complete args if the space after command came already
         c = COMMANDS[cmd]
         values = c.complete(args)
-        values = [cmd + sep + x for x in filter_completions(args, values)]
+        values = (cmd + sep + x for x in filter_completions(args, values))
     else:
         values = sorted(filter_completions(string, COMMANDS.keys()))
     return values
