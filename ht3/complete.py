@@ -7,9 +7,9 @@ from . import env
 SCOPE = ChainMap(env.Env.dict, __builtins__)
 
 def filter_completions(s, prop):
-    """Sort and Filter out proposals that don't start with ``s``""";
+    """Filter out proposals that don't start with ``s``.""";
     l = len(s)
-    return sorted(p for p in prop if p[:l] == s)
+    return (p for p in prop if p[:l] == s)
 
 
 def complete_all(string):
@@ -25,7 +25,7 @@ def complete_command(string):
         values = c.complete(args)
         values = [cmd + sep + x for x in filter_completions(args, values)]
     else:
-        values = filter_completions(string, COMMANDS.keys())
+        values = sorted(filter_completions(string, COMMANDS.keys()))
     return values
 
 def complete_py(string):
@@ -59,7 +59,7 @@ def complete_py(string):
         except (KeyError, AttributeError):
             pass
     prefix = string[:len(string)-len(pl)]
-    values = [prefix + x for x in filter_completions(pl, values)]
+    values = [prefix + x for x in sorted(filter_completions(pl, values))]
 
     return values
 

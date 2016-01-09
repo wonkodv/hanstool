@@ -14,8 +14,8 @@ class Test_Completion(unittest.TestCase):
         with patch("ht3.command.COMMANDS", {'c1':c1, 'c2': c2, 'asdfg':None}):
             self.assertListEqual(complete_command('c'), ['c1', 'c2'])
             self.assertListEqual(complete_command('c1'), ['c1'])
-            self.assertListEqual(complete_command('c1 '), ['c1 a2', 'c1 arg1'])
-            self.assertListEqual(complete_command('c1 a'), ['c1 a2', 'c1 arg1'])
+            self.assertListEqual(complete_command('c1 '), ['c1 arg1', 'c1 a2'])
+            self.assertListEqual(complete_command('c1 a'), ['c1 arg1', 'c1 a2'])
             self.assertListEqual(complete_command('c1 ar'), ['c1 arg1'])
 
     def test_py_completion(self):
