@@ -178,7 +178,10 @@ class UserInterface():
                 ct = self._completion_cache[self._completion_index]
             except StopIteration:
                 self._completion_index = -1
+
+            if self._completion_index < 0:
                 ct = self._uncompleted_string
+                self._completion_index = -1
 
             self._completion_update = True
             self._set_text(ct)
