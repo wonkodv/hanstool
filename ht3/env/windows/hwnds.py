@@ -65,7 +65,7 @@ def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., fl
         flags |= 4
         after = 0
     if not ctypes.windll.user32.SetWindowPos(hwnd, after, left, top, width, height, flags):
-        raise OSError("win32API Error", ctypes.windll.kernel32.GetLastError())
+        ctypes.WinError()
 @Env
 def GetTaskBarHandle():
     h = FindWindow(cls='Shell_TrayWnd')
