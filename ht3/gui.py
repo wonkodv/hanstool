@@ -314,10 +314,8 @@ class UserInterface():
             self.log("Process finished %d: %r" % (p.pid, p.returncode))
             if p.returncode > 0:
                 if CHECK.os.win:
-                    #TODO: if not p.shell:
-                        # The return code for "single instance" programms
-                        # like explorer or firefox is often non-zero without
-                        # any real errors
+                    if not getattr(p, 'shell', False): # shell is set explicitly by the shell function
+                        # Dont raise log for non-shell
                         return
                 self.to_front()
 

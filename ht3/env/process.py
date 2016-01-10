@@ -32,6 +32,7 @@ def shell(string, cwd=None, env=None):
         stderr=subprocess.PIPE)
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
+    p.shell=True
     return p
 
 @Env
@@ -40,4 +41,5 @@ def execute(*args, cwd=None, env=None):
     p = subprocess.Popen(args, shell=False, cwd=cwd, env=env)
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
+    p.shell=False
     return p
