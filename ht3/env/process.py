@@ -22,7 +22,14 @@ def shellescape(string):
 @Env
 def shell(string, cwd=None, env=None):
     """ pass a string to a shell. The shell will parse it. """
-    p = subprocess.Popen(string, shell=True, cwd=cwd, env=env)
+    p = subprocess.Popen(
+        string,
+        shell=True,
+        cwd=cwd,
+        env=env,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
     return p
