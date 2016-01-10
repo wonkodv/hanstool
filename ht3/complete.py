@@ -31,11 +31,14 @@ def complete_command(string):
         values = sorted(filter_completions(string, COMMANDS.keys()))
     return values
 
+_COMPLETE_PY_VALIDATE = re.compile("(\w*(\.|( *[^a-zA-Z0-9_. ] *)+)?)*")
+_COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_. ]+")
+
 def complete_py(string):
-    #TODO: 1+DEB<tab> -> 1+DEBUG
-    #s = re.split("[^a-zA-A0-9_.]*", string)
-    #string = s[-1]
-    parts = string.split(".")
+    if not _COMPLETE_PY_VALIDATE.fullmatch(string):
+        return []
+    s = _COMPLETE_PY_SEPERATOR.split(string)
+    parts = s[-1].strip().split(".")
 
     if len(parts) == 1:
         pl = parts[0]

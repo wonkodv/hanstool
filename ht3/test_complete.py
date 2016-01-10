@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_command
+from ht3.complete import complete_py, complete_command, _COMPLETE_PY_VALIDATE
 
 
 class Test_Completion(unittest.TestCase):
@@ -18,6 +18,14 @@ class Test_Completion(unittest.TestCase):
             self.assertListEqual(list(complete_command('c1 a')), ['c1 arg1', 'c1 a2'])
             # complete_command should filter out a2
             self.assertListEqual(list(complete_command('c1 ar')), ['c1 arg1'])
+
+    def test_py_completion_guard(self):
+        assert _COMPLETE_PY_VALIDATE.fullmatch('text')
+        assert not _COMPLETE_PY_VALIDATE.fullmatch('text ')
+        assert _COMPLETE_PY_VALIDATE.fullmatch('text +')
+        assert _COMPLETE_PY_VALIDATE.fullmatch('text + ')
+        assert _COMPLETE_PY_VALIDATE.fullmatch('text + t')
+        assert _COMPLETE_PY_VALIDATE.fullmatch('text +')
 
     def test_py_completion(self):
         with patch("ht3.complete.SCOPE", {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}):
@@ -49,6 +57,12 @@ class Test_Completion(unittest.TestCase):
             c = complete_py('text.s')
             self.assertIn('text.startswith', c)
             self.assertIn('text.strip', c)
+
+            c = complete_py('one + tw')
+            self.assertListEqual(c, ['one + two'])
+
+            c = complete_py('"".find(te')
+            self.assertListEqual(c, ['"".find(text'])
 
     def test_command_complete_iter(self):
         """Complete of commands should not be consumed if iterator
