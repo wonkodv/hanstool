@@ -1,59 +1,59 @@
 import unittest
 import time
 from unittest.mock import Mock, patch
+from threading import Event
 
 from ht3 import processwatch
 
-def MockProcess(pid, lifetime):
-    lifetime = float(lifetime)
-    starttime = time.monotonic()
-    def poll():
-        age = time.monotonic() - starttime
-        if age < lifetime:
-            return None
-        else:
-            return 42
-    p = Mock()
-    p.pid = pid
-    p.poll = poll
-    return p
-
 class TestProcessWatch(unittest.TestCase):
-    def test_the_mock(self):
-        p = MockProcess(1, 0.010)
-        assert p.poll() is None
-        assert p.poll() is None
-        time.sleep(0.02)
-        assert p.poll() == 42
-        assert p.pid == 1
-
+    @patch('ht3.processwatch.SHORT_SLEEP',0.001)
+    @patch('ht3.processwatch.LONG_SLEEP',0.001)
     def test_watch(self):
-        """
-        Test that processwatch.watch calls callbacks within expected time
+        """ Test processwatch.watch calls callbacks once after poll is not None."""
+        event = Event()
+        sentinel = Mock()
+        sentinel.poll = lambda : (event.set(), None)[1]
+        processwatch.watch(sentinel, None)
+        def wait():
+            """Wait till all were polled >=1 time."""
+            event.clear()
+            event.wait()
+            event.clear()
+            event.wait()
 
-        This Test is based on sleeping the right time and thus,
-        a bit shaky. to be more accurate, multiply each time eith
-        10 but then the test is slow.
-        """
-        with patch('ht3.processwatch.SHORT_SLEEP',0.001):
+        p1 = Mock()
+        p1.poll.return_value = None
+        c1 = Mock()
 
-            p1 = MockProcess(1, 0.05)
-            c1 = Mock()
-            processwatch.watch(p1, c1)
+        p2 = Mock()
+        p2.poll.return_value = None
+        c2 = Mock()
 
-            c1.assert_not_called()
+        processwatch.watch(p1, c1)
 
-            p2 = MockProcess(2, 0.01)
-            c2 = Mock()
-            processwatch.watch(p2, c2)
+        wait()
+        assert not c1.called
 
-            c2.assert_not_called()
+        processwatch.watch(p2, c2)
 
-            time.sleep(0.02)
+        wait()
+        assert not c1.called
+        assert not c2.called
 
-            c2.assert_called_once_with(p2)
-            c1.assert_not_called()
+        p2.poll.return_value = 42
 
-            time.sleep(0.05)
+        wait()
+        assert not c1.called
+        c2.assert_called_once_with(p2)
+        c2.reset_mock()
 
-            c1.assert_called_once_with(p1)
+        p1.poll.return_value = 0
+        wait()
+
+        c1.assert_called_once_with(p1)
+        c1.reset_mock()
+
+        wait()
+        wait()
+        assert not c1.called
+        assert not c2.called
