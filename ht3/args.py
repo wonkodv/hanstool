@@ -5,6 +5,7 @@ import pathlib
 import inspect
 import collections.abc
 import getopt
+import ht3.complete
 
 __all__ = ('Args', )
 
@@ -115,10 +116,8 @@ class SetArgs(ArgParser):
 
     def complete(self, string):
         string = string.strip()
-        for s in self.sets:
-            for e in s:
-                if e.startswith(string):
-                    yield e
+        return sorted(ht3.complete.filter_completions(string, *self.sets))
+
 
 class DictArgs(ArgParser):
     """Takes one of a set of arguments."""
@@ -137,10 +136,7 @@ class DictArgs(ArgParser):
 
     def complete(self, string):
         string = string.strip()
-        for s in self.dicts:
-            for e in s:
-                if e.startswith(string):
-                    yield e
+        return sorted(ht3.complete.filter_completions(string, *self.dicts))
 
 class CallableArgParser(ArgParser):
     """Takes a String that is accepted by %s()."""

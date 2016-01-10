@@ -1,15 +1,16 @@
 """Completion od commands and python expressions."""
 from collections import ChainMap
-from . import command
+import ht3.command
+import re
 from . import env
 
 
 SCOPE = ChainMap(env.Env.dict, __builtins__)
 
-def filter_completions(s, prop):
+def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``.""";
     l = len(s)
-    return (p for p in prop if p[:l] == s)
+    return (p for it in prop for p in it  if p[:l] == s)
 
 
 def complete_all(string):
@@ -19,8 +20,8 @@ def complete_all(string):
         yield s
 
 def complete_command(string):
-    cmd, sep, args = command.parse_command(string)
-    COMMANDS = command.COMMANDS
+    cmd, sep, args = ht3.command.parse_command(string)
+    COMMANDS = ht3.command.COMMANDS
 
     if sep and cmd in COMMANDS: # only complete args if the space after command came already
         c = COMMANDS[cmd]
@@ -61,7 +62,9 @@ def complete_py(string):
         except (KeyError, AttributeError):
             pass
     prefix = string[:len(string)-len(pl)]
-    values = [prefix + x for x in sorted(filter_completions(pl, values))]
+    values = filter_completions(pl, values)
+    values = sorted(values)
+    values = [prefix + x for x in values]
 
     return values
 

@@ -3,8 +3,7 @@ import functools
 import inspect
 import traceback
 
-
-from .args import Args
+import ht3.args
 from . import env
 from .lib import THREAD_LOCAL, start_thread
 
@@ -34,7 +33,7 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
         r = func(*args, **kwargs)
         return r
 
-    arg_parser = Args(args, _command=Command, **attrs)
+    arg_parser = ht3.args.Args(args, _command=Command, **attrs)
 
     if func_name is _DEFAULT:
         func_name = func.__name__
