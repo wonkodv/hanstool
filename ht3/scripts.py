@@ -43,3 +43,25 @@ def load_scripts(path):
         raise Exception("neither file nor dir in load_Scripts", path)
 
 
+def reload_all():
+    for path in SCRIPTS:
+        with path.open("rt") as f:
+            c = f.read()
+        c = compile(c, str(path), "exec")
+        try:
+            exec (c, Env.dict)
+        except NotImplementedError:
+            # Script wanted to be ignored
+            pass
+
+def check_all_compilable():
+    r = True
+    for path in SCRIPTS:
+        with path.open("rt") as f:
+            c = f.read()
+        try:
+            compile(c, str(path), "exec")
+        except Exception as e:
+            Env.log_error(e)
+            r = False
+    return r

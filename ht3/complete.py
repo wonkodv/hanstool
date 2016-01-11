@@ -2,10 +2,10 @@
 from collections import ChainMap
 import ht3.command
 import re
-from . import env
+from .env import Env
 
 
-SCOPE = ChainMap(env.Env.dict, __builtins__)
+SCOPE = ChainMap(Env, __builtins__)
 
 def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``.""";

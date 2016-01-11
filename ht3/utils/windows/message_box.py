@@ -1,7 +1,6 @@
 """Show the MessageBox."""
 import ctypes
 from functools import reduce
-from ht3.env import Env
 
 _MessageBoxFlags={
     # Buttons
@@ -59,7 +58,6 @@ _MessageBoxResults = [
     'CONTINUE'
 ]
 
-@Env
 def MessageBox(title, text, flags):
     """ Show the Message Box
 

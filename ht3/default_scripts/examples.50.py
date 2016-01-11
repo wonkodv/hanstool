@@ -1,7 +1,7 @@
 """Soome example commands and configuration."""
 
 if CHECK.frontend('ht3.cli'):
-    @ht3.cli.do_on_start
+    @cli_do_on_start
     def _():
         try:
             import readline

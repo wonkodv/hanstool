@@ -4,11 +4,10 @@ import subprocess
 import shlex
 import warnings
 
-from . import Env
-from ht3.processwatch import watch
+from ht3.env import Env
+from .processwatch import watch
 from ht3.check import CHECK
 
-@Env
 def shellescape(string):
     if CHECK.os.posix:
         return shlex.quote(string)
@@ -19,7 +18,6 @@ def shellescape(string):
 
     return string
 
-@Env
 def shell(string, cwd=None, env=None):
     """ pass a string to a shell. The shell will parse it. """
     p = subprocess.Popen(
@@ -35,7 +33,6 @@ def shell(string, cwd=None, env=None):
     p.shell=True
     return p
 
-@Env
 def execute(*args, cwd=None, env=None):
     """ Execute a programm with arguments """
     p = subprocess.Popen(args, shell=False, cwd=cwd, env=env)

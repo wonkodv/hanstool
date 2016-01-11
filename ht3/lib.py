@@ -1,9 +1,10 @@
 """Module for loading frontends, scripts and miscelaneous functions"""
 
 import sys
+import importlib
 import threading
 
-from . import env
+from .env import Env
 from . import check
 
 FRONTENDS = []
@@ -18,15 +19,9 @@ check.CHECK.frontend = check.Group(FRONTENDS)
 check.CHECK.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
 
 
-def import_recursive(name):
-    """Import and return a leaf-module"""
-    __import__(name)
-    return sys.modules[name]
-
-
 def load_frontend(name):
     """Load a the frontend with wualified name: ``name``"""
-    mod = import_recursive(name)
+    mod = importlib.import_module(name)
     assert callable(mod.start)
     assert callable(mod.loop)
     assert callable(mod.stop)
@@ -43,7 +38,7 @@ def run_frontends():
     frontends is called (from the main thread so stop must be threadsafe) after all threads finished
     (the ``loop`` functions return), this function returns.
     """
-    frontends = list(FRONTEND_MODULES) # avoid concurrency
+    frontends = tuple(FRONTEND_MODULES) # avoid concurrency if modules load modules
 
     if not frontends:
         raise ValueError("No Frontend Loaded yet")
@@ -55,11 +50,11 @@ def run_frontends():
         try:
             fe.loop()
         except Exception as e:
-            env.Env.log_error(e)
+            Env.log_error(e)
         try:
             fe.stop()
         except Exception as e:
-            env.Env.log_error(e)
+            Env.log_error(e)
         THREAD_LOCAL.frontend = None
     else:
         threads = []
@@ -73,7 +68,7 @@ def run_frontends():
             try:
                 fe.loop()
             except Exception as e:
-                env.Env.log_error(e)
+                Env.log_error(e)
             finally:
                 evt.set()
         for fe in frontends:
@@ -89,7 +84,7 @@ def run_frontends():
                 try:
                     f.stop()
                 except Exception as e:
-                    env.Env.log_error(e)
+                    Env.log_error(e)
 
             # wait for all frontends to finish.
             for t, f in threads:
@@ -98,13 +93,13 @@ def run_frontends():
 def execute_py_expression(s):
     """Execute a python expression"""
     c = compile(s, "<input>", "exec")
-    return eval(c, env.Env.dict)
+    return eval(c, Env.dict)
 
 
 def evaluate_py_expression(s):
     """Evaluate a python expression"""
     c = compile(s, "<input>", "eval")
-    r = eval(c, env.Env.dict)
+    r = eval(c, Env.dict)
     return r
 
 
@@ -119,9 +114,9 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if name is None:
         name = func.__name__
     if on_finish is None:
-        on_finish = env.Env.log_thread_finished
+        on_finish = Env.log_thread_finished
     if on_exception is None:
-        on_exception = env.Env.log_error
+        on_exception = Env.log_error
     if args is None:
         args=tuple()
     if kwargs is None:

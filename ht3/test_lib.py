@@ -6,10 +6,6 @@ from unittest.mock import patch, Mock
 from ht3 import lib
 
 class Test_frontends(unittest.TestCase):
-    def test_import_recursive(self):
-        m = lib.import_recursive('unittest.mock')
-        self.assertIs(m, unittest.mock)
-
     def get_fe(self, n):
         m = Mock()
         m.i = 0
@@ -26,7 +22,7 @@ class Test_frontends(unittest.TestCase):
         m.stop = stop
         return m
 
-    @patch('ht3.lib.import_recursive')
+    @patch('importlib.import_module')
     def test_full_run(self, importMock):
 
         fe1 = self.get_fe('fe1')

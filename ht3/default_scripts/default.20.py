@@ -13,7 +13,7 @@ cmd(name=':', args=1)(fake)
 def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s)
-    Env._ = r
+    Env['_'] = r
     show(r)
     return None
 
@@ -73,11 +73,12 @@ def _():
             e = [e]
         else:
             e = ['notepad.exe']
-    Env.EDITOR = tuple(e) # make unmodifiable
+    Env['EDITOR'] = tuple(e) # make unmodifiable
 _()
 
 @cmd(name='e')
 def edit_file(file_name:Path, line:int=0):
+    """Edit a file using EDITOR."""
     f = str(file_name) # allow pathlib.Path
     l = int(line)
     e = EDITOR[0]
@@ -172,12 +173,29 @@ def debug(what):
     pdb.set_trace()
     ht3.command.run_command(what)
 
-
 @cmd
 def py():
     """ start a python repl """
     import sys
     return execute(sys.executable)
+
+@cmd
+def reload(full:bool=False):
+    import ht3.env
+    import ht3.scripts
+
+    if not ht3.scripts.check_all_compilable():
+        return
+    if full:
+        log("\n==================== FULL RELOAD ===================\n")
+        Env._reload()
+        ht3.command.COMMANDS.clear()
+    else:
+        log("\n===== RELOAD SCRIPTS ====\n")
+    ht3.scripts.reload_all()
+
+
+
 
 @cmd(args="shell")
 def restart(*more_args):
@@ -186,14 +204,11 @@ def restart(*more_args):
         -f, -s and -r args, NOT -x.
     """
     import os, sys
-    for path in ht3.scripts.SCRIPTS:
-        with path.open("rt") as f:
-            c = f.read()
-        try:
-            compile(c, str(path), "exec")
-        except Exception as e:
-            log_error(e)
-            return
+    import ht3.scripts
+
+    if not ht3.scripts.check_all_compilable():
+        return
+
     args = []
     if CHECK.os.win:
         args.append('"' + sys.executable + '"')
@@ -216,7 +231,7 @@ def restart(*more_args):
         elif a == '-r':
             args += [a]
         else:
-            assert a == '-x'
+            assert a == '-x', "Unknown arg "+a+" in restart"
             next(it)    # dont execute -x
 
     it = iter(more_args)
@@ -235,6 +250,8 @@ def restart(*more_args):
             raise ValueError("Unsupported Argument", a)
 
     print ("\n==================== RESTART ===================\n")
+    #print not show since gui disappears
+
     os.execv(sys.executable, args)
 
 if CHECK.frontend('ht3.gui', 'ht3.hotkey'):
@@ -251,6 +268,6 @@ if CHECK.frontend('ht3.gui', 'ht3.hotkey'):
             ht3.gui.log_win_to_front()
 
 if CHECK.frontend('ht3.gui'):
-    @ht3.gui.do_on_start
+    @gui_do_on_start
     def _():
         ht3.gui.cmd_win_stay_on_top()

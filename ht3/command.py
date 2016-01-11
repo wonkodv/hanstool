@@ -4,13 +4,16 @@ import inspect
 import traceback
 
 import ht3.args
-from . import env
+from .env import Env
 from .lib import THREAD_LOCAL, start_thread
 
 COMMANDS = {}
+RESULT_HISTORY = []
 _DEFAULT = object()
 
 _COMMAND_RUN_ID = 0
+
+
 
 def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
                      func_name=_DEFAULT,
@@ -70,9 +73,12 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
     COMMANDS[name] = Command
 
 def cmd(func=None, **kwargs):
-    """ use as decorator with or without arguments to register a function
-        as a command. The function will be registered in its original form
-        in the module and in arg parsing form in COMMANDS """
+    """Decorate a function to become a command
+
+    use as decorator with or without arguments to register a function
+    as a command. The function will be registered in its original form
+    in the module and in arg parsing form in COMMANDS.
+    """
 
     if func is None:
         def decorator(func):
@@ -108,16 +114,16 @@ def run_command_func(c, *args, **kwargs):
     parent = THREAD_LOCAL.command
     THREAD_LOCAL.command = [_COMMAND_RUN_ID, c.name, parent]
 
-    env.Env.log_command(c.name)
+    Env.log_command(c.name)
     r = c(*args, **kwargs);
-    env.Env.log_command_finished(r)
+    Env.log_command_finished(r)
 
     _, _, p = THREAD_LOCAL.command
     THREAD_LOCAL.command = p
 
-    env.Env.__.append(r)
+    RESULT_HISTORY.append(r)
     if r is not None:
-        env.Env._ = r
+        Env['_'] = r
     return r
 
 def run_command(string):
@@ -128,23 +134,23 @@ def run_command(string):
     THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, parent]
 
     cmd, _, arg = parse_command(string)
-    env.Env.log_command(string)
+    Env.log_command(string)
     try:
         c = COMMANDS[cmd]
     except KeyError:
         try:
-            r = env.Env.command_not_found_hook(string)
+            r = Env.command_not_found_hook(string)
         except Exception as e:
             # prevent this exception from being chained to the KeyError
             raise e from None
     else:
         r = c(arg)
-    env.Env.log_command_finished(r)
+    Env.log_command_finished(r)
 
     _, _, p = THREAD_LOCAL.command
     THREAD_LOCAL.command = p
 
-    env.Env.__.append(r)
+    RESULT_HISTORY.append(r)
     if r is not None:
-        env.Env._ = r
+        Env['_'] = r
     return r

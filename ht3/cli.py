@@ -7,7 +7,7 @@ import threading
 
 from .env import Env
 from .command import run_command
-from .complete import complete_all
+from .complete import complete_command
 
 try:
     import readline
@@ -25,7 +25,7 @@ def loop():
         c()
     while not _evt.is_set():
         try:
-            prompt = Env.CLI_PROMPT
+            prompt = Env.get('CLI_PROMPT', 'ht3> ')
             if callable(prompt):
                 prompt = prompt()
             s = input(prompt) #TODO: let this be interrupted from stop.
@@ -79,7 +79,7 @@ def _setup_readline():
             try:
                 # rl consumes entire list, so no lazy evaluation possible
                 completion_cache.clear()
-                completion_cache.extend(complete_all(text))
+                completion_cache.extend(complete_command(text))
             except Exception as e:
                 Env.log_error(e) # readline ignores all exceptions
         return completion_cache[n]
@@ -87,16 +87,8 @@ def _setup_readline():
     readline.set_completer_delims('') # complete with the whole line
     readline.parse_and_bind('tab: complete')
 
-
-# Basic API
-
-Env['help'] = help
-
-# Extended API
-
-Env['CLI_PROMPT'] = "ht3> "
-
 _do_on_start=[]
 def cli_do_on_start(f):
     _do_on_start.append(f)
 
+__all__ = ('help', 'CLI_PROMPT')

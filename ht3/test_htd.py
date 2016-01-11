@@ -15,7 +15,7 @@ class TestDaemon(unittest.TestCase):
     def test_daemon(self, run_command):
         with tempfile.TemporaryDirectory() as tmpd:
             sname = tmpd +'/socket'
-            Env.SOCKET = sname
+            Env['SOCKET'] = sname
 
             ht3.htd.start()
             t = threading.Thread(target=ht3.htd.loop)

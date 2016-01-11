@@ -7,8 +7,6 @@ from .command import run_command
 from .env import Env
 from .scripts import load_scripts
 
-__import__('ht3.env.initial')
-
 
 HELP= """call ht with the following arguments:
     -s SCRIPT   Load a script
@@ -36,7 +34,7 @@ def main(args):
             elif a == '-e':
                 k = next(arg_iter)
                 v = next(arg_iter)
-                Env[k]= v
+                Env.put_persistent(k, v)
             elif a == '-f':
                 f = next(arg_iter)
                 lib.load_frontend(f)
@@ -54,6 +52,12 @@ def main(args):
                 print (HELP)
 
                 return 1
+
+        if not (_f or _x):
+            print("Loading default frontend `ht3.cli` Load others with `-f`")
+            lib.load_frontend('ht3.cli')
+            _f = True
+
         if not _s:
             s = Env.get('SCRIPTS', False)
             if s:
@@ -66,11 +70,7 @@ def main(args):
                 s = os.path.expanduser('~/.config/ht3')
                 if os.path.exists(s):
                     load_scripts(s)
-        if (not _r and _f):
-            lib.run_frontends()
-        elif (not _f and not _x):
-            print("Loading default frontend `ht3.cli` Load others with `-f`")
-            lib.load_frontend('ht3.cli')
+        if not _r and _f:
             lib.run_frontends()
         return 0
     except:

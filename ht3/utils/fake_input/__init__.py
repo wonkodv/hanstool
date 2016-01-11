@@ -1,7 +1,7 @@
 """
 Fake Input
 
-Provides a set of functions in Env that simulate User
+Provides a set of functions that simulate User
 input (mouse moves, Key Strokes, etc).
 ``fake(s)`` parses the string s and generates fake input from that.
 """
@@ -11,7 +11,6 @@ import time
 
 from ht3.check import CHECK;
 from ht3.keycodes import KEY_CODES
-from ht3.env import Env
 
 if CHECK.os.win:
     from . import windows as impl
@@ -45,7 +44,6 @@ fake_types = (
 
 fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in fake_types))
 
-@Env
 def fake(string,interval=10):
     """
     Fake a sequence of Events, specified by a string.
@@ -142,8 +140,6 @@ def fake(string,interval=10):
         except KeyError:
             raise Error("Invalid fake-sequence", m)
 
-    Env.log("Fake: " +"\n      ".join(logs))
-
     for c, a, m in sequence:
         if interval:
             time.sleep(float(interval)/1000)
@@ -151,7 +147,3 @@ def fake(string,interval=10):
             c(*a)
         except:
             raise Exception(m)
-
-for k in __all__:
-    if hasattr(impl, k):
-        Env[k] = getattr(impl, k)

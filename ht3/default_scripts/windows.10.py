@@ -30,15 +30,16 @@ def explore_command(cmd):
             p = Path(s)
             if p.exists():
                 if p.is_dir():
-                    execute("explorer",str(p))
+                    arg = str(p)
                 else:
-                    shell('explorer /select,"'+str(p)+'"')
+                    arg = '/select,' + str(p)
+                execute(r'explorer', arg)
                 return
     except:
         pass
 
 if CHECK.frontend('ht3.gui'):
-    @ht3.gui.do_on_start
+    @gui_do_on_start
     def _place_cmd_win_over_taskbar_toolbar():
         """Find a toolbar named ``hanstool`` and place the command window over it."""
         h = GetTaskBarHandle()

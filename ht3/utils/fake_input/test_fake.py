@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from ht3.env.fake_input import fake, KEY_CODES, fake_re
+from . import fake, KEY_CODES, fake_re
 
 class Test_fake(unittest.TestCase):
 
@@ -19,7 +19,7 @@ class Test_fake(unittest.TestCase):
         s = []
         with patch("time.sleep") as mockSleep:
             mockSleep.side_effect=lambda t: s.append(['s', t])
-            with patch("ht3.env.fake_input.impl") as fake_in:
+            with patch(__package__ + ".impl") as fake_in:
                 fake_in.mouse_move_abs =lambda x,y  : s.append(["ma", x, y])
                 fake_in.mouse_move_rel =lambda x,y  : s.append(["mr", x, y])
                 fake_in.mouse_move =    lambda x,y  : s.append(["m", x, y])
@@ -29,8 +29,7 @@ class Test_fake(unittest.TestCase):
                 fake_in.key_up =        lambda k    : s.append(["ku", k])
                 fake_in.type_string =   lambda t,i  : s.append(["t", t, i])
                 fake_in.KEY_CODES =     KEY_CODES
-                with patch('ht3.env.fake_input.Env'): # Env.log
-                    fake(string, interval)
+                fake(string, interval)
         return s
 
     def test_all(self):

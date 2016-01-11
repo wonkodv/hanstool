@@ -18,6 +18,24 @@ from .check import CHECK
 GUI = None
 
 
+__all__ = (
+    'cmd_win_set_rect',
+    'cmd_win_stay_on_top',
+    'cmd_win_to_front',
+    'gui_do_on_start',
+    'help',
+    'log',
+    'log_command',
+    'log_command_finished',
+    'log_error',
+    'log_subprocess',
+    'log_subprocess_finished',
+    'log_thread',
+    'log_thread_finished',
+    'log_win_to_front',
+    'show',
+)
+
 class UserInterface():
     def __init__(self):
         self.root = tk.Tk()
@@ -367,55 +385,46 @@ def _do_log(m, *args):
     else:
         _stored_log.append( [ m, args, { 'current_command': cc, 'frontend': cf } ])
 
-@Env
 def show(o):
     _do_log('log_show', o)
 
-@Env
 def log_command(cmd):
     _do_log('log_command', cmd)
 
-@Env
 def log_command_finished(result):
     _do_log('log_command_finished', result)
 
-@Env
 def log_error(e):
     _do_log('log_error', e)
     if  not GUI:
-        import ht3.env.log
-        ht3.env.log.log_error(e)
+        from ht3.utils.log import log_error
+        log_error(e)
 
-@Env
 def log(s):
     _do_log('log', s)
 
 
-@Env
 def log_subprocess(p):
     _do_log('log_subprocess', p)
 
-@Env
 def log_subprocess_finished(p):
     _do_log('log_subprocess_finished', p)
 
-@Env
 def log_thread(t):
     _do_log('log_thread', t)
 
-@Env
 def log_thread_finished(result):
     _do_log('log_thread_finished', result)
 
-@Env
 def help(obj):
+    #TODO: Proper Help Text
     show(obj.__doc__)
 
 
 # Extended User API
 
 _do_on_start = []
-def do_on_start(f):
+def gui_do_on_start(f):
     assert callable(f)
     _do_on_start.append(f)
     return f

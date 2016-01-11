@@ -3,11 +3,11 @@ import time
 from unittest.mock import Mock, patch
 from threading import Event
 
-from ht3 import processwatch
+from ht3.utils import processwatch
 
 class TestProcessWatch(unittest.TestCase):
-    @patch('ht3.processwatch.SHORT_SLEEP',0.001)
-    @patch('ht3.processwatch.LONG_SLEEP',0.001)
+    @patch('ht3.utils.processwatch.SHORT_SLEEP',0.001)
+    @patch('ht3.utils.processwatch.LONG_SLEEP',0.001)
     def test_watch(self):
         """ Test processwatch.watch calls callbacks once after poll is not None."""
         event = Event()

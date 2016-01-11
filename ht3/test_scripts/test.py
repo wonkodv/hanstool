@@ -1,5 +1,9 @@
 """A set of commands that test if scripts and commands work as expected."""
 
+from ht3.command import cmd, run_command, COMMANDS
+
+log_command = log_command_finished = lambda *_: None
+
 @cmd(args="?")
 def test(silent=False):
 
@@ -8,7 +12,6 @@ def test(silent=False):
     test_argument_parsing()
     test_decorator()
     test_names()
-    test_help()
 
     if not silent:
         print ("Test OK")
@@ -41,7 +44,7 @@ def test_script_order():
     #   overwrited.5.py
     #   test.py
     # And scripts run in the same namespace
-    assert Env.OVERWRITE == [0, 1, 2, 3]
+    assert Env['OVERWRITE'] == [0, 1, 2, 3]
 
 
 #### @cmd
@@ -85,22 +88,3 @@ def name_test():
 def test_names():
     run_command('$')
     assert NAME_TEST
-
-
-#### Help
-
-HELP_TEST=[]
-def help(obj):
-    HELP_TEST.append(obj)
-
-@cmd
-def help_dummy():
-    " Documentation of a command "
-    pass
-
-def test_help():
-    help_command('help_dummy') # evaluated as command
-    help_command('1+1') # evaluated as py
-
-    assert HELP_TEST[0].__wrapped__ is help_dummy
-    assert HELP_TEST[1] == 2
