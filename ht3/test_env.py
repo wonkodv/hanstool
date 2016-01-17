@@ -3,10 +3,9 @@ import unittest
 from ht3.env import _Env_class
 
 class EnvTest(unittest.TestCase):
-    def test_containsSelf(self):
+    def test_is_empty(self):
         e = _Env_class()
-        self.assertIs(e , e.Env)
-        self.assertIs(e , e['Env'])
+        assert dict(e) == {}
 
     def test_asDict(self):
         e = _Env_class()
@@ -15,27 +14,32 @@ class EnvTest(unittest.TestCase):
         self.assertEqual(e['key'],1)
         self.assertEqual(e['key2'],2)
 
-    def test_noSetAttr(self):
-        e = _Env_class()
-        with self.assertRaises(TypeError):
-            e.Attr1 = 1
-        with self.assertRaises(TypeError):
-            setattr(e, 'Attr2', 2)
-
     def test_iter(self):
         e = _Env_class()
         e['Key1'] = 1
         e['Key2'] = 2
 
-        self.assertListEqual(list(sorted(e)), ['Env', 'Key1', 'Key2'])
+        self.assertListEqual(list(sorted(e)), ['Key1', 'Key2'])
 
     def test_ObjToDict(self):
         e = _Env_class()
         e['Key1'] = 1
         e['Key2'] = 2
-        self.assertDictEqual (e.dict, {'Key1':1, 'Env': e, 'Key2':2})
+        self.assertDictEqual (e.dict, {'Key1':1, 'Key2':2})
 
-    def test_DictToObj(self):
+    def test_attribute_not_write(self):
+        """The Attributes of Env are a seperate namespace backed by the items"""
+        e = _Env_class()
+        e.Attr1 = 1
+        e['Key2'] = 2
+
+        assert e.Attr1 == 1
+        assert e.Key2 == 2
+
+        with self.assertRaises(KeyError):
+            e['Attr1']
+
+    def test_attribute_read(self):
         e = _Env_class()
         e.dict['Key3'] = 3
 

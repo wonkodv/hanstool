@@ -10,8 +10,6 @@ class _Env_class:
         object.__setattr__(self, 'dict', dict())
         object.__setattr__(self, 'persistent_dict', dict())
 
-        self.put_persistent('Env', self)
-
     def _reload(self):
         object.__setattr__(self, 'dict', dict())
         self.dict.update(self.persistent_dict)
@@ -33,9 +31,6 @@ class _Env_class:
         return self.dict[key]
 
     __getattr__ = __getitem__
-
-    def __setattr__(self,k,v):
-        raise TypeError("Set Attr not supported !")
 
     def __iter__(self):
         return iter(self.dict)

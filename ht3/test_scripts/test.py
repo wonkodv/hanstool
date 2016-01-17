@@ -1,9 +1,5 @@
 """A set of commands that test if scripts and commands work as expected."""
 
-from ht3.command import cmd, run_command, COMMANDS
-
-log_command = log_command_finished = lambda *_: None
-
 @cmd(args="?")
 def test(silent=False):
 

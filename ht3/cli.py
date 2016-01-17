@@ -7,7 +7,6 @@ import threading
 
 from .env import Env
 from .command import run_command
-from .complete import complete_command
 
 try:
     import readline
@@ -79,7 +78,7 @@ def _setup_readline():
             try:
                 # rl consumes entire list, so no lazy evaluation possible
                 completion_cache.clear()
-                completion_cache.extend(complete_command(text))
+                completion_cache.extend(Env.general_completion(text))
             except Exception as e:
                 Env.log_error(e) # readline ignores all exceptions
         return completion_cache[n]

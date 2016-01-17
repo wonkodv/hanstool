@@ -12,7 +12,6 @@ import os.path
 from . import lib
 from .env import Env
 from .command import run_command
-from .complete import complete_all
 from .check import CHECK
 
 GUI = None
@@ -183,7 +182,8 @@ class UserInterface():
             if self._completion_cache is None:
                 s = self.cmd.get()
                 self._completion_cache = []
-                self._completion_iter = complete_all(s)
+                c = Env.general_completion(s)
+                self._completion_iter = iter(c)
                 self._completion_index = 0
                 self._uncompleted_string = s
             else:

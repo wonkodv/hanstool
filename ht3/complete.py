@@ -12,7 +12,6 @@ def filter_completions(s, *prop):
     l = len(s)
     return (p for it in prop for p in it  if p[:l] == s)
 
-
 def complete_all(string):
     for s in complete_command(string):
         yield s
