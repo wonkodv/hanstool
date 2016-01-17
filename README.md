@@ -19,22 +19,25 @@ HansTool 3
 A third attempt, this time with python:)
 
 Tool that does things without typing much. Like a shell but less confusing
-because you program your own stuff in python and start with a (mostly) clean NameSpace [1].
+because you program your own stuff in python and start with a (mostly) clean NameSpace [^1].
 
 Components:
 *   Commands have a name and execute things. Implemented as Python functions.
 *   A simple Language in which you specify a command, possibly with Arguments.
-    Looks very shell like. If there is no such command, interprete it as python.
+    Looks very shell like. If there is no such command, you can choose what to do,
+    for example evaluate it as python expression and show the result.
 *   Script loader, which executes python scripts in which you define commands.
 *   One global Namespace in which the scripts and commands are exected in, for less typing
-*   Completion for Commands, their arguments, and simple python statements
+*   Completion for Commands, their arguments, and simple python expressions or statements
 *   Frontends: They ask the user for input, offer completion and
     offer a few functions to the commands.
-*   Plattform aware functions. depending on the executing os, a different set of 
+*   Plattform aware functions. depending on the executing os, a different set of
     functions is made available in the Namespace. For example in windows, there is the
     `MessageBox` function, taken right out of user32.dll, under linux, there isnt.
+    There is a set of functions to simulate user input like moving the mouse, or
+    Keystrokes. In (another) Minilanguage, you can specify those inputs easily.
 
-[1]: I Once wrote a Shell script to do some things when i start my computer,
+[^1]: I Once wrote a Shell script to do some things when i start my computer,
     e.g. start music, open firefox, mail and 3 terminals I called this script
     `as` instead of `auto_start`, so I would not have to type as much because
     I'm lazy. After some weeks, I had to compile something and it didnt work,
@@ -151,18 +154,31 @@ Namespaces are very pythonic and you should allways have more of those.  But
 this tool is not about clean and readable code, it's about getting things done
 (without dolores -.-) therfore there is only one great namespace in which
 scripts and commands are executed. From outside that namespace (the core code
-and plattform modules) the environment is available in `ht3.lib.Env`. Env is a
-decorator to put functions in it, its a dictionary kind of thing and it is also
-a namespace.
-    @Env
-    def foo(): pass
-    Env['foo']
-    Env.foo()
-Env contains itself if you need to use it from your scripts or commands.
+and plattform modules) the environment is available in `ht3.env.Env`.
 
-This gets problematic if you define stuff on module level in your script,
-use it from your command and another script uses different things with the same
-name on module level. But it still beats `bash` ([1]).
+All bindings are added by scripts.
+In the default scripts, `basic.0.py` puts various ht3 control functions,
+all of the utillity functions, and some useful functions from the python libs
+(`sleep`, `Path`, etc.) into Env, but you don't have to.
+
+Since anything that is defined in module scope of the scipts is put into the namespace,
+it might be useful to wrap code that uses variables or imports modules into a
+function with a name that does not annoy you later, or simply deleting it once it
+was called. From inside the variable,
+bindings in the Env can still be made with the `global` keyword.
+The `_` binding is later used as the result of the previous command, how the 
+
+    def initialize_something_once():
+        import some.module
+        compute = something
+        do_something()
+        global ThisIsImportant
+        ThisIsImportant = 42 # put this in Env
+    initialize_something_once()
+    del initialize_something_once
+
+The Env can be reloaded, in which case it forgets everything except for a few
+"persistent" bindings. These are made with `Env.put_persistent(ke, value)`.
 
 Scripts
 -----------
@@ -195,6 +211,9 @@ Inside a directory, scripts are sorted by a numeric index before the `.py` suffi
 
 The default scripts might change. If you dont like that, copy them to your
 script directory and pass it explicitly.
+
+Be sure to load a script that initializes your Env before any other.
+This can be `basic.0.py` or something else.
 
 Some Default Commands
 -----------------
@@ -236,11 +255,11 @@ Any packet can be a HT-Fronend. The user chooses which one(s) to load on the com
 *   CLI: This one is really almost a shell
 *   A little Window
 *   Hotkeys: (Probably runs paralell to anotherone) which has
-	systemwide hotkeys for some commands
+    systemwide hotkeys for some commands
 *   a Daemon: listens on a socket for commands. commands can be sent with
-	`python -m ht3.client "command 1" "command 2"`.
-	Only on UNIX.
-*   [Awesome WM Client](./docs/AWESOME.rst): A piece of lua that runs `ht3.htd`
+    `python -m ht3.client "command 1" "command 2"`.
+    Only on UNIX.
+*   [Awesome WM Client](./docs/AWESOME.rst): A piece of lua that runs `ht3.client`
 *   more are easily implemented, see [Frontends](./docs/FRONTENDS.rst)
 
 
@@ -290,8 +309,7 @@ Some Behaviour can be configured by setting things in the `Env`.
 *   `EDITOR`: a list of strings that should be an editor with parameters.
     It is used by the `edit_file` function in the `default_scripts`.
 *   `RL_HISTORY`: a string that points to a file with the history of the repl.
-*   `DEBUG`: set to true to do post mortem pdb debugging and show traces with all
-        `log` and `show` messages
+*   `DEBUG`: set to true to do post mortem pdb debugging.
 *   `SCRIPTS` If no script is passed on the command line, this variable can specify
      scripts, seperated by `:` that will be loaded.
 
