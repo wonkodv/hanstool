@@ -303,7 +303,13 @@ class UserInterface():
 
 
         def log_show(self, o, current_command=None, frontend=None):
-            if not isinstance(o, str):
+            if isinstance(o, str):
+                pass
+            elif isinstance(o, bool):
+                o = str(o)
+            elif isinstance(o, int):
+                o = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
+            else:
                 o = pprint.pformat(o)
             self.log(o)
             self.to_front()
