@@ -115,15 +115,16 @@ def _complete_script_names(s):
     return filter_completions(s, (p.name for p in SCRIPTS))
 
 @cmd(name="++", args="auto", complete=_complete_script_names)
-def add_command(script, name=None):
+def add_command(script, name=None, text=None):
     """ define a command in a script.
         1.  If `script` matches a loaded one, it is edited, otherwise
             a new script with the name
             (it must end in .py) is created in the directory of
             the most recently loaded script.
         2. If `name` is given, a command definition is added with the name.
-        3. The script is edited.
-        4. you should restart for the new command to be activated.
+        3. If text is given, it is added as comment to the function
+        4. The script is edited.
+        5. you should restart for the new command to be activated.
 
     """
     from ht3.scripts import SCRIPTS
@@ -132,7 +133,7 @@ def add_command(script, name=None):
 
     name_path = dict((p.name, p) for p in SCRIPTS)
 
-    s = difflib.get_close_matches(script, name_path, 1, 0.2)
+    s = difflib.get_close_matches(script, name_path, 1, 0.5)
     if s:
         s = name_path[s[0]]
     else:
@@ -154,17 +155,14 @@ def add_command(script, name=None):
 
     if name:
         with s.open("ta") as f:
-            f.write("\n@cmd(name='"+name+"', args='auto')\ndef "+name+"():\n    pass")
+            f.write("\n@cmd(name='"+name+"', args='auto')"
+                    "\ndef "+name+"():"
+                    "\n    pass"
+                    + ("\n    # "+text if text else ''))
 
     with s.open("rt") as f:
         l = len(list(f))
     edit_file(s, l)
-
-@cmd(name="<", args='path')
-def run_command_file(p):
-    with p.open('rt') as f:
-        for l in f:
-            run_command(l)
 
 @cmd(args=1, complete=lambda s:COMMANDS.keys())
 def debug(what):
