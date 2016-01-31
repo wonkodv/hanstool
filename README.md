@@ -31,7 +31,7 @@ Components:
 *   Completion for Commands, their arguments, and simple python expressions or statements
 *   Frontends: They ask the user for input, offer completion and
     offer a few functions to the commands.
-*   Plattform aware functions. depending on the executing os, a different set of
+*   Platform aware functions. depending on the executing os, a different set of
     functions is made available in the Namespace. For example in windows, there is the
     `MessageBox` function, taken right out of user32.dll, under linux, there isnt.
     There is a set of functions to simulate user input like moving the mouse, or
@@ -75,13 +75,16 @@ The String you type to get things done as EBNF:
     WS:         SPACE | TAB
     ARGUMENT:   (~RETURN)+
 
-and as plaintext:
+and as plain text:
 
     all (printable) characters that are not whitespaces make the command name, the rest
     of the line is the argument to the command
 
 and as some examples:
 
+    web
+    web example.com
+    ? web
     foo
     foo bar
     foo         bar baz!
@@ -122,7 +125,7 @@ The `@cmd` decorator has more or less the following effect:
 
 Note that, the function is stored itself under its own name in the namespace,
 not the wrapper.  The wrapper is stored under the command-name in the
-`COMMANDS` dictionary. The wrapper does not apear anywhere else.
+`COMMANDS` dictionary. The wrapper does not appear anywhere else.
 The command has the following properties:
 
 *   Name is `!`. This would often be the function name, but can be different.
@@ -150,15 +153,15 @@ More in [Argument Parsing](./docs/ARGUMENTS.rst)
 The one unified Namespace `Env`
 -------------------------------
 
-Namespaces are very pythonic and you should allways have more of those.  But
+Namespaces are very pythonic and you should always have more of those.  But
 this tool is not about clean and readable code, it's about getting things done
-(without dolores -.-) therfore there is only one great namespace in which
+(without dolores -.-) therefore there is only one great namespace in which
 scripts and commands are executed. From outside that namespace (the core code
-and plattform modules) the environment is available in `ht3.env.Env`.
+and platform modules) the environment is available in `ht3.env.Env`.
 
 All bindings are added by scripts.
 In the default scripts, `basic.0.py` puts various ht3 control functions,
-all of the utillity functions, and some useful functions from the python libs
+all of the utility functions, and some useful functions from the python libs
 (`sleep`, `Path`, etc.) into Env, but you don't have to.
 
 Since anything that is defined in module scope of the scipts is put into the namespace,
@@ -180,21 +183,26 @@ The `_` binding is later used as the result of the previous command, how the
 The Env can be reloaded, in which case it forgets everything except for a few
 "persistent" bindings. These are made with `Env.put_persistent(ke, value)`.
 
+Attributes of the `Env` that are not found on the object are looked up in the dict.
+Log functions and hooks are usually accessed as attributes of `Env`, so they
+could be kept outside of the namespace by setting them up as attributes. This
+might even work but I wouldn't recommend it.
+
 Scripts
 -----------
 
 Scripts are python scripts that are all executed in the same namespace.
 You can define functions variables and most important, commands there.
 The way you load scripts:
-1.  Specify one or more scripts or directories with scripts on the commandline
-2.  If no scripts were loaded on the commandline,
+1.  Specify one or more scripts or directories with scripts on the command line
+2.  If no scripts were loaded on the command line,
     The ':' seperated directories from the `SCRIPTS` variable are loaded (from the
     `Env`. Use the `HT3_SCRIPTS` environment variable from outside ht3.)
 3.  If no `SCRIPTS` variable is defined, use `ht3/default_scripts`
     which definitely exists and `~/.config/ht3` if exists.
 
 Since `~/.config` looks a bit silly on windows, you might want to name
-your script folder (and propably the default scripts) explicitly using the
+your script folder (and probably the default scripts) explicitly using the
 1st or 2nd form from a batch file.
 
 The order in which scripts are loaded matters if they overwrite things that
@@ -303,12 +311,18 @@ Configure Things
 ---------------
 
 Some Behaviour can be configured by setting things in the `Env`.
-*   `command_not_found_hook` is executed if the command-string does
+*   `command_not_found_hook(s)` is executed if the command-string does
     not specify a command. Defaults to evaluating or executing as python code.
-*   `CLI_PROMPT()`: the text in the CLI Prompt, defaults to `lambda:'ht3> '`
+*   `general_completion(s)` should return a list/iterator of completions for
+    the general input. The default is, to complete commands if possible, else
+    python code.
+*   `CLI_PROMPT`: the text in the CLI Prompt, can be a `str` or a callable
+    returning strings. Default: `'ht3> '`
 *   `EDITOR`: a list of strings that should be an editor with parameters.
     It is used by the `edit_file` function in the `default_scripts`.
-*   `RL_HISTORY`: a string that points to a file with the history of the repl.
+*   `RL_HISTORY`: a string that points to a file with the history of the CLI repl.
+*   `GUI_HISTORY`: a string that points at a file for the history of the GUI
+    command window.
 *   `DEBUG`: set to true to do post mortem pdb debugging.
 *   `SCRIPTS` If no script is passed on the command line, this variable can specify
      scripts, seperated by `:` that will be loaded.
@@ -330,12 +344,12 @@ The `ht3.cli` uses readline. Configure it as you need.
     import readline
     readline.parse_and_bind('set editing-mode vi')
 
-Make it more shell like by importing modules like `sh` [2] or `plumbum` [3]
+Make it more shell like by importing modules like `sh` [^2] or `plumbum` [^3]
 into your Environment and glue them to the `command_not_found_hook`.
+If you have a good setup, tell me about it!
 
-
-[2]: https://amoffat.github.io/sh/
-[3]: https://plumbum.readthedocs.org/en/latest/
+[^2]: https://amoffat.github.io/sh/
+[^3]: https://plumbum.readthedocs.org/en/latest/
 
 Developing
 ----------
