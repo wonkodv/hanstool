@@ -178,7 +178,7 @@ def py():
     return execute(sys.executable)
 
 @cmd
-def reload(full:bool=False):
+def reload(full:WordBool=False):
     import ht3.env
     import ht3.scripts
 

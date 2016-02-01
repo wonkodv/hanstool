@@ -38,3 +38,15 @@ def cmd_func(name, func, *args, **kwargs):
         doc='executes\n'+" ".join(shlex.quote(x) for x in args),
         origin_stacked=3)
     Env[name] = cmdf
+
+def WordBool(s):
+    s = s.lower()
+    if not s:
+        raise valueError()
+
+    if s[0] in 'n0' or s == 'false':
+        return False
+    if s[0] in 'jy1' or s == 'true':
+        return True
+
+    raise ValueError("Not a boolean word: "+s)
