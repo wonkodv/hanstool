@@ -155,18 +155,29 @@ class CallableArgParser(ArgParser):
 
 
 class AutoArgs(ArgParser):
-    """Parses shell style args and converts to annotated types."""
+    """Parses args matching the signature %s."""
     def __init__(self, command):
-        self.command = command;
+        self.command = command
+        self.sig = inspect.signature(command)
+        self.__doc__ = self.__doc__ % (self.sig)
+
 
     def __call__(self, string):
         if not string.strip():
             return [],{}
-        sig = inspect.signature(self.command)
-        values = iter(shlex.split(string))
+
+        values = []
+        if len(self.sig.parameters) == 1:
+            p = list(self.sig.parameters.items())[0][1]
+            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
+                values = [string]
+        if not values:
+            values = shlex.split(string)
+
+        values = iter(values)
 
         args=[]
-        for name, p in sig.parameters.items():
+        for name, p in self.sig.parameters.items():
             t = p.annotation
             if t == p.empty:
                 t = str

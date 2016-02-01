@@ -123,6 +123,30 @@ class TestArgs(unittest.TestCase):
         assert kwargs == {}
         assert args == ['a']
 
+    def test_auto_onearg_vararg(self):
+        cmd = Mock()
+        def f(*a):
+            pass
+        cmd.__wrapped__ = f
+
+        a = Args('auto', _command=cmd)
+
+        args, kwargs = a('1 2 3')
+        assert kwargs == {}
+        assert args == ['1', '2', '3']
+
+    def test_auto_onearg(self):
+        cmd = Mock()
+        def f(a):
+            pass
+        cmd.__wrapped__ = f
+
+        a = Args('auto', _command=cmd)
+
+        args, kwargs = a('1 2 3')
+        assert kwargs == {}
+        assert args == ['1 2 3']
+
     def test_auto_noargs(self):
         cmd = Mock()
         def f(a=0):
