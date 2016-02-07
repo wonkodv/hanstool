@@ -55,36 +55,52 @@ else:
     cmd(name="$", args=1, complete=complete_executable)(shell)
     cmd(name="!", args='shell', complete=complete_executable)(execute)
 
-def _():
+def _get_the_editor():
     import os
     import os.path
+    import shutil
 
     if 'EDITOR' in os.environ:
         import shlex
         e = shlex.split(os.environ['EDITOR'])
-    elif CHECK.os.posix:
-        if CHECK.frontend('ht3.cli'):
-            EDITOR=['vim']
-        else:
-            EDITOR=['gvim']
     elif CHECK.os.win:
-        e = r"C:\Program Files (x86)\Notepad++\notepad++.exe"
-        if os.path.exists(e):
-            e = [e]
+        editors = [
+            "gvim",
+            r"C:\Program Files (x86)\Notepad++\notepad++.exe",
+            r"C:\Program Files\Notepad++\notepad++.exe"
+        ]
+
+        for e in editors:
+            if os.path.exists(e) or shutil.which(e):
+                e = [e]
+                break
         else:
             e = ['notepad.exe']
-    Env['EDITOR'] = tuple(e) # make unmodifiable
-_()
+    else:
+        if CHECK.frontend('ht3.cli'):
+            editors =['vim', 'nano', 'emacs']
+        else:
+            editors =['gvim']
+        for s in editors:
+            s = shutil.which(s)
+            if s:
+                e = [s]
+                break
+        else:
+            e = ['ed'] # haha
+    global EDITOR
+    EDITOR = tuple(e) # make unmodifiable
+_get_the_editor()
+del _get_the_editor
 
 @cmd(name='e')
 def edit_file(file_name:Path, line:int=0):
     """Edit a file using EDITOR."""
     f = str(file_name) # allow pathlib.Path
     l = int(line)
-    e = EDITOR[0]
-    if e[-4:] == '.exe':
+    e = EDITOR[0].lower()
+    if e[-4:] == '.exe' or e[-4:] == '.bat':
         e = e[:-4]
-
 
     args = EDITOR + (f, )
     if line:
