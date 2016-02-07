@@ -386,6 +386,11 @@ def stop():
     if GUI is not None:
         GUI.close_soon()
 
+def _reptor_tk_ex(self, typ, val, tb):
+    log_error(val)
+
+tk.Tk.report_callback_exception = _reptor_tk_ex
+
 #logging
 
 def _do_log(m, *args):
