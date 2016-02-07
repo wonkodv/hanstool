@@ -27,33 +27,33 @@ def exit():
 
 if CHECK.frontend('ht3.cli'):
     # Programms should run in foreground when invoked from CLI
-    @cmd(name="$", args=1)
+    @cmd(name="$", args=1, complete=complete_executable)
     def _shell(arg):
         p = shell(arg)
         if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
-    @cmd(name="!", args="shell")
-    def _execute(args):
+    @cmd(name="!", args="shell", complete=complete_executable)
+    def _execute(*args):
         p = execute(*args)
         if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
     # TODO disconnect stdinout for bg
-    @cmd(name="$&", args=1)
+    @cmd(name="$&", args=1, complete=complete_executable)
     def _shell_bg(arg):
         p = shell(arg)
         return p
 
-    @cmd(name="!&", args="shell")
-    def _execute_bg(args):
+    @cmd(name="!&", args="shell", complete=complete_executable)
+    def _execute_bg(*args):
         p = execute(*args)
         return p
 else:
-    cmd(name="$", args=1)(shell)
-    cmd(name="!", args='shell')(execute)
+    cmd(name="$", args=1, complete=complete_executable)(shell)
+    cmd(name="!", args='shell', complete=complete_executable)(execute)
 
 def _():
     import os

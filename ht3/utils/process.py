@@ -3,6 +3,8 @@
 import subprocess
 import shlex
 import warnings
+import pathlib
+import os
 
 from ht3.env import Env
 from .processwatch import watch
@@ -40,3 +42,23 @@ def execute(*args, cwd=None, env=None):
     watch(p, lambda p: Env.log_subprocess_finished(p))
     p.shell=False
     return p
+
+def complete_executable(s):
+    s = shlex.split(s)
+    if len(s) != 1:
+        return
+    s = s[0]
+    p = pathlib.Path(s)
+
+    if p.is_absolute() or '/' in s:
+        for c in p.parent.glob(p.name+'*'):
+            if c.is_file():
+                if os.access(str(c), os.F_OK | os.X_OK):
+                    yield str(c)
+    else:
+        for p in os.get_exec_path():
+            p = pathlib.Path(p)
+            for c in p.glob(s+'*'):
+                if c.is_file():
+                    if os.access(str(c), os.F_OK | os.X_OK):
+                        yield c.name
