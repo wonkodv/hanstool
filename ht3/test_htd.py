@@ -10,6 +10,7 @@ import socket
 import time
 
 
+@unittest.skipUnless(os.name == 'posix',"Not on POSIX")
 class TestDaemon(unittest.TestCase):
     @patch('ht3.htd.run_command')
     def test_daemon(self, run_command):
