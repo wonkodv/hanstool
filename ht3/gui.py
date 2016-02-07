@@ -8,6 +8,7 @@ import traceback
 import threading
 import pprint
 import os.path
+import pathlib
 
 from . import lib
 from .env import Env
@@ -335,7 +336,13 @@ class UserInterface():
             self.log("Spawned process %d: %r" % (p.pid, p.args))
 
         def log_subprocess_finished(self, p, current_command=None, frontend=None):
-            self.log("Process finished %d: %r" % (p.pid, p.returncode))
+            a = p.args
+            if not isinstance(a, str):
+                a = a[0]
+            a = pathlib.Path(a)
+            a = a.with_suffix('')
+            a = a.name
+            self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
             if p.returncode > 0:
                 if CHECK.os.win:
                     if not getattr(p, 'shell', False): # shell is set explicitly by the shell function
