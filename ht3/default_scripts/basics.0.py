@@ -29,13 +29,15 @@ from os.path import expanduser
 from pathlib import Path
 
 from ht3.check import CHECK
-if CHECK.os.windows:
-    from ht3.utils.windows import *
 
 from ht3.utils.fake_input import *
 from ht3.utils.process import *
 from ht3.utils.helpers import *
 from ht3.utils.log import *
+
+if CHECK.os.windows:
+    from ht3.utils.windows import *
+
 
 def _import():
     import importlib
