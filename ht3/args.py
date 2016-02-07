@@ -116,7 +116,7 @@ class SetArgs(ArgParser):
 
     def complete(self, string):
         string = string.strip()
-        return sorted(ht3.complete.filter_completions(string, *self.sets))
+        return ht3.complete.filter_completions(string, *self.sets)
 
 
 class DictArgs(ArgParser):

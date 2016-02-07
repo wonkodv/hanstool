@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_command, _COMPLETE_PY_VALIDATE
+from ht3.complete import complete_py, complete_command
 
 
 class Test_Completion(unittest.TestCase):
@@ -19,50 +19,50 @@ class Test_Completion(unittest.TestCase):
             # complete_command should filter out a2
             self.assertListEqual(list(complete_command('c1 ar')), ['c1 arg1'])
 
-    def test_py_completion_guard(self):
-        assert _COMPLETE_PY_VALIDATE.fullmatch('text')
-        assert not _COMPLETE_PY_VALIDATE.fullmatch('text ')
-        assert _COMPLETE_PY_VALIDATE.fullmatch('text +')
-        assert _COMPLETE_PY_VALIDATE.fullmatch('text + ')
-        assert _COMPLETE_PY_VALIDATE.fullmatch('text + t')
-        assert _COMPLETE_PY_VALIDATE.fullmatch('text +')
-
     def test_py_completion(self):
         with patch("ht3.complete.SCOPE", {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}):
-            c = complete_py('FO')
+            def f(s):
+                return list(complete_py(s))
+
+            c = f('FO')
             self.assertListEqual(c, [])
 
-            c = complete_py('FO ')
+            c = f('FO ')
+            assert 'FO one' in c
+
+            c = f('FO BAR')
             self.assertListEqual(c, [])
 
-            c = complete_py('FO BAR')
-            self.assertListEqual(c, [])
-
-            c = complete_py('t')
+            c = f('t')
             self.assertListEqual(c, ['text', 'three', 'two'])
 
-            c = complete_py('text')
+            c = f('text')
             self.assertListEqual(c, ['text'])
 
-            c = complete_py('text ')
-            self.assertListEqual(c, []) # Is a command, not py, dont py complete
+            c = f('text ')
+            # start new after spaces
+            assert 'text three' in c
 
-            c = complete_py('text foo')
-            self.assertListEqual(c, []) # Is a command, not py, dont py complete
+            c = f('text o')
+            self.assertListEqual(c, ['text one']) # Is a command, not py, dont py complete
 
-            c = complete_py('text.')
+            c = f('text.')
             self.assertIn('text.startswith', c)
             self.assertIn('text.capitalize', c)
 
-            c = complete_py('text.s')
+            c = f('text.s')
             self.assertIn('text.startswith', c)
             self.assertIn('text.strip', c)
 
-            c = complete_py('one + tw')
+            c = f('one + tw')
             self.assertListEqual(c, ['one + two'])
 
-            c = complete_py('"".find(te')
+            c = f('"".find(te')
             self.assertListEqual(c, ['"".find(text'])
+
+            # should not raise a key error !
+            c = f('text.foo.bar')
+            assert c == []
 
     def test_command_complete_iter(self):
         """Complete of commands should not be consumed if iterator

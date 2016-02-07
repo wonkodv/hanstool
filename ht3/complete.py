@@ -10,7 +10,10 @@ SCOPE = ChainMap(Env, __builtins__)
 def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``.""";
     l = len(s)
-    return (p for it in prop for p in it  if p[:l] == s)
+    for it in prop:
+        for p in it:
+            if p[:l] == s:
+                yield p
 
 def complete_all(string):
     for s in complete_command(string):
@@ -30,12 +33,24 @@ def complete_command(string):
         values = sorted(filter_completions(string, COMMANDS.keys()))
     return values
 
-_COMPLETE_PY_VALIDATE = re.compile("(\w*(\.|( *[^a-zA-Z0-9_. ] *)+)?)*")
-_COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_. ]+")
+def _get_attributes_rec(obj):
+    values = set()
+    for v in sorted(dir(obj)):
+        values.add(v)
+        yield v
+
+    if hasattr(obj, '__class__'):
+        c = obj.__class__
+        while c != object:
+            c = c.__base__
+            for v in sorted(dir(c)):
+                if v not in values:
+                    values.add(v)
+                    yield v
+
+_COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
 
 def complete_py(string):
-    if not _COMPLETE_PY_VALIDATE.fullmatch(string):
-        return []
     s = _COMPLETE_PY_SEPERATOR.split(string)
     parts = s[-1].strip().split(".")
 
@@ -48,25 +63,18 @@ def complete_py(string):
 
         try:
             val = SCOPE[p0]
-
             for p in parts[1:-1]:
-                p = p.strip()
                 val = getattr(val, p)
-
-            values = dir(val)
-
-            if hasattr(val, '__class__'):
-                values.append('__class__')
-                c = val.__class__
-                while c != object:
-                    values += dir(c)
-                    c = c.__base__
         except (KeyError, AttributeError):
-            pass
+            return [] # when the string contains illegal keys/attributes
+
+        values = _get_attributes_rec(val)
+
+
     prefix = string[:len(string)-len(pl)]
     values = filter_completions(pl, values)
     values = sorted(values)
-    values = [prefix + x for x in values]
+    values = (prefix + x for x in values)
 
     return values
 
