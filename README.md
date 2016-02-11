@@ -132,9 +132,9 @@ The command has the following properties:
     Any sequence of printable, non-whitespace characters works.
 *   Arguments to `!` should be parsed with the `shell` strategy. The complete text
     after `!` is parsed into a list of strings in the way unix shells parse
-    argument strings. (see docu of `shlex.split()` for details.)
-*   Function: The `execute_things` function will be called when the user types runs the `!`
-    command. The command-argument is parsed and passed to the function as 
+    argument strings. (see doc of `shlex.split()` for details.)
+*   Function: The `execute_things` function will be called when the user runs the `!`
+    command. The command-argument is parsed and passed to the function as
     positional arguments. For example the following commands are equal to the python calls:
     *   `! a b "c"` =>  `execute_things('a', 'b', 'c')`
     *   `! ` =>  `execute_things()`
@@ -162,14 +162,13 @@ and platform modules) the environment is available in `ht3.env.Env`.
 All bindings are added by scripts.
 In the default scripts, `basic.0.py` puts various ht3 control functions,
 all of the utility functions, and some useful functions from the python libs
-(`sleep`, `Path`, etc.) into Env, but you don't have to.
+(`sleep`, `Path`, etc.) into Env, but you don't have to use that file.
 
-Since anything that is defined in module scope of the scipts is put into the namespace,
-it might be useful to wrap code that uses variables or imports modules into a
-function with a name that does not annoy you later, or simply deleting it once it
-was called. From inside the variable,
-bindings in the Env can still be made with the `global` keyword.
-The `_` binding is later used as the result of the previous command, how the 
+Since anything that is defined in module scope of the scipts is put into the
+namespace, it might be useful to wrap code that uses variables or imports
+modules into a function with a name that does not annoy you later, or simply
+deleting it once it was called. From inside, bindings in the Env can still be
+made with the `global` keyword.
 
     def initialize_something_once():
         import some.module
@@ -181,7 +180,7 @@ The `_` binding is later used as the result of the previous command, how the
     del initialize_something_once
 
 The Env can be reloaded, in which case it forgets everything except for a few
-"persistent" bindings. These are made with `Env.put_persistent(ke, value)`.
+"persistent" bindings. These are made with `Env.put_persistent(key, value)`.
 
 Attributes of the `Env` that are not found on the object are looked up in the dict.
 Log functions and hooks are usually accessed as attributes of `Env`, so they
@@ -222,6 +221,10 @@ script directory and pass it explicitly.
 
 Be sure to load a script that initializes your Env before any other.
 This can be `basic.0.py` or something else.
+
+If one of your scripts imports `ht3.check.CHECK`, you can make your scripts flexible
+for running on different plattforms and with different frontends.
+See [CHECK](./docs/CHECK.md).
 
 Some Default Commands
 -----------------

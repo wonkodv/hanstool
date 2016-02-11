@@ -1,6 +1,7 @@
 """Provide the CHECK object to test the current environment"""
 import os
 import sys
+import functools
 
 __all__ = ('CHECK', )
 
@@ -17,6 +18,10 @@ class Group:
     def __call__(self, *vals):
         return set(vals) <= set(self.collection)
 
+    def __repr__(self):
+        return repr(self.collection)
+
+@functools.total_ordering
 class Value:
     def __init__(self, call):
         self.call = call
@@ -26,6 +31,9 @@ class Value:
 
     def __ne__(self, other):
         return self.call() != other
+
+    def __gt__(self, other):
+        return self.call() > other
 
     def __bool__(self):
         return bool(self.call())
@@ -37,11 +45,17 @@ class Value:
             return self.call()
         raise TypeError()
 
+    def __repr__(self):
+        return repr(self.call())
+
 class Check:
     pass
 
 
 CHECK = Check()
+
+
+## OS
 
 OS = set()
 OS.add(os.name)
@@ -52,3 +66,10 @@ if os.name == 'nt':
     OS.add("windows")
 
 CHECK.os = Group(OS)
+
+
+## Py
+
+CHECK.py = Value(lambda :"{0.major}.{0.minor}".format(sys.version_info))
+
+## frontend and current_frontend are inserted by ht3.lib

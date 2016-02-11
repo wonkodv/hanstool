@@ -51,3 +51,10 @@ class Test_check(unittest.TestCase):
             fl.frontend='testfe'
             assert CHECK.current_frontend('testfe')
 
+    def test_py(self):
+        assert CHECK.py > '3'
+        assert CHECK.py >= '3.3'
+        assert CHECK.py('3.4') or CHECK.py('3.5') or CHECK.py('3.6')
+        assert CHECK.py == '3.4' or CHECK.py == '3.5' or CHECK.py == '3.6'
+        assert CHECK.py < '4'
+        assert CHECK.py <= '3.6'
