@@ -33,11 +33,7 @@ def load_scripts(path):
         with path.open("rt") as f:
             c = f.read()
         c = compile(c, str(path), "exec")
-        try:
-            exec (c, Env.dict)
-        except NotImplementedError:
-            # Script wanted to be ignored
-            pass
+        exec (c, Env.dict)
         SCRIPTS.append(path)
     else:
         raise Exception("neither file nor dir in load_Scripts", path)
