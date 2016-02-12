@@ -14,7 +14,7 @@ def execute(exe, *args, **kwargs):
 
     return process.execute(exe, *args, **kwargs)
 
-_extensions = os.environ['PATHEXT'].split(os.pathsep)
+_extensions = os.environ.get('PATHEXT','').split(os.pathsep)
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]
 
 def _glob_path_complete(p):

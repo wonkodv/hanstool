@@ -28,16 +28,10 @@ class EnvTest(unittest.TestCase):
         self.assertDictEqual (e.dict, {'Key1':1, 'Key2':2})
 
     def test_attribute_not_write(self):
-        """The Attributes of Env are a seperate namespace backed by the items"""
+        """The Attributes of Env are not writable"""
         e = _Env_class()
-        e.Attr1 = 1
-        e['Key2'] = 2
-
-        assert e.Attr1 == 1
-        assert e.Key2 == 2
-
-        with self.assertRaises(KeyError):
-            e['Attr1']
+        with self.assertRaises(AttributeError):
+            e.Attr1 = 1
 
     def test_attribute_read(self):
         e = _Env_class()

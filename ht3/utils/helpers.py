@@ -2,14 +2,15 @@
 import textwrap
 import functools
 import shlex
+from ht3.lib import evaluate_py_expression
 from ht3.env import Env
-from ht3.command import register_command
+from ht3.command import register_command, COMMANDS
 
 def list_commands():
     """ List all commands """
     text = ""
-    for n in sorted(Env.COMMANDS):
-        c = Env.COMMANDS[n]
+    for n in sorted(COMMANDS):
+        c = COMMANDS[n]
         d = c.doc
         a = c.arg_parser
         doc = textwrap.shorten(d,60)
@@ -23,14 +24,18 @@ def list_env():
 
 def help_command(exp):
     """ Show help on a command or evaluated python expression """
-    if exp in Env.COMMANDS:
-        obj = Env.COMMANDS[exp]
+    if exp in COMMANDS:
+        obj = COMMANDS[exp]
     else:
-        obj = Env.evaluate_py_expression(exp)
+        obj = evaluate_py_expression(exp)
     Env.help(obj)
 
 def cmd_func(name, func, *args, **kwargs):
-    """Define a command that calls a function with arguments"""
+    """Define a command that calls a function with arguments.
+
+    The function is added to Env and can be called with additional
+    arguments.
+    see `functools.partial`."""
     cmdf = functools.partial(func, *args, **kwargs)
     register_command(cmdf,
         name=name,

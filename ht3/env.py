@@ -24,6 +24,9 @@ class _Env_class:
 
     __setitem__ = put
 
+    def __setattr__(self, key, val):
+        raise AttributeError("Dont set Attributes on Env")
+
     def get(self, key, default=_DEFAULT):
         return self.dict.get(key, default)
 

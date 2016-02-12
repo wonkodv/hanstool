@@ -13,7 +13,8 @@ cmd(name=':', args=1)(fake)
 def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s)
-    Env['_'] = r
+    global _
+    _ = r
     show(r)
     return None
 
@@ -105,9 +106,9 @@ def edit_file(file_name:Path, line:int=0):
     args = EDITOR + (f, )
     if line:
         if e.endswith('vim'):
-            args = Env.EDITOR + (f, '+%d'%l )
+            args = EDITOR + (f, '+%d'%l )
         elif e.endswith('notepad++'):
-            args = Env.EDITOR + ('-n%d'%l, f)
+            args = EDITOR + ('-n%d'%l, f)
 
     p = execute(*args)
     if CHECK.current_frontend == 'ht3.cli':

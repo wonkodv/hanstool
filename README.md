@@ -148,7 +148,7 @@ The default one does shell like parsing and passes the strings as positional
 arguments to your function. If the parameters are annotated, that annotation
 should be a callable that converts a string into your expected type (like `int` or `float`).
 
-More in [Argument Parsing](./docs/ARGUMENTS.rst)
+More in [Argument Parsing](./docs/ARGUMENTS.md)
 
 The one unified Namespace `Env`
 -------------------------------
@@ -159,33 +159,8 @@ this tool is not about clean and readable code, it's about getting things done
 scripts and commands are executed. From outside that namespace (the core code
 and platform modules) the environment is available in `ht3.env.Env`.
 
-All bindings are added by scripts.
-In the default scripts, `basic.0.py` puts various ht3 control functions,
-all of the utility functions, and some useful functions from the python libs
-(`sleep`, `Path`, etc.) into Env, but you don't have to use that file.
 
-Since anything that is defined in module scope of the scipts is put into the
-namespace, it might be useful to wrap code that uses variables or imports
-modules into a function with a name that does not annoy you later, or simply
-deleting it once it was called. From inside, bindings in the Env can still be
-made with the `global` keyword.
-
-    def initialize_something_once():
-        import some.module
-        compute = something
-        do_something()
-        global ThisIsImportant
-        ThisIsImportant = 42 # put this in Env
-    initialize_something_once()
-    del initialize_something_once
-
-The Env can be reloaded, in which case it forgets everything except for a few
-"persistent" bindings. These are made with `Env.put_persistent(key, value)`.
-
-Attributes of the `Env` that are not found on the object are looked up in the dict.
-Log functions and hooks are usually accessed as attributes of `Env`, so they
-could be kept outside of the namespace by setting them up as attributes. This
-might even work but I wouldn't recommend it.
+More in [Env](./docs/ENV.md)
 
 Scripts
 -----------
@@ -270,8 +245,8 @@ Any packet can be a HT-Fronend. The user chooses which one(s) to load on the com
 *   a Daemon: listens on a socket for commands. commands can be sent with
     `python -m ht3.client "command 1" "command 2"`.
     Only on UNIX.
-*   [Awesome WM Client](./docs/AWESOME.rst): A piece of lua that runs `ht3.client`
-*   more are easily implemented, see [Frontends](./docs/FRONTENDS.rst)
+*   [Awesome WM Client](./docs/AWESOME.md): A piece of lua that runs `ht3.client`
+*   more are easily implemented, see [Frontends](./docs/FRONTENDS.md)
 
 
 Command Line
@@ -357,4 +332,4 @@ If you have a good setup, tell me about it!
 Developing
 ----------
 
-You are welcome to contribute, see [here](./docs/DEVELOPE.rst).
+You are welcome to contribute, see [here](./docs/DEVELOPE.md).
