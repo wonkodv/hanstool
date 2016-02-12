@@ -18,8 +18,10 @@ HansTool 3
 
 A third attempt, this time with python:)
 
-Tool that does things without typing much. Like a shell but less confusing
-because you program your own stuff in python and start with a (mostly) clean NameSpace [^1].
+The idea is, that a language that lets you quickly execute some commands (like bash)
+is not a good language to write scripts, functions etc. with, so the HT3 splits this
+into a command language that quickly executes arbitrary commands and python to write
+what those commands do.
 
 Components:
 *   Commands have a name and execute things. Implemented as Python functions.
@@ -29,21 +31,15 @@ Components:
 *   Script loader, which executes python scripts in which you define commands.
 *   One global Namespace in which the scripts and commands are exected in, for less typing
 *   Completion for Commands, their arguments, and simple python expressions or statements
-*   Frontends: They ask the user for input, offer completion and
-    offer a few functions to the commands.
-*   Platform aware functions. depending on the executing os, a different set of
-    functions is made available in the Namespace. For example in windows, there is the
+*   Frontends: They ask the user for input, offer completion, show messages and
+    can be controlled by commands.
+*   Utillity functions.
+    Depending on the executing os, a different set of
+    functions is made available. For example in windows, there is the
     `MessageBox` function, taken right out of user32.dll, under linux, there isnt.
     There is a set of functions to simulate user input like moving the mouse, or
     Keystrokes. In (another) Minilanguage, you can specify those inputs easily.
 
-[^1]: I Once wrote a Shell script to do some things when i start my computer,
-    e.g. start music, open firefox, mail and 3 terminals I called this script
-    `as` instead of `auto_start`, so I would not have to type as much because
-    I'm lazy. After some weeks, I had to compile something and it didnt work,
-    but music started to play and 3 terminals opend. `gcc` invokes the
-    assmebler which is called `as` because many people before me where just as
-    lazy. Now I like clean namespaces.
 
 Command
 -----
