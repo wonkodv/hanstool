@@ -4,6 +4,7 @@ import ht3.command
 import re
 import pathlib
 import os
+import os.path
 from .env import Env
 
 
@@ -81,13 +82,22 @@ def complete_py(string):
     return values
 
 def complete_path(s):
-    p = pathlib.Path(s)
-    for e in p.parent.glob(p.name+'*'):
-        if e.is_dir():
-            e = str(e) + '/'
-        else:
-            e = str(e)
-        if os.sep != '/':
-            e = e.replace(os.sep, '/')
-        assert e.startswith(s), [s,e]
-        yield e
+    p = pathlib.Path(os.path.expanduser(s))
+    if s[-1] in ['/', os.sep]:
+        stem = s
+        mask = '*'
+        p = p
+    else:
+        stem = s[:-len(p.name)]
+        mask = p.name+'*'
+        p = p.parent
+    for e in p.glob(mask):
+        yield stem + e.name
+
+
+def complete_type(typ, s):
+    if typ == pathlib.Path:
+        typ = 'path'
+    if isinstance(typ, str):
+        return ht3.env.Env.get('complete_'+typ)(s)
+    raise TypeError("No Completion available", typ)

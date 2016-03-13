@@ -199,7 +199,7 @@ class AutoArgs(ArgParser):
                 typ = str
             elif callable(typ):
                 pass
-            elif typ == 'py':
+            elif isinstance(typ, str):
                 typ = str
             else:
                 raise TypeError(typ)
@@ -249,12 +249,7 @@ class AutoArgs(ArgParser):
             consume_all, typ = self.convert[-1]
             assert consume_all
 
-        if typ == pathlib.Path:
-            values = ht3.complete.complete_path(s)
-        else:
-            values = [s+typ.__name__]
-
-        for v in values:
+        for v in ht3.complete.complete_type(typ, s):
             yield prefix + v
 
 def Args(spec, **kwargs):
