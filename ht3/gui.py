@@ -268,10 +268,10 @@ class UserInterface():
             s = self.cmd.get()
             if self.ui.run_command(s):
                 self._set_text('')
-                self._history.append(s)
-                self._history_index = -1
-                with open(self._history_file, 'at') as f:
-                    f.write(s+"\n")
+            self._history.append(s)
+            self._history_index = -1
+            with open(self._history_file, 'at') as f:
+                f.write(s+"\n")
 
 
     class MessageWindow():
