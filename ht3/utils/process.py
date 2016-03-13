@@ -20,7 +20,7 @@ def shellescape(string):
 
     return string
 
-def shell(string, cwd=None, env=None):
+def shell(string, cwd=None, env=None, **kwargs):
     """ pass a string to a shell. The shell will parse it. """
     p = subprocess.Popen(
         string,
@@ -29,15 +29,16 @@ def shell(string, cwd=None, env=None):
         env=env,
         universal_newlines=True,
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        stderr=subprocess.PIPE,
+        **kwargs)
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
     p.shell=True
     return p
 
-def execute(*args, cwd=None, env=None):
+def execute(*args, cwd=None, env=None, **kwargs):
     """ Execute a programm with arguments """
-    p = subprocess.Popen(args, shell=False, cwd=cwd, env=env)
+    p = subprocess.Popen(args, shell=False, cwd=cwd, env=env, **kwargs)
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
     p.shell=False
