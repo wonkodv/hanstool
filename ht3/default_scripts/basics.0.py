@@ -15,6 +15,7 @@ from ht3.complete import complete_py
 from ht3.complete import complete_all
 from ht3.complete import complete_command
 from ht3.complete import filter_completions
+from ht3.complete import complete_path
 
 from ht3.command import cmd
 from ht3.command import COMMANDS
@@ -71,10 +72,9 @@ def general_completion(string):
     Complete command-strings that the user enters, including stuff that the
     command_not_found_hook will get. Specifically, complete commands but if
     none matched complete python."""
-    found = False
-    for s in complete_command(string):
-        yield s
-        found = True
-    if not found:
+    try:
+        for s in complete_command(string):
+            yield s
+    except KeyError:
         for s in complete_py(string):
             yield s

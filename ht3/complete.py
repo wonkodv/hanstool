@@ -28,12 +28,9 @@ def complete_all(string):
         yield s
 
 def complete_command(string):
-    try:
-        cmd, sep, args = ht3.command.get_command(string)
-        if sep or args:
-            return (cmd.name + sep + a for a in filter_completions(args, cmd.complete(args)))
-    except KeyError:
-        pass
+    cmd, sep, args = ht3.command.get_command(string)
+    if sep or args:
+        return (cmd.name + sep + a for a in filter_completions(args, cmd.complete(args)))
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
 
 def _get_attributes_rec(obj):
