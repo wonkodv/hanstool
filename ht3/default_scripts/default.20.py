@@ -62,9 +62,9 @@ if CHECK.frontend('ht3.cli'):
             return p.wait()
         return p
 
-    @cmd(name="!", args="shell", complete=complete_executable, Prefix=True)
-    def _execute(*args):
-        p = execute(*args)
+    @cmd(name="!", Prefix=True)
+    def _execute(exe:"executable", *args:Path):
+        p = execute(exe, *args)
         if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
@@ -75,13 +75,16 @@ if CHECK.frontend('ht3.cli'):
         p = shell(arg)
         return p
 
-    @cmd(name="!&", args="shell", complete=complete_executable, Prefix=True)
-    def _execute_bg(*args):
-        p = execute(*args)
+    @cmd(name="!&", Prefix=True)
+    def _execute_bg(exe:"executable", *args:Path):
+        p = execute(exe, *args)
         return p
 else:
     cmd(name="$", args=1, complete=complete_executable, Prefix=True)(shell)
-    cmd(name="!", args='shell', complete=complete_executable, Prefix=True)(execute)
+    @cmd(name="!", Prefix=True)
+    def _execute(exe:"executable", *args:Path):
+        p = execute(exe, *args)
+        return p
 
 def _get_the_editor():
     import os
