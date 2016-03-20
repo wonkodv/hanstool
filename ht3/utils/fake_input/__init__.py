@@ -10,7 +10,6 @@ import re
 import time
 
 from ht3.check import CHECK;
-from ht3.keycodes import KEY_CODES
 
 if CHECK.os.win:
     from . import windows as impl
@@ -18,9 +17,20 @@ elif CHECK.os.posix:
     try:
         from . import xserver as impl
     except NotImplementedError:
-        impl = object()
+        impl = None
 
-__all__ = ('KEY_CODES', 'fake')
+__all__ = (
+    'KEY_CODES',
+    'fake',
+    'type_string',
+    'get_mouse_pos',
+    'mouse_wheel',
+    'mouse_move',
+    'mouse_down',
+    'mouse_up',
+    'key_down',
+    'key_up'
+)
 
 class Error(Exception):
     pass
@@ -28,7 +38,6 @@ class Error(Exception):
 fake_types = (
     ("WHITESPACE",  r"\s+"),
     ("MOVEABS",     r"([\d]+)[x/:,]([\d]+)"),
-    ("MOVEREL",     r"([\d]+.?[\d]*)%([\d]+.?[\d]*)"),
     ("COMBO",       r"((?P<mod1>\w+)\+)"
                     r"((?P<mod2>\w+)\+)?"
                     r"((?P<mod3>\w+)\+)?"
@@ -44,14 +53,13 @@ fake_types = (
 
 fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in fake_types))
 
-def fake(string,interval=10):
+def fake(string, interval=10, restore_mouse_pos=False):
     """
     Fake a sequence of Events, specified by a string.
 
     Parses the following mini language:
     *   Whitespaces are ignored
-    *   ``123X456`` moves the mouse to x=123 and y=456, see mouse_move_abs
-    *   ``50.2%7``  moves the mouse to x=50.2% and y=7%, see mouse_move_rel
+    *   ``123X456`` moves the mouse to x=123 and y=456, see mouse_move
     *   ``M1``      Does a Mouse Click at the current mouse position
                     With the left button. 2=Middle, 3=right, 4, 5
     *   ``+M2``     Press but do not release the middle mouse button
@@ -84,18 +92,12 @@ def fake(string,interval=10):
         try:
             if   m.group("WHITESPACE"):
                 pass
-            elif m.group("MOVEREL"):
-                x, y = groups
-                x = float(x)
-                y = float(y)
-                a(impl.mouse_move_rel, x, y)
-                log("MouseMove rel to x=%.1f y=%.1f", x, y)
             elif m.group("MOVEABS"):
                 x,y = groups
                 x = int(x)
                 y = int(y)
-                a(impl.mouse_move_abs, x, y)
-                log("MouseMove abs to x=%.1f y=%.1f", x, y)
+                a(impl.mouse_move, x, y)
+                log("MouseMove to x=%.1f y=%.1f", x, y)
             elif m.group("MBTN"):
                 ud = m.group('mud')
                 btn= int(m.group('btn'))
@@ -140,10 +142,16 @@ def fake(string,interval=10):
         except KeyError:
             raise Error("Invalid fake-sequence", m)
 
+    if restore_mouse_pos:
+        mp = get_mouse_pos()
     for c, a, m in sequence:
         if interval:
             time.sleep(float(interval)/1000)
-        try:
-            c(*a)
-        except:
-            raise Exception(m)
+        c(*a)
+    if restore_mouse_pos:
+        mouse_move(*mp)
+
+for e in __all__:
+    g = globals()
+    if hasattr(impl,e):
+        g[e]=getattr(impl,e)

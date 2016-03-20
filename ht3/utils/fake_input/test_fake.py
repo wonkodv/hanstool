@@ -20,9 +20,7 @@ class Test_fake(unittest.TestCase):
         with patch("time.sleep") as mockSleep:
             mockSleep.side_effect=lambda t: s.append(['s', t])
             with patch(__package__ + ".impl") as fake_in:
-                fake_in.mouse_move_abs =lambda x,y  : s.append(["ma", x, y])
-                fake_in.mouse_move_rel =lambda x,y  : s.append(["mr", x, y])
-                fake_in.mouse_move =    lambda x,y  : s.append(["m", x, y])
+                fake_in.mouse_move =    lambda x,y  : s.append(["ma", x, y])
                 fake_in.mouse_down =    lambda b    : s.append(["md", b])
                 fake_in.mouse_up =      lambda b    : s.append(["mu", b])
                 fake_in.key_down =      lambda k    : s.append(["kd", k])
@@ -43,8 +41,6 @@ class Test_fake(unittest.TestCase):
             "GH'I"
             1000x2000
             01/250
-            0.1%2.2
-            50%50
             M1
             CTRL+A
             """,0)
@@ -58,8 +54,6 @@ class Test_fake(unittest.TestCase):
             ['t', "GH'I", 0],
             ['ma', 1000, 2000],
             ['ma', 1, 250],
-            ['mr', 0.1, 2.2],
-            ['mr', 50, 50],
             ['md', 1],
             ['mu', 1],
             ['kd',k['CTRL']],
