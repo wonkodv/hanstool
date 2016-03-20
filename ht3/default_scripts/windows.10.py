@@ -11,7 +11,7 @@ if CHECK.os.win:
         else:
             raise OSError("ShellExecute returned an error: %d" % r)
 
-    @cmd(args="1", complete=complete_command, name="#", Prefix=True)
+    @cmd(args="1", complete=complete_command, name="#")
     def explore_command(cmd):
         """Show the directory or file used in the target commands source in explorer."""
         from pathlib import Path
@@ -67,3 +67,23 @@ if CHECK.os.win:
 
             SetParent(c, h)
 
+
+
+
+    @cmd
+    def analyze_windows():
+
+        arr = []
+
+        p = get_mouse_pos()
+        w = WindowFromPoint(p)
+
+        while(w):
+            clas = GetClassName(w)
+            title = GetWindowText(w)
+            rect = GetWindowRect(w)
+
+            arr.append("{0:X}\t{1:20s}\t'{2}'\n\t{3: 4} {4: 4} {5: 4} {6: 4})".format(w, clas, title, *rect))
+
+            w = GetParent(w)
+        show(str(p) + "\n" + "\n".join(arr))

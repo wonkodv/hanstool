@@ -13,18 +13,10 @@ def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
         w = ctypes.windll.user32.FindWindowW(None, spec)
     return w
 
-def GetWindowRect(hwnd):
-    r = RECT(0,0,0,0)
-    p = ctypes.byref(r)
-    if not ctypes.windll.user32.GetWindowRect(hwnd, p):
-        raise ctypes.WinError()
-    return r.left, r.top, r.right - r.left, r.bottom - r.top
-
-def SetParent(child, parent):
-    return ctypes.windll.user32.SetParent(child, parent)
-
-def SetForegroundWindow(wnd):
-    return ctypes.windll.user32.SetForegroundWindow(wnd)
+def GetClassName(wnd):
+    name = (c_wchar * 100)()
+    ctypes.windll.user32.GetClassNameW(wnd, name, 100)
+    return name.value
 
 def GetCursorPos():
     p = POINT()
@@ -32,18 +24,42 @@ def GetCursorPos():
         raise ctypes.WinError()
     return p
 
-def WindowFromPoint(p=None):
-    if p is None:
-        p = GetCursorPos()
-    elif not isinstance(p, POINT):
-        p = POINT(*p)
-    return ctypes.windll.user32.WindowFromPoint(p)
+def GetForegroundWindow():
+    return ctypes.windll.user32.GetForegroundWindow()
 
-def GetClassName(wnd):
+def GetParent(hWnd):
+    return ctypes.windll.user32.GetParent(hWnd)
+
+def GetTaskBarHandle():
+    h = FindWindow(cls='Shell_TrayWnd')
+    if not h:
+        raise ctypes.WinError()
+    h = FindWindow(parent=h, cls='ReBarWindow32')
+    if not h:
+        raise ctypes.WinError()
+    h = FindWindow(parent=h, cls='ToolbarWindow32', title='hanstool')
+    if not h:
+        raise ctypes.WinError()
+    return h
+
+def GetWindowRect(hwnd):
+    r = RECT(0,0,0,0)
+    p = ctypes.byref(r)
+    if not ctypes.windll.user32.GetWindowRect(hwnd, p):
+        raise ctypes.WinError()
+    return r.left, r.top, r.right - r.left, r.bottom - r.top
+
+def GetWindowText(wnd):
     name = (c_wchar * 100)()
-    ctypes.windll.user32.GetClassNameW(wnd, name, 100)
+    ctypes.windll.user32.GetWindowTextW(wnd, name, 100)
     return name.value
 
+
+def SetForegroundWindow(wnd):
+    return ctypes.windll.user32.SetForegroundWindow(wnd)
+
+def SetParent(child, parent):
+    return ctypes.windll.user32.SetParent(child, parent)
 
 def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., flags=0):
     after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2).get(after,after)
@@ -64,17 +80,10 @@ def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., fl
         after = 0
     if not ctypes.windll.user32.SetWindowPos(hwnd, after, left, top, width, height, flags):
         ctypes.WinError()
-def GetTaskBarHandle():
-    h = FindWindow(cls='Shell_TrayWnd')
-    if not h:
-        raise ctypes.WinError()
-    h = FindWindow(parent=h, cls='ReBarWindow32')
-    if not h:
-        raise ctypes.WinError()
-    h = FindWindow(parent=h, cls='ToolbarWindow32', title='hanstool')
-    if not h:
-        raise ctypes.WinError()
-    return h
 
-def GetForegroundWindow():
-    return ctypes.windll.user32.GetForegroundWindow()
+def WindowFromPoint(p=None):
+    if p is None:
+        p = GetCursorPos()
+    elif not isinstance(p, POINT):
+        p = POINT(*p)
+    return ctypes.windll.user32.WindowFromPoint(p)
