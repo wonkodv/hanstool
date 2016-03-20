@@ -202,21 +202,26 @@ def add_command(script, name=None, text=None):
 
     if name:
         with s.open("ta") as f:
-            f.write("\n@cmd(name='"+name+"', args='auto')"
+            f.write("\n@cmd"
                     "\ndef "+name+"():"
-                    "\n    pass"
-                    + ("\n    # "+text if text else ''))
+                    "\n    "+ (text if text else 'pass'))
 
     with s.open("rt") as f:
         l = len(list(f))
-    edit_file(s, l)
+    p = edit_file(s, l)
+    p.wait()
 
-@cmd(args=1, complete=lambda s:COMMANDS.keys())
+@cmd(args=1, complete=general_completion)
 def debug(what):
     """ Debug a Command """
-    import pdb, ht3.command
-    pdb.set_trace()
-    ht3.command.run_command(what)
+    import pdb, ht3.command, inspect
+    try:
+        cmd, _, args = ht3.command.get_command(what)
+        pdb.set_trace()
+        return cmd(args)
+    except KeyError:
+        x = pdb.runeval(what, Env.dict)
+        return x
 
 @cmd
 def py():
