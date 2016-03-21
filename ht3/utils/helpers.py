@@ -47,7 +47,7 @@ def cmd_func(name, func, *args, **kwargs):
 def WordBool(s):
     s = s.lower()
     if not s:
-        raise valueError()
+        raise ValueError()
 
     if s[0] in 'n0' or s == 'false':
         return False
