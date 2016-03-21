@@ -2,6 +2,8 @@
 from collections import ChainMap
 import ht3.command
 import re
+import pathlib
+import os
 from .env import Env
 
 
@@ -75,3 +77,16 @@ def complete_py(string):
 
     return values
 
+def complete_path(s):
+    p = pathlib.Path(s)
+    for e in p.parent.glob(p.name+'*'):
+        if e.is_dir():
+            e = str(e) + os.pathsep
+        else:
+            e = str(e)
+        if not e.startswith(s):
+            c = e[:len(s)]
+            if c.replace('\\','/') == s.replace('\\','/'):
+                e = s + e[len(s):]
+        assert e.startswith(s), [s,e]
+        yield e

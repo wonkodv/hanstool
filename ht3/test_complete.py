@@ -1,7 +1,8 @@
 import unittest
+import pathlib
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_command
+from ht3.complete import complete_py, complete_command, complete_path
 
 
 class Test_Completion(unittest.TestCase):
@@ -86,3 +87,17 @@ class Test_Completion(unittest.TestCase):
             l = complete_command('c b')
 
         assert next(l) == 'c b'
+
+
+    def test_complete_path_dir_slash(self):
+        l = list(complete_path('ht'))
+        assert 'ht3/' in l
+
+    def test_complete_path_local(self):
+        l = list(complete_path('ht3/comple'))
+        assert 'ht3/complete.py' in l
+
+    def test_complete_path_dir_slash(self):
+        a = str(pathlib.Path(__file__).parent.absolute())
+        l = list(complete_path(a+'/comple'))
+        assert a+'/complete.py' in l

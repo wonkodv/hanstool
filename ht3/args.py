@@ -71,6 +71,10 @@ class PathArgs(ArgParser):
     def __call__(self, string):
         return [pathlib.Path(string)],{}
 
+
+    def complete(self, s):
+        ht3.complete.complete_path(s)
+
 class GetOptsArgs(ArgParser):
     """Takes "getopt" arguments: %s."""
     def __init__(self, opts):
