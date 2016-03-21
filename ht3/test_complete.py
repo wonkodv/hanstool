@@ -98,6 +98,6 @@ class Test_Completion(unittest.TestCase):
         assert 'ht3/complete.py' in l
 
     def test_complete_path_dir_slash(self):
-        a = str(pathlib.Path(__file__).parent.absolute())
+        a = str(pathlib.Path(__file__).parent.absolute()).replace('\\','/')
         l = list(complete_path(a+'/comple'))
         assert a+'/complete.py' in l

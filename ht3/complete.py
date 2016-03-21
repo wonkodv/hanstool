@@ -84,12 +84,10 @@ def complete_path(s):
     p = pathlib.Path(s)
     for e in p.parent.glob(p.name+'*'):
         if e.is_dir():
-            e = str(e) + os.pathsep
+            e = str(e) + '/'
         else:
             e = str(e)
-        if not e.startswith(s):
-            c = e[:len(s)]
-            if c.replace('\\','/') == s.replace('\\','/'):
-                e = s + e[len(s):]
+        if os.sep != '/':
+            e = e.replace(os.sep, '/')
         assert e.startswith(s), [s,e]
         yield e
