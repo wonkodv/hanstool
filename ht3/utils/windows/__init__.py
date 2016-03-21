@@ -6,3 +6,4 @@ if CHECK.os.win:
     from .default import *
     from .hwnds import *
     from .execute import *
+    from .clipboard import *
