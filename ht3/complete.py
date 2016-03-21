@@ -10,12 +10,15 @@ from .env import Env
 SCOPE = ChainMap(Env, __builtins__)
 
 def filter_completions(s, *prop):
-    """Filter out proposals that don't start with ``s``.""";
+    """Filter out proposals that don't start with ``s``."""
+    already_yielded = set()
     l = len(s)
     for it in prop:
         for p in it:
             if p[:l] == s:
-                yield p
+                if p not in already_yielded:
+                    yield p
+                    already_yielded.add(p)
 
 def complete_all(string):
     for s in complete_command(string):
