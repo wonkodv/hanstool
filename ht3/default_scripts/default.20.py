@@ -6,7 +6,9 @@ cmd(name='e')(list_env)
 cmd(name='?', args=1, complete=complete_all, Prefix=True)(help_command)
 
 # Some Eval Python functions
-cmd(name=';',args=1, complete=complete_py, Prefix=True)(execute_py_expression)
+@cmd(name=';',args=1, complete=complete_py, Prefix=True)
+def _execute_py_expression(s):
+    execute_py_expression(s.lstrip())
 
 def _complete_fake(string):
     import re
@@ -37,7 +39,7 @@ def repeat_fake():
 @cmd(name='=',args='?', complete=complete_py, Prefix=True)
 def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
-    r = evaluate_py_expression(s)
+    r = evaluate_py_expression(s.lstrip())
     global _
     _ = r
     show(r)
