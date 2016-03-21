@@ -209,6 +209,9 @@ def reload(full:WordBool=False):
         log("\n===== RELOAD SCRIPTS ====\n")
     ht3.scripts.reload_all()
 
+    if CHECK.frontend('ht3.hotkey'):
+        ht3.hotkey.reload_hotkeys()
+
 
 
 
@@ -269,7 +272,7 @@ def restart(*more_args):
 
     os.execv(sys.executable, args)
 
-if CHECK.frontend('ht3.gui', 'ht3.hotkey'):
+if CHECK.frontend('ht3.gui'):
     _httofront_time=0
     @cmd(HotKey="F8")
     def httofront():
@@ -282,7 +285,14 @@ if CHECK.frontend('ht3.gui', 'ht3.hotkey'):
         else:
             ht3.gui.log_win_to_front()
 
-if CHECK.frontend('ht3.gui'):
     @gui_do_on_start
     def _():
         ht3.gui.cmd_win_stay_on_top()
+
+if CHECK.frontend('ht3.hotkey'):
+    @cmd(name="disable_hotkey", args='?', complete=lambda s:sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values()))
+    def _disable_hotkey(hk=None):
+        if hk:
+            disable_hotkey(hk)
+        else:
+            disable_all_hotkeys()
