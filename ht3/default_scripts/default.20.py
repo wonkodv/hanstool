@@ -7,7 +7,17 @@ cmd(name='?', args=1, complete=complete_all, Prefix=True)(help_command)
 
 # Some Eval Python functions
 cmd(name=';',args=1, complete=complete_py, Prefix=True)(execute_py_expression)
-cmd(name=':', args=1, Prefix=True)(fake)
+@cmd(name=':', args=1, Prefix=True)
+def test_fake(s):
+    sleep(0.5)
+    fake(s)
+    global FAKE_TEXT
+    FAKE_TEXT = s
+
+@cmd(HotKey='F10')
+def repeat_fake():
+    global FAKE_TEXT
+    fake(FAKE_TEXT)
 
 @cmd(name='=',args='?', complete=complete_py, Prefix=True)
 def _show_eval(s=""):
