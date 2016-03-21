@@ -1,9 +1,20 @@
 import unittest
-from ht3.utils.windows.execute import complete_executable
+from unittest.mock import patch
+from ht3.utils.windows.execute import complete_executable, execute
 import os
+import sys
 
 @unittest.skipUnless(os.name == 'nt', "Not On Windows")
-class TestWinPathCompl(unittest.TestCase):
-    def test_it(self):
-        p = list(complete_executable('python'))
-        assert p[0][-4:].lower() == '.exe'
+class TestWinExecute(unittest.TestCase):
+    def test_complete(self):
+        p = list(complete_executable('pytho'))
+        assert 'python' in p
+        assert 'pythonw' in p
+
+
+    @patch('ht3.utils.process.Env')
+    def test_execute(self, Env):
+        s = sys.executable
+        p = execute(s,'-c','import sys; sys.exit(42)')
+        p.wait()
+        assert p.returncode == 42
