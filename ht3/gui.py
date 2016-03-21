@@ -180,27 +180,39 @@ class UserInterface():
 
 
         def _set_completion(self, i):
+            # index 0: original
+            # index < 0 is wrapped in line 198
+            # index > 0: used to access cache[index-1]
             if self._completion_cache is None:
                 s = self.cmd.get()
                 self._completion_cache = []
                 c = Env.general_completion(s)
                 self._completion_iter = iter(c)
-                self._completion_index = 0
+                self._completion_index = i
                 self._uncompleted_string = s
             else:
                 self._completion_index += i
 
-            try:
-                while self._completion_index+1 > len(self._completion_cache):
-                    nc = next(self._completion_iter)
-                    self._completion_cache.append(nc)
-                ct = self._completion_cache[self._completion_index]
-            except StopIteration:
-                self._completion_index = -1
-
             if self._completion_index < 0:
+                self._completion_cache.extend(self._completion_iter)
+                try:
+                    self._completion_index = self._completion_index % (
+                         len(self._completion_cache) + 1)
+                except ZeroDivisionError:
+                    self._completion_index = 0
+            else:
+                try:
+                    while self._completion_index > len(self._completion_cache):
+                        nc = next(self._completion_iter)
+                        self._completion_cache.append(nc)
+                except StopIteration:
+                    self._completion_index = 0
+
+            if self._completion_index == 0:
                 ct = self._uncompleted_string
-                self._completion_index = -1
+            else:
+                assert self._completion_index >= 1
+                ct = self._completion_cache[self._completion_index-1]
 
             self._completion_update = True
             self._set_text(ct)
