@@ -1,8 +1,7 @@
 """Fake Input for the X11."""
 
-__all__ = ('mouse_move', 'mouse_down', 'mouse_up', 'key_down', 'key_up')
-
-mouse_move = None
+mouse_move_abs = None
+mouse_move_rel = None
 mouse_down = None
 mouse_up = None
 key_down = None

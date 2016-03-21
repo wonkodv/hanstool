@@ -7,7 +7,22 @@ cmd(name='?', args=1, complete=complete_all, Prefix=True)(help_command)
 
 # Some Eval Python functions
 cmd(name=';',args=1, complete=complete_py, Prefix=True)(execute_py_expression)
-@cmd(name=':', args=1, Prefix=True)
+
+def _complete_fake(string):
+    import re
+    parts = re.split('[^A-Za-z0-9]+', string)
+    if len(parts) > 0:
+        p = parts[-1]
+    else:
+        p=''
+
+    prefix = string[:len(string)-len(p)]
+    values = filter_completions(p, ht3.utils.fake_input.KEY_CODES)
+    values = sorted(values)
+    values = (prefix + x for x in values)
+    return values
+
+@cmd(name=':', args=1, Prefix=True, complete=_complete_fake)
 def test_fake(s):
     sleep(0.5)
     fake(s)
@@ -104,7 +119,7 @@ def _get_the_editor():
 _get_the_editor()
 del _get_the_editor
 
-@cmd(name='e')
+@cmd
 def edit_file(file_name:Path, line:int=0):
     """Edit a file using EDITOR."""
     f = str(file_name) # allow pathlib.Path

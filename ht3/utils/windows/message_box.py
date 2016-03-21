@@ -54,7 +54,7 @@ _MessageBoxResults = [
     'NO',
     None,
     None,
-    'TRYAGAIN',
+    'RETRY',
     'CONTINUE'
 ]
 
