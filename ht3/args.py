@@ -14,6 +14,9 @@ _DEFAULT=object()
 class ArgError(ValueError):
     pass
 
+def filterDict(d, *keys):
+    return dict((k,d[k]) for k in d if k in keys)
+
 class ArgParser:
     def __init__(self):
         pass
@@ -162,42 +165,97 @@ class AutoArgs(ArgParser):
     """Parses args matching the signature %s."""
     def __init__(self, command):
         self.command = command
-        self.sig = inspect.signature(command.function)
-        self.__doc__ = self.__doc__ % (self.sig)
+        sig = inspect.signature(command.function)
+        self.__doc__ = self.__doc__ % (sig)
 
+        params = list(sig.parameters.items())
+        if len(params) == 1 and params[0][1].kind in [
+                inspect.Parameter.POSITIONAL_ONLY,
+                inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+            self.split = lambda s: [s]
+        else:
+            self.split = shlex.split
+
+        convert = []
+        self.convert = convert
+        for name, p in params:
+            t = p.annotation
+            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
+                convert.append([False,t])
+            elif p.kind == p.VAR_POSITIONAL:
+                convert.append([True,t])
+                break
+            else:
+                raise TypeError("Can not handle parameter", name, p, sig)
 
     def __call__(self, string):
-        if not string.strip():
+        string = string.strip()
+        if not string:
             return [],{}
+        it = iter(self.split(string))
+        args = []
+        for consume_all, typ in self.convert:
+            if typ is inspect.Parameter.empty:
+                typ = str
+            elif callable(typ):
+                pass
+            elif typ == 'py':
+                typ = str
+            else:
+                raise TypeError(typ)
 
-        values = []
-        if len(self.sig.parameters) == 1:
-            p = list(self.sig.parameters.items())[0][1]
-            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
-                values = [string]
-        if not values:
-            values = shlex.split(string)
-
-        values = iter(values)
-
-        args=[]
-        for name, p in self.sig.parameters.items():
-            t = p.annotation
-            if t == p.empty:
-                t = str
-            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
+            if consume_all:
+                args.extend( typ(v) for v in it)
+            else:
                 try:
-                    v = next(values)
+                    v = next(it)
                 except StopIteration:
                     break
-                v = t(v)
-                args.append(v)
-            elif p.kind == p.VAR_POSITIONAL:
-                for v in values:
-                    v = t(v)
-                    args.append(v)
-                break
+                args.append(typ(v))
         return args, {}
+
+    def complete(self, string):
+        if len(self.convert) == 0:
+            return []
+
+        for append in ['', '"', "'"]:
+            try:
+                values = self.split(string+append+'|') # pipe for cursor pos
+            except ValueError:
+                continue
+            else:
+                break
+        else:
+            # raise the error:
+            self.split(string)
+
+        assert values[-1][-1] == '|'
+
+        if values[-1] == '|':
+            values = values[:-1]
+            new = True
+            i = len(values)
+            s = ""
+            prefix = string + append + " "
+        else:
+            s = values[-1][:-1]
+            i = len(values) - 1
+            prefix = string[:len(string)-len(s)]
+
+
+        if i <= len(self.convert):
+            consume_all, typ = self.convert[i]
+        else:
+            consume_all, typ = self.convert[-1]
+            assert consume_all
+
+        if typ == pathlib.Path:
+            values = ht3.complete.complete_path(s)
+        else:
+            values = [s+typ.__name__]
+
+        for v in values:
+            yield prefix + v
 
 def Args(spec, **kwargs):
     if not spec:
@@ -224,7 +282,7 @@ def Args(spec, **kwargs):
                 s.extend(kwargs['sets'])
             if not s:
                 raise KeyError('Pass a set in `set` or `sets`')
-            return SetArgs(*s)
+            return SetArgs(*s, **filterDict(kwargs, 'default'))
 
         if spec == 'dict':
             d = []
@@ -234,10 +292,10 @@ def Args(spec, **kwargs):
                 d.extend(kwargs['dicts'])
             if not d:
                 raise KeyError('Pass a dict in `dict` or `dicts`')
-            return DictArgs(*d)
+            return DictArgs(*d, **filterDict(kwargs, 'default'))
 
         if spec == 'callable':
-            return CallableArgParser(kwargs['call'])
+            return CallableArgParser(kwargs['call'], **filterDict(kwargs, 'default'))
 
         if spec == 'getopt':
             return GetOptsArgs(kwargs['opt'])
@@ -252,12 +310,12 @@ def Args(spec, **kwargs):
         return spec
 
     if isinstance(spec, collections.abc.Mapping):
-        return DictArgs(spec)
+        return DictArgs(spec, **filterDict(kwargs, 'default'))
 
     if isinstance(spec, collections.abc.Container):
-        return SetArgs(spec)
+        return SetArgs(spec, **filterDict(kwargs, 'default'))
 
     if callable(spec):
-        return CallableArgParser(spec)
+        return CallableArgParser(spec, **filterDict(kwargs, 'default'))
 
     raise ValueError(spec)

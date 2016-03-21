@@ -160,6 +160,20 @@ class TestArgs(unittest.TestCase):
         assert kwargs == {}
         assert args == []
 
+
+    def test_auto_complete_full(self):
+        def f(t1:pathlib.Path, t2:pathlib.Path):
+            pass
+        cmd = Mock()
+        cmd.function = f
+        a = Args('auto', _command=cmd)
+
+        def t(s):
+            return list(a.complete(s))
+
+        assert 'A ht3/' in t('A ht')
+
+
     def test_getopt(self):
         a = Args(':ab:c')
 

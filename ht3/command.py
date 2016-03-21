@@ -95,12 +95,12 @@ def cmd(func=None, **kwargs):
 
 
 def get_command(string):
-    i=0
     if string in COMMANDS:
         cmd = COMMANDS[string]
         sep = ''
         arg = ''
     else:
+        i=0
         for char in string:
             if char in [' ','\t']:
                 cmd = string[:i]
