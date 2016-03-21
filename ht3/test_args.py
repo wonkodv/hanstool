@@ -91,7 +91,7 @@ class TestArgs(unittest.TestCase):
             assert len(args) == 4
             return 'OK'
 
-        cmd.__wrapped__ = f
+        cmd.function = f
 
         a = Args('auto', _command=cmd)
 
@@ -115,7 +115,7 @@ class TestArgs(unittest.TestCase):
         cmd = Mock()
         def f(a,b=0):
             pass
-        cmd.__wrapped__ = f
+        cmd.function = f
 
         a = Args('auto', _command=cmd)
 
@@ -127,7 +127,7 @@ class TestArgs(unittest.TestCase):
         cmd = Mock()
         def f(*a):
             pass
-        cmd.__wrapped__ = f
+        cmd.function = f
 
         a = Args('auto', _command=cmd)
 
@@ -139,7 +139,7 @@ class TestArgs(unittest.TestCase):
         cmd = Mock()
         def f(a):
             pass
-        cmd.__wrapped__ = f
+        cmd.function = f
 
         a = Args('auto', _command=cmd)
 
@@ -151,7 +151,7 @@ class TestArgs(unittest.TestCase):
         cmd = Mock()
         def f(a=0):
             pass
-        cmd.__wrapped__ = f
+        cmd.function = f
 
         a = Args('auto', _command=cmd)
 

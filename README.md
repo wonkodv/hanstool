@@ -90,6 +90,13 @@ and as some examples:
     $ cat ~/txt | /dev/null
     < some/file.ht
 
+Commands can be specified as "Prefix" commands. They do not need a whitespace seperator
+allowing for example the following commands
+
+    !firefox
+    +someCommand
+
+if there are multile prefix commands that could match, the longest wins.
 
 Command-Functions
 ---

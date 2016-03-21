@@ -3,13 +3,13 @@
 # Helpers
 cmd(name='l')(list_commands)
 cmd(name='e')(list_env)
-cmd(name='?', args=1, complete=complete_all)(help_command)
+cmd(name='?', args=1, complete=complete_all, Prefix=True)(help_command)
 
 # Some Eval Python functions
-cmd(name=';',args=1, complete=complete_py)(execute_py_expression)
-cmd(name=':', args=1)(fake)
+cmd(name=';',args=1, complete=complete_py, Prefix=True)(execute_py_expression)
+cmd(name=':', args=1, Prefix=True)(fake)
 
-@cmd(name='=',args='?', complete=complete_py)
+@cmd(name='=',args='?', complete=complete_py, Prefix=True)
 def _show_eval(s=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s)
@@ -28,14 +28,14 @@ def exit():
 
 if CHECK.frontend('ht3.cli'):
     # Programms should run in foreground when invoked from CLI
-    @cmd(name="$", args=1, complete=complete_executable)
+    @cmd(name="$", args=1, complete=complete_executable, Prefix=True)
     def _shell(arg):
         p = shell(arg)
         if CHECK.current_frontend('ht3.cli'):
             return p.wait()
         return p
 
-    @cmd(name="!", args="shell", complete=complete_executable)
+    @cmd(name="!", args="shell", complete=complete_executable, Prefix=True)
     def _execute(*args):
         p = execute(*args)
         if CHECK.current_frontend('ht3.cli'):
@@ -43,18 +43,18 @@ if CHECK.frontend('ht3.cli'):
         return p
 
     # TODO disconnect stdinout for bg
-    @cmd(name="$&", args=1, complete=complete_executable)
+    @cmd(name="$&", args=1, complete=complete_executable, Prefix=True)
     def _shell_bg(arg):
         p = shell(arg)
         return p
 
-    @cmd(name="!&", args="shell", complete=complete_executable)
+    @cmd(name="!&", args="shell", complete=complete_executable, Prefix=True)
     def _execute_bg(*args):
         p = execute(*args)
         return p
 else:
-    cmd(name="$", args=1, complete=complete_executable)(shell)
-    cmd(name="!", args='shell', complete=complete_executable)(execute)
+    cmd(name="$", args=1, complete=complete_executable, Prefix=True)(shell)
+    cmd(name="!", args='shell', complete=complete_executable, Prefix=True)(execute)
 
 def _get_the_editor():
     import os
@@ -114,7 +114,7 @@ def edit_file(file_name:Path, line:int=0):
     if CHECK.current_frontend == 'ht3.cli':
         p.wait()
 
-@cmd(name="+", args="1", complete=complete_all)
+@cmd(name="+", args="1", complete=complete_all, Prefix=True)
 def edit_command(c):
     """ Edit the location where a command or function was defined """
     if c in COMMANDS:

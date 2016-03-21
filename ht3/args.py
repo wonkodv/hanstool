@@ -158,7 +158,7 @@ class AutoArgs(ArgParser):
     """Parses args matching the signature %s."""
     def __init__(self, command):
         self.command = command
-        self.sig = inspect.signature(command)
+        self.sig = inspect.signature(command.function)
         self.__doc__ = self.__doc__ % (self.sig)
 
 

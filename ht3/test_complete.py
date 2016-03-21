@@ -9,9 +9,11 @@ class Test_Completion(unittest.TestCase):
     def test_command_completion(self):
         c1 = Mock()
         c1.complete = lambda s: ["arg1", "a2"]
+        c1.name='c1'
         c2 = Mock()
+        c2.name='c2'
 
-        with patch("ht3.command.COMMANDS", {'c1':c1, 'c2': c2, 'asdfg':None}):
+        with patch("ht3.command.COMMANDS", {'c1':c1, 'c2': c2}):
             self.assertListEqual(list(complete_command('c')), ['c1', 'c2'])
             self.assertListEqual(list(complete_command('c1')), ['c1'])
             self.assertListEqual(list(complete_command('c1 ')), ['c1 arg1', 'c1 a2'])
@@ -78,6 +80,7 @@ class Test_Completion(unittest.TestCase):
             yield "c"
         c = Mock()
         c.complete = compl
+        c.name = 'c'
 
         with patch("ht3.command.COMMANDS", {'c':c}):
             l = complete_command('c b')

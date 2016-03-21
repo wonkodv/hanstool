@@ -11,13 +11,13 @@ if CHECK.os.win:
         else:
             raise OSError("ShellExecute returned an error: %d" % r)
 
-    @cmd(args="1", complete=complete_command, name="#")
+    @cmd(args="1", complete=complete_command, name="#", Prefix=True)
     def explore_command(cmd):
         """Show the directory or file used in the target commands source in explorer."""
         from pathlib import Path
         import functools
 
-        w = COMMANDS[cmd].__wrapped__
+        w = COMMANDS[cmd].function
 
         strings = []
         if isinstance(w, functools.partial):

@@ -22,16 +22,13 @@ def complete_all(string):
         yield s
 
 def complete_command(string):
-    cmd, sep, args = ht3.command.parse_command(string)
-    COMMANDS = ht3.command.COMMANDS
-
-    if sep and cmd in COMMANDS: # only complete args if the space after command came already
-        c = COMMANDS[cmd]
-        values = c.complete(args)
-        values = (cmd + sep + x for x in filter_completions(args, values))
-    else:
-        values = sorted(filter_completions(string, COMMANDS.keys()))
-    return values
+    try:
+        cmd, sep, args = ht3.command.get_command(string)
+        if sep or args:
+            return (cmd.name + sep + a for a in filter_completions(args, cmd.complete(args)))
+    except KeyError:
+        pass
+    return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
 
 def _get_attributes_rec(obj):
     values = set()

@@ -1,7 +1,11 @@
 import unittest
-from ht3.command import cmd, COMMANDS, parse_command
+from unittest.mock import patch, Mock
+from ht3.command import cmd, get_command
 
 class TestCmd(unittest.TestCase):
+    COMMANDS = {}
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_decorator(self):
         @cmd
         def someCommand():
@@ -11,9 +15,10 @@ class TestCmd(unittest.TestCase):
         def someOtherCommand():
             pass
 
-        self.assertIn('someCommand', COMMANDS)
-        self.assertIn('some_other_command', COMMANDS)
+        self.assertIn('someCommand', self.COMMANDS)
+        self.assertIn('some_other_command', self.COMMANDS)
 
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_command_called(self):
         x = 0
         @cmd(args=int)
@@ -21,42 +26,85 @@ class TestCmd(unittest.TestCase):
             nonlocal x
             x = arg
 
-        COMMANDS['someCommand']("1")
+        self.COMMANDS['someCommand']("1")
         assert x==1
-        COMMANDS['someCommand']("42")
+        self.COMMANDS['someCommand']("42")
         assert x==42
 
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_origin(self):
         @cmd
         def someCommand():
             pass
 
-        f, l = COMMANDS['someCommand'].origin
+        f, l = self.COMMANDS['someCommand'].origin
         assert f == __file__
-        assert l == 30
+        assert l > 5
 
+class Test_get_command(unittest.TestCase):
+    comM = Mock()
+    comM.name='com'
 
-class Test_parse_command(unittest.TestCase):
+    preM = Mock()
+    preM.name = '+'
+    preM.Prefix = True
+    pre2M = Mock()
+    pre2M.name = '++'
+    pre2M.Prefix = True
+    COMMANDS = {'com': comM, '+': preM, '++':pre2M}
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_noarg(self):
-        ca = parse_command("cmd")
-        self.assertTupleEqual(ca, ('cmd',"", ''))
+        com, sep, args = get_command("com")
+        assert com == self.comM
+        assert sep == ''
+        assert args == ''
 
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_empty_cmd(self):
-        ca = parse_command("")
-        self.assertTupleEqual(ca, ('',"", ''))
+        with self.assertRaises(KeyError):
+            get_command("")
+        with self.assertRaises(KeyError):
+            get_command(" a")
 
-    def test_empty_cmd_with_arg(self):
-        ca = parse_command(" a")
-        self.assertTupleEqual(ca, (''," ", 'a'))
-
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
-        ca = parse_command("cmd arg")
-        self.assertTupleEqual(ca, ('cmd', " ", 'arg'))
+        com, sep, args = get_command("com arg")
+        assert com == self.comM
+        assert sep == ' '
+        assert args == 'arg'
 
+    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_tab_arg(self):
-        ca = parse_command("cmd\targ")
-        self.assertTupleEqual(ca, ('cmd', '\t', 'arg'))
+        com, sep, args = get_command("com\targuments")
+        assert com == self.comM
+        assert sep == '\t'
+        assert args == 'arguments'
 
-    def test_special_chars_cmd(self):
-        ca = parse_command("$? !%")
-        self.assertTupleEqual(ca, ('$?', ' ', '!%'))
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_prefix_args(self):
+        com, sep, args = get_command("+foo")
+        assert com == self.preM
+        assert sep == ''
+        assert args == 'foo'
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_prefix_noarg(self):
+        com, sep, args = get_command("+")
+        assert com == self.preM
+        assert sep == ''
+        assert args == ''
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_prefix_ws_arg(self):
+        com, sep, args = get_command("+ foo")
+        assert com == self.preM
+        assert sep == ' '
+        assert args == 'foo'
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_prefix_order(self):
+        com, sep, args = get_command("++foo")
+        assert com == self.pre2M
+        assert sep == ''
+        assert args == 'foo'
