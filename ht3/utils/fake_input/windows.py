@@ -23,6 +23,20 @@ keybd_event = ctypes.windll.user32.keybd_event
 keyscan = ctypes.windll.user32.VkKeyScanW
 
 
+EXTENDED_KEYS=set(KEY_CODES[k] for k in (
+        'UP',
+        'DOWN',
+        'LEFT',
+        'RIGHT',
+        'HOME',
+        'END',
+        'PRIOR',
+        'NEXT',
+        'INSERT',
+        'DELETE'
+    )
+)
+
 KEYEVENTF_EXTENDEDKEY   = 0x0001
 KEYEVENTF_KEYUP         = 0x0002
 
@@ -85,10 +99,16 @@ def _btn(b, up):
     return f, d
 
 def key_down(vk):
-    keybd_event(vk, 42, KEYEVENTF_EXTENDEDKEY, 0)
+    f = 0
+    if vk in EXTENDED_KEYS:
+        f |= KEYEVENTF_EXTENDEDKEY
+    keybd_event(vk, 42, f, 0)
 
-def key_up(vk):
-    keybd_event(vk, 42, KEYEVENTF_EXTENDEDKEY | KEYEVENTF_KEYUP, 0)
+def key_up(vk, extended=False):
+    f = KEYEVENTF_KEYUP
+    if vk in EXTENDED_KEYS:
+        f |= KEYEVENTF_EXTENDEDKEY
+    keybd_event(vk, 42, f, 0)
 
 def type_string(s, interval=0):
     if interval:
