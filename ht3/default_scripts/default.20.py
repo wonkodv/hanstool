@@ -19,7 +19,7 @@ def _complete_fake(string):
         p=''
 
     prefix = string[:len(string)-len(p)]
-    values = filter_completions(p, ht3.utils.fake_input.KEY_CODES)
+    values = filter_completions_i(p, ht3.utils.fake_input.KEY_CODES)
     values = sorted(values)
     values = (prefix + x for x in values)
     return values

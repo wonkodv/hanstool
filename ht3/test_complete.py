@@ -2,7 +2,7 @@ import unittest
 import pathlib
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_command, complete_path
+from ht3.complete import complete_py, complete_command, complete_path, filter_completions, filter_completions_i
 
 
 class Test_Completion(unittest.TestCase):
@@ -101,3 +101,47 @@ class Test_Completion(unittest.TestCase):
         a = str(pathlib.Path(__file__).parent.absolute()).replace('\\','/')
         l = list(complete_path(a+'/comple'))
         assert a+'/complete.py' in l
+
+
+
+    def test_filter_completions(self):
+        def src0():
+            yield 'FOO'
+            yield 'bar'
+        def src1():
+            yield 'FOO'
+            yield 'Foo'
+            yield 'foo'
+            assert False, "The iterator was consumed without need"
+            yield None
+
+        g = filter_completions('F', src0(), src1())
+        assert next(g) == 'FOO'
+        assert next(g) == 'Foo', "should filter 'FOO'"
+
+        g = filter_completions('f', src0(), src1())
+        assert next(g) == 'foo'
+
+        g = filter_completions('b', src0(), src1())
+        assert next(g) == 'bar'
+
+    def test_filter_completions_i(self):
+        def src0():
+            yield 'FOO'
+            yield 'b:aR'
+        def src1():
+            yield 'FOO'
+            yield 'Foo'
+            yield 'fuu'
+            assert False, "The iterator was consumed without need"
+            yield None
+
+        g = filter_completions_i('F', src0(), src1())
+        assert next(g) == 'FOO'
+        assert next(g) == 'FUU', "should convert to upper"
+
+        g = filter_completions_i('fo', src0(), src1())
+        assert next(g) == 'foo', "should convert to lower"
+
+        g = filter_completions_i('B:', src0(), src1())
+        assert next(g) == 'B:aR', "Should not convert"

@@ -14,7 +14,7 @@ from ht3.check import CHECK
 from ht3.complete import complete_py
 from ht3.complete import complete_all
 from ht3.complete import complete_command
-from ht3.complete import filter_completions
+from ht3.complete import filter_completions, filter_completions_i
 from ht3.complete import complete_path
 
 from ht3.command import cmd

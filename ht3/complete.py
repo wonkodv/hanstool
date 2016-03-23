@@ -10,6 +10,35 @@ from .env import Env
 
 SCOPE = ChainMap(Env, __builtins__)
 
+def filter_completions_i(s, *prop):
+    """Filter out proposals that don't start with ``s`` ignoring case.
+
+    returned proposals have the same case as ``s``.
+    """
+    already_yielded = set()
+    l = len(s)
+    if l > 0:
+        us = s.upper()
+        upper = s[-1].isupper()
+        lower = s[-1].islower()
+    else:
+        us=s
+        upper=False
+        lower=False
+
+    for it in prop:
+        for p in it:
+            up = p.upper()
+            if up[:l] == us:
+                if up not in already_yielded:
+                    if upper:
+                        yield s + up[l:]
+                    elif lower:
+                        yield s + p[l:].lower()
+                    else:
+                        yield s+p[l:]
+                    already_yielded.add(up)
+
 def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``."""
     already_yielded = set()
@@ -28,9 +57,10 @@ def complete_all(string):
         yield s
 
 def complete_command(string):
-    cmd, sep, args = ht3.command.get_command(string)
-    if sep or args:
-        return (cmd.name + sep + a for a in filter_completions(args, cmd.complete(args)))
+    cmd, sep, args = ht3.command.parse_command(string)
+    if sep:
+        c = ht3.command.COMMANDS[cmd]
+        return (cmd + sep + a for a in filter_completions(args, c.complete(args)))
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
 
 def _get_attributes_rec(obj):
