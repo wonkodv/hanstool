@@ -218,9 +218,9 @@ class AutoArgs(ArgParser):
         if len(self.convert) == 0:
             return []
 
-        for append in ['', '"', "'"]:
+        for quote in ['', '"', "'"]:
             try:
-                values = self.split(string+append+'|') # pipe for cursor pos
+                values = self.split(string+quote+'|') # pipe for cursor pos
             except ValueError:
                 continue
             else:
@@ -236,7 +236,7 @@ class AutoArgs(ArgParser):
             new = True
             i = len(values)
             s = ""
-            prefix = string + append + " "
+            prefix = string + quote + " "
         else:
             s = values[-1][:-1]
             i = len(values) - 1
@@ -250,7 +250,29 @@ class AutoArgs(ArgParser):
             assert consume_all
 
         for v in ht3.complete.complete_type(typ, s):
-            yield prefix + v
+            if shlex._find_unsafe(v) is None:
+                s = prefix + v + quote
+                if s.startswith(string):
+                    yield s
+            else:
+                if quote:
+                    s = prefix + v.replace(quote, "\\"+quote) + "'"
+                    if s.startswith(string):
+                        yield s
+                else:
+                    pass # can not help if it did not start with a quote
+
+
+def quote(s):
+    """Return a shell-escaped version of the string *s*."""
+    if not s:
+        return "''"
+    if _find_unsafe(s) is None:
+        return s
+
+    # use single quotes, and put single quotes into double quotes
+    # the string $'b is then quoted as '$'"'"'b'
+    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 def Args(spec, **kwargs):
     if not spec:

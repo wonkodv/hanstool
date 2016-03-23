@@ -1,6 +1,6 @@
 import unittest
 import pathlib
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 from ht3.args import Args
 
 class TestArgs(unittest.TestCase):
@@ -161,8 +161,16 @@ class TestArgs(unittest.TestCase):
         assert args == []
 
 
-    def test_auto_complete_full(self):
-        def f(t1:pathlib.Path, t2:pathlib.Path):
+    @patch('ht3.complete.complete_type')
+    def test_auto_complete_full(self, complete_type):
+        def compl(typ, s):
+            if typ == 'f':
+                return ['foo','FUU', 'FOO']
+            else:
+                return ['Bar','baz', "x = 42"]
+        complete_type.side_effect=compl
+
+        def f(t1:'f', t2:'b'):
             pass
         cmd = Mock()
         cmd.function = f
@@ -171,8 +179,12 @@ class TestArgs(unittest.TestCase):
         def t(s):
             return list(a.complete(s))
 
-        assert 'A ht3/' in t('A ht')
+        assert 'foo' in t('fo')
+        assert '"foo"' in t('"fo')
+        assert 'foo Bar' in t('foo B')
+        assert '"foo" "baz"' in t('"foo" "ba')
 
+        assert 0==len(t('foo x'))
 
     def test_getopt(self):
         a = Args(':ab:c')
