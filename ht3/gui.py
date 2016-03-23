@@ -3,12 +3,15 @@
 Has a small window where you enter Text
 and a larger one that will be mostly hidden wher log messages appear.
 """
-import tkinter as tk
-import traceback
-import threading
-import pprint
+
+import inspect
+import itertools
 import os.path
 import pathlib
+import pprint
+import threading
+import tkinter as tk
+import traceback
 
 from . import lib
 from .env import Env
@@ -322,6 +325,9 @@ class UserInterface():
                 o = str(o)
             elif isinstance(o, int):
                 o = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
+            elif inspect.isfunction(o):
+                s, l = inspect.getsourcelines(o)
+                o = "".join("{0:>6d} {1}".format(n,s) for (n,s) in zip(itertools.count(l),s))
             else:
                 o = pprint.pformat(o)
             self.log(o)
