@@ -42,10 +42,12 @@ if CHECK.os.windows:
 
 def _import():
     import importlib
+    excludes = ['start', 'loop', 'stop']
     for f in ht3.lib.FRONTENDS:
         m = importlib.import_module(f)
-        for k in dir(m):
-            Env[k] = getattr(m, k)
+        for k in set(dir(m)):
+            if k[0] != '_' and k not in excludes:
+                Env[k] = getattr(m, k)
 
     import os
     for k, v in os.environ.items():
