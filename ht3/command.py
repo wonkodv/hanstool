@@ -17,7 +17,6 @@ _COMMAND_RUN_ID = 0
 
 def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
                      func_name=_DEFAULT,
-                     Prefix=False,
                      async=False, complete=_DEFAULT,
                      doc=_DEFAULT, **attrs):
     """ Register a function as Command """
@@ -71,9 +70,10 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
     Command.complete = complete
     Command.attrs = attrs
     Command.arg_parser = arg_parser
-    Command.Prefix = Prefix
 
     COMMANDS[name] = Command
+
+    func.__command__ = Command
 
 def cmd(func=None, **kwargs):
     """Decorate a function to become a command
@@ -93,37 +93,12 @@ def cmd(func=None, **kwargs):
         register_command(func=func, origin_stacked=3, **kwargs)
     return func
 
+def parse_command(string):
+    return string.partition(' ')
 
 def get_command(string):
-    if string in COMMANDS:
-        cmd = COMMANDS[string]
-        sep = ''
-        arg = ''
-    else:
-        i=0
-        for char in string:
-            if char in [' ','\t']:
-                cmd = string[:i]
-                sep = string[i]
-                arg = string[i+1:]
-
-                if cmd in COMMANDS:
-                    cmd = COMMANDS[cmd]
-                    break
-            i += 1
-        else:
-            prefixcommands = [
-                com for com in COMMANDS.values()
-                    if com.Prefix and string.startswith(com.name)]
-            prefixcommands = sorted(prefixcommands, key=lambda x: len(x.name), reverse=True)
-
-            if prefixcommands:
-                cmd = prefixcommands[0]
-                sep = ''
-                arg = string[len(cmd.name):]
-            else:
-                raise KeyError("No command with that name", string)
-    return cmd, sep, arg
+    cmd, sep, args = parse_command(string)
+    return COMMANDS[cmd], sep, args
 
 def run_command_func(c, *args, **kwargs):
     global _COMMAND_RUN_ID
@@ -152,8 +127,9 @@ def run_command(string):
     THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, parent]
 
     Env.log_command(string)
+    cmd, _, arg = parse_command(string)
     try:
-        cmd, _, arg = get_command(string)
+        cmd = COMMANDS[cmd]
     except KeyError:
         try:
             r = Env.command_not_found_hook(string)

@@ -42,21 +42,18 @@ class TestCmd(unittest.TestCase):
         assert l > 5
 
 class Test_get_command(unittest.TestCase):
-    comM = Mock()
-    comM.name='com'
+    c1 = Mock()
+    c1.name='c1'
 
-    preM = Mock()
-    preM.name = '+'
-    preM.Prefix = True
-    pre2M = Mock()
-    pre2M.name = '++'
-    pre2M.Prefix = True
-    COMMANDS = {'com': comM, '+': preM, '++':pre2M}
+    c2 = Mock()
+    c2.name = 'c2'
+
+    COMMANDS = {'c1': c1, 'c2': c2}
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_noarg(self):
-        com, sep, args = get_command("com")
-        assert com == self.comM
+        com, sep, args = get_command("c1")
+        assert com == self.c1
         assert sep == ''
         assert args == ''
 
@@ -69,42 +66,7 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
-        com, sep, args = get_command("com arg")
-        assert com == self.comM
+        com, sep, args = get_command("c1 arg")
+        assert com == self.c1
         assert sep == ' '
         assert args == 'arg'
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_tab_arg(self):
-        com, sep, args = get_command("com\targuments")
-        assert com == self.comM
-        assert sep == '\t'
-        assert args == 'arguments'
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_prefix_args(self):
-        com, sep, args = get_command("+foo")
-        assert com == self.preM
-        assert sep == ''
-        assert args == 'foo'
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_prefix_noarg(self):
-        com, sep, args = get_command("+")
-        assert com == self.preM
-        assert sep == ''
-        assert args == ''
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_prefix_ws_arg(self):
-        com, sep, args = get_command("+ foo")
-        assert com == self.preM
-        assert sep == ' '
-        assert args == 'foo'
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_prefix_order(self):
-        com, sep, args = get_command("++foo")
-        assert com == self.pre2M
-        assert sep == ''
-        assert args == 'foo'
