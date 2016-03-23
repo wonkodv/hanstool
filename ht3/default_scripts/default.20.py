@@ -130,19 +130,19 @@ def edit_file(file_name:Path, line:int=0):
     f = str(file_name) # allow pathlib.Path
     l = int(line)
     e = EDITOR[0].lower()
-    if e[-4:] == '.exe' or e[-4:] == '.bat':
-        e = e[:-4]
 
-    args = EDITOR + (f, )
+    args = list(EDITOR)
+    args.append(f)
     if line:
-        if e.endswith('vim'):
-            args = EDITOR + (f, '+%d'%l )
-        elif e.endswith('notepad++'):
-            args = EDITOR + ('-n%d'%l, f)
-
+        if 'vim' in e:
+            args.append('+%d'%l )
+        elif 'notepad++' in e:
+            args.append('-n%d'%l)
     p = execute(*args)
     if CHECK.current_frontend == 'ht3.cli':
         p.wait()
+    return p
+
 
 @cmd(name="+", args="1", complete=complete_all)
 def edit_command(c):
@@ -155,7 +155,8 @@ def edit_command(c):
         if not inspect.isfunction(o):
             raise TypeError("Not a function", o)
         f, l = inspect.getsourcefile(o), o.__code__.co_firstlineno
-    edit_file(f, l)
+    p = edit_file(f, l)
+    p.wait()
 
 def _complete_script_names(s):
     from ht3.scripts import SCRIPTS
