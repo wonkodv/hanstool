@@ -453,8 +453,8 @@ def log_thread_finished(result):
     _do_log('log_thread_finished', result)
 
 def help(obj):
-    #TODO: Proper Help Text
-    show(obj.__doc__)
+    import pydoc
+    show(pydoc.plain(pydoc.render_doc(obj, title='Help on %s')))
 
 
 # Extended User API

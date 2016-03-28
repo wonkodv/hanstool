@@ -27,7 +27,10 @@ def help_command(exp):
     if exp in COMMANDS:
         obj = COMMANDS[exp]
     else:
-        obj = evaluate_py_expression(exp)
+        try:
+            obj = evaluate_py_expression(exp)
+        except:
+            obj = exp
     Env.help(obj)
 
 def cmd_func(name, func, *args, **kwargs):
