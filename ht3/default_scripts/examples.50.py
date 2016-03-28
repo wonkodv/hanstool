@@ -14,10 +14,10 @@ def txt():
     edit_file(expanduser("~/txt"))
 
 @cmd(async=True)
-def timer(t:float=3):
-    """ Tea timer """
+def timer(t:float=3, event:str="Done"):
+    """ timer timer """
     sleep(t*60)
-    MessageBox("Timer", "Done (%.1f)"%t, "TOPMOST SETFOREGROUND SYSTEMMODAL OK ICONINFORMATION")
+    option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
 
 def _vb_get_vms(s=None):
