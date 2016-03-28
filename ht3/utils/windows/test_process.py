@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch
-from ht3.utils.windows.execute import complete_executable, execute
+from ht3.utils.windows.process import complete_executable, execute
 import os
 import sys
 

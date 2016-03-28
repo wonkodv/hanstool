@@ -1,4 +1,6 @@
-"""Functions to spawn subprocesses."""
+"""Functions to spawn subprocesses.
+
+All functions here use posix semantics, some are redefined in ht3.util.windows.process"""
 
 import subprocess
 import shlex
@@ -10,15 +12,8 @@ from ht3.env import Env
 from .processwatch import watch
 from ht3.check import CHECK
 
-def shellescape(string):
-    if CHECK.os.posix:
-        return shlex.quote(string)
-
-    #TODO: make this safe!
-    warnings.warn("UNSAFE !!! ht3.lib.shellescape")
-    string = '"' + string + '"'
-
-    return string
+def shellescape(*strings):
+    return " ".join(shlex.quote(s) for s in strings)
 
 def shell(string, cwd=None, env=None, **kwargs):
     """ pass a string to a shell. The shell will parse it. """

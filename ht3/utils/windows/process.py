@@ -1,8 +1,9 @@
+"""Implement process-related functions that behave special on windows."""
+
 import pathlib
 import subprocess
 import os
 import shlex
-import shutil
 from ht3.utils import process
 from ht3.env import Env
 
@@ -67,3 +68,7 @@ def complete_executable(s):
         else:
             for l in longs:
                 yield l
+
+
+def shellescape(*strings):
+    return subprocess.list2cmdline(strings)
