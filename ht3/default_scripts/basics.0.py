@@ -45,9 +45,13 @@ def _import():
     excludes = ['start', 'loop', 'stop']
     for f in ht3.lib.FRONTENDS:
         m = importlib.import_module(f)
-        for k in set(dir(m)):
-            if k[0] != '_' and k not in excludes:
+        if hasattr(m, '__all__'):
+            for k in m.__all__:
                 Env[k] = getattr(m, k)
+        else:
+            for k in set(dir(m)):
+                if k[0] != '_' and k not in excludes:
+                    Env[k] = getattr(m, k)
 
     import os
     for k, v in os.environ.items():
