@@ -351,7 +351,7 @@ class UserInterface():
             self.to_front()
 
         def log_subprocess(self, p, current_command=None, frontend=None):
-            self.log("Spawned process %d: %r" % (p.pid, p.args))
+            self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
 
         def log_subprocess_finished(self, p, current_command=None, frontend=None):
             a = p.args
@@ -363,9 +363,7 @@ class UserInterface():
             self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
             if p.returncode > 0:
                 if CHECK.os.win:
-                    if not getattr(p, 'shell', False): # shell is set explicitly by the shell function
-                        # Dont raise log for non-shell
-                        return
+                    return # return codes on windows don't make any sense
                 self.to_front()
 
         def log_thread(self, t, current_command=None, frontend=None):
