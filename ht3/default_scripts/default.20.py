@@ -3,7 +3,7 @@
 # Helpers
 cmd(name='l')(list_commands)
 cmd(name='e')(list_env)
-cmd(name='?', args=1, complete=complete_all)(help_command)
+cmd(name='?', args=1, complete=general_completion)(help_command)
 
 # Some Eval Python functions
 @cmd(name=';',args=1, complete=complete_py)
@@ -144,7 +144,7 @@ def edit_file(file_name:Path, line:int=0):
     return p
 
 
-@cmd(name="+", args="1", complete=complete_all)
+@cmd(name="+", args="1", complete=general_completion)
 def edit_command(c):
     """ Edit the location where a command or function was defined """
     if c in COMMANDS:

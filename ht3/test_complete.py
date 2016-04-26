@@ -2,7 +2,7 @@ import unittest
 import pathlib
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_command, complete_path, filter_completions, filter_completions_i
+from ht3.complete import complete_py, complete_commands, complete_command_args, complete_path, filter_completions, filter_completions_i
 
 
 class Test_Completion(unittest.TestCase):
@@ -15,12 +15,11 @@ class Test_Completion(unittest.TestCase):
         c2.name='c2'
 
         with patch("ht3.command.COMMANDS", {'c1':c1, 'c2': c2}):
-            self.assertListEqual(list(complete_command('c')), ['c1', 'c2'])
-            self.assertListEqual(list(complete_command('c1')), ['c1'])
-            self.assertListEqual(list(complete_command('c1 ')), ['c1 arg1', 'c1 a2'])
-            self.assertListEqual(list(complete_command('c1 a')), ['c1 arg1', 'c1 a2'])
-            # complete_command should filter out a2
-            self.assertListEqual(list(complete_command('c1 ar')), ['c1 arg1'])
+            self.assertListEqual(list(complete_commands('c')), ['c1', 'c2'])
+            self.assertListEqual(list(complete_commands('c1')), ['c1'])
+            self.assertListEqual(list(complete_command_args('c1 ')), ['c1 arg1', 'c1 a2'])
+            self.assertListEqual(list(complete_command_args('c1 a')), ['c1 arg1', 'c1 a2'])
+            self.assertListEqual(list(complete_command_args('c1 ar')), ['c1 arg1'])
 
     def test_py_completion(self):
         with patch("ht3.complete.SCOPE", {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}):
@@ -67,7 +66,7 @@ class Test_Completion(unittest.TestCase):
             c = f('text.foo.bar')
             assert c == []
 
-    def test_command_complete_iter(self):
+    def test_command_complete_args_iter(self):
         """Complete of commands should not be consumed if iterator
 
         If a completion function yields some values and has to compute the
@@ -84,7 +83,7 @@ class Test_Completion(unittest.TestCase):
         c.name = 'c'
 
         with patch("ht3.command.COMMANDS", {'c':c}):
-            l = complete_command('c b')
+            l = complete_command_args('c b')
 
         assert next(l) == 'c b'
 

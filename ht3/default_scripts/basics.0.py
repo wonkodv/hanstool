@@ -12,8 +12,7 @@ from  ht3.command import RESULT_HISTORY as __
 from ht3.check import CHECK
 
 from ht3.complete import complete_py
-from ht3.complete import complete_all
-from ht3.complete import complete_command
+from ht3.complete import complete_commands, complete_command_args
 from ht3.complete import filter_completions, filter_completions_i
 from ht3.complete import complete_path
 
@@ -80,8 +79,13 @@ def general_completion(string):
     command_not_found_hook will get. Specifically, complete commands but if
     none matched complete python."""
     try:
-        for s in complete_command(string):
+        for s in complete_command_args(string):
             yield s
-    except KeyError:
-        for s in complete_py(string):
+    except (KeyError, ValueError):
+        found = False
+        for s in complete_commands(string):
             yield s
+            found = True
+        if not found:
+            for s in complete_py(string):
+                yield s

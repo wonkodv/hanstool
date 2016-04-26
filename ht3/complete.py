@@ -50,17 +50,14 @@ def filter_completions(s, *prop):
                     yield p
                     already_yielded.add(p)
 
-def complete_all(string):
-    for s in complete_command(string):
-        yield s
-    for s in complete_py(string):
-        yield s
-
-def complete_command(string):
+def complete_command_args(string):
     cmd, sep, args = ht3.command.parse_command(string)
-    if sep:
-        c = ht3.command.COMMANDS[cmd]
-        return (cmd + sep + a for a in filter_completions(args, c.complete(args)))
+    if not sep:
+        raise ValueError()
+    c = ht3.command.COMMANDS[cmd]
+    return (cmd + sep + a for a in filter_completions(args, c.complete(args)))
+
+def complete_commands(string):
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
 
 def _get_attributes_rec(obj):
