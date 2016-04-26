@@ -27,7 +27,7 @@ def _complete_fake(string):
 @cmd(name=':', args=1, complete=_complete_fake)
 def test_fake(s):
     sleep(0.5)
-    fake(s)
+    fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
     FAKE_TEXT = s
 

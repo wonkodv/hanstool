@@ -149,6 +149,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
             time.sleep(float(interval)/1000)
         c(*a)
     if restore_mouse_pos:
+        if interval:
+            time.sleep(float(interval)/1000)
         mouse_move(*mp)
 
 for e in __all__:
