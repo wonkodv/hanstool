@@ -90,4 +90,8 @@ _do_on_start=[]
 def cli_do_on_start(f):
     _do_on_start.append(f)
 
-__all__ = ('help', 'CLI_PROMPT')
+
+help = help
+CLI_PROMPT = 'ht3> '
+
+__all__ = ('help', 'CLI_PROMPT', 'cli_do_on_start')
