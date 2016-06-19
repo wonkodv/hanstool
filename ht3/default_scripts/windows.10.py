@@ -45,6 +45,7 @@ if CHECK.os.win:
                 ht3.gui.cmd_win_set_rect(*r)
 
         @Env
+        @cmd
         def DockInTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
             h = GetTaskBarHandle()

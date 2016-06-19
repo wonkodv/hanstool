@@ -6,6 +6,7 @@ import inspect
 import collections.abc
 import getopt
 import ht3.complete
+import ht3.env
 
 __all__ = ('Args', )
 
@@ -76,7 +77,7 @@ class PathArgs(ArgParser):
 
 
     def complete(self, s):
-        ht3.complete.complete_path(s)
+        ht3.complete.complete_Path(s)
 
 class GetOptsArgs(ArgParser):
     """Takes "getopt" arguments: %s."""
@@ -163,30 +164,44 @@ class CallableArgParser(ArgParser):
 
 class AutoArgs(ArgParser):
     """Parses args matching the signature %s."""
+
+
     def __init__(self, command):
         self.command = command
         sig = inspect.signature(command.function)
         self.__doc__ = self.__doc__ % (sig)
 
-        params = list(sig.parameters.items())
-        if len(params) == 1 and params[0][1].kind in [
-                inspect.Parameter.POSITIONAL_ONLY,
-                inspect.Parameter.POSITIONAL_OR_KEYWORD]:
+        params = iter(sig.parameters.items())
+        self.params = []
+        for name, param in params:
+            if param.kind in [param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD]:
+                # X
+                # X=1
+                var_arg = False
+            elif param.kind == param.VAR_POSITIONAL:
+                # *args
+                var_arg = True
+            elif param.kind == param.KEYWORD_ONLY:
+                if param.default == param.empty:
+                    # *, X=1
+                    raise TypeError("Non positional parameter without default", name, param)
+                else:
+                    # *, X=1
+                    continue
+            elif param.kind == param.VAR_KEYWORD:
+                # **kwargs
+                continue
+            else:
+                assert False
+
+            self.params.append((var_arg, self.ParamAnno(param.annotation)))
+
+        if len(self.params) == 1 and not self.params[0][0]:
             self.split = lambda s: [s]
         else:
             self.split = shlex.split
 
-        convert = []
-        self.convert = convert
-        for name, p in params:
-            t = p.annotation
-            if p.kind in [p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD]:
-                convert.append([False,t])
-            elif p.kind == p.VAR_POSITIONAL:
-                convert.append([True,t])
-                break
-            else:
-                raise TypeError("Can not handle parameter", name, p, sig)
+
 
     def __call__(self, string):
         string = string.strip()
@@ -194,28 +209,21 @@ class AutoArgs(ArgParser):
             return [],{}
         it = iter(self.split(string))
         args = []
-        for consume_all, typ in self.convert:
-            if typ is inspect.Parameter.empty:
-                typ = str
-            elif callable(typ):
-                pass
-            elif isinstance(typ, str):
-                typ = str
-            else:
-                raise TypeError(typ)
-
-            if consume_all:
-                args.extend( typ(v) for v in it)
+        params = iter(self.params)
+        for var_arg, param in params:
+            if var_arg:
+                args.extend(param.convert(v) for v in it)
             else:
                 try:
                     v = next(it)
                 except StopIteration:
                     break
-                args.append(typ(v))
+                args.append(param.convert(v))
+        assert not list(params)
         return args, {}
 
     def complete(self, string):
-        if len(self.convert) == 0:
+        if len(self.params) == 0:
             return []
 
         for quote in ['', '"', "'"]:
@@ -236,20 +244,23 @@ class AutoArgs(ArgParser):
             new = True
             i = len(values)
             s = ""
-            prefix = string + quote + " "
+            prefix = string + quote
+            if len(values) > 1:
+                prefix += " "
         else:
             s = values[-1][:-1]
             i = len(values) - 1
             prefix = string[:len(string)-len(s)]
 
 
-        if i <= len(self.convert):
-            consume_all, typ = self.convert[i]
+        if i <= len(self.params):
+            var_arg, param = self.params[i]
         else:
-            consume_all, typ = self.convert[-1]
-            assert consume_all
+            var_arg, param = self.params[-1]
+            if not var_arg:
+                raise ArgError("Too many arguments",i,len(self.params))
 
-        for v in ht3.complete.complete_type(typ, s):
+        for v in param.complete(s):
             if shlex._find_unsafe(v) is None:
                 s = prefix + v + quote
                 if s.startswith(string):
@@ -262,6 +273,51 @@ class AutoArgs(ArgParser):
                 else:
                     pass # can not help if it did not start with a quote
 
+    class ParamAnno:
+        def __init__(self, typ):
+            if typ is inspect.Parameter.empty:
+                complete = None
+                convert  = str
+            elif callable(typ):
+                def complete(s):
+                    c = getattr(ht3.env.Env, '_complete_'+typ.__name__, False)
+                    if c:
+                        return c(s)
+                    c = getattr(ht3.env.Env, 'complete_'+typ.__name__, False)
+                    if c:
+                        return c(s)
+                    return []
+                convert = typ
+            elif isinstance(typ, str):
+                def complete(s):
+                    c = getattr(ht3.env.Env, '_complete_'+typ, False)
+                    if c:
+                        return c(s)
+                    c = getattr(ht3.env.Env, 'complete_'+typ, False)
+                    if c:
+                        return c(s)
+                    return []
+                def convert(s):
+                    c = getattr(ht3.env.Env, '_convert_'+typ.__name__, False)
+                    if c:
+                        return c(s)
+                    c = getattr(ht3.env.Env, 'convert_'+typ.__name__, False)
+                    if c:
+                        return c(s)
+                    return s
+            elif (isinstance(typ, collections.abc.Mapping)
+                    or isinstance(typ, collections.abc.Sequence)):
+                complete = lambda s: ht3.complete.filter_completions(s, typ)
+                def convert(s):
+                    if not s in typ:
+                        raise KeyError("not in list", s, typ)
+                    return s
+            # UPGRADE: Add typing.Union once support for python3.4 is dropped
+            else:
+                raise TypeError(typ)
+
+            self.complete = complete
+            self.convert = convert
 
 def quote(s):
     """Return a shell-escaped version of the string *s*."""

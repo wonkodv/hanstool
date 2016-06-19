@@ -5,6 +5,7 @@ import re
 import pathlib
 import os
 import os.path
+import collections.abc
 from .env import Env
 
 
@@ -41,6 +42,7 @@ def filter_completions_i(s, *prop):
 
 def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``."""
+    assert len(prop) > 0
     already_yielded = set()
     l = len(s)
     for it in prop:
@@ -107,7 +109,9 @@ def complete_py(string):
 
     return values
 
-def complete_path(s):
+def complete_Path(s):
+    if not s:
+        return
     p = pathlib.Path(os.path.expanduser(s))
     if s[-1] in ['/', os.sep]:
         stem = s
@@ -121,9 +125,3 @@ def complete_path(s):
         yield stem + e.name
 
 
-def complete_type(typ, s):
-    if typ == pathlib.Path:
-        typ = 'path'
-    if isinstance(typ, str):
-        return ht3.env.Env.get('complete_'+typ)(s)
-    raise TypeError("No Completion available", typ)

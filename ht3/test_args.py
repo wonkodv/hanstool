@@ -86,10 +86,12 @@ class TestArgs(unittest.TestCase):
         typ = Mock()
         cmd = Mock()
 
+        typ.__name__ = 'typ'
         def f(s : str, n, t: typ, *args:int, kwa=42):
             assert s == 'Hans'
             assert kwa == 42
             assert len(args) == 4
+            all(isinstance(i,int) for i in args)
             return 'OK'
 
         cmd.function = f
@@ -161,14 +163,16 @@ class TestArgs(unittest.TestCase):
         assert args == []
 
 
-    @patch('ht3.complete.complete_type')
-    def test_auto_complete_full(self, complete_type):
-        def compl(typ, s):
-            if typ == 'f':
-                return ['foo','FUU', 'FOO']
-            else:
-                return ['Bar','baz', "x = 42"]
-        complete_type.side_effect=compl
+    @patch('ht3.env.Env')
+    def test_auto_complete_full(self, Env):
+        def compl_f(s):
+            return ['foo','FUU', 'FOO']
+
+        def compl_b(s):
+            return ['Bar','baz', "x = 42"]
+
+        Env._complete_f = compl_f
+        Env._complete_b = compl_b
 
         def f(t1:'f', t2:'b'):
             pass
