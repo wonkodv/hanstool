@@ -222,13 +222,15 @@ class UserInterface():
             self._completion_update = False
 
         def _load_history(self):
-            h = os.path.expanduser(Env.get('GUI_HISTORY', '~/.config/guihistory'))
+            h = pathlib.Path(os.path.expanduser(Env.get('GUI_HISTORY', '~/.config/ht3/guihistory')))
             self._history_file = h
-            if os.path.exists(h):
-                with open(h, 'rt') as f:
+            if h.exists():
+                with h.open('rt') as f:
                     self._history = [s.strip() for s in f]
-            else:
+            elif h.parent.is_dir():
                 self._history = []
+            else:
+                raise FileNotFoundError("Folder for gui history does not exist.",h)
             self._history_index = -1
 
         def _set_history(self, i):
@@ -273,7 +275,7 @@ class UserInterface():
                 self._set_text('')
             self._history.append(s)
             self._history_index = -1
-            with open(self._history_file, 'at') as f:
+            with self._history_file.open('at') as f:
                 f.write(s+"\n")
 
 
