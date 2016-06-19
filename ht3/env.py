@@ -28,12 +28,18 @@ class _Env_class:
         raise AttributeError("Dont set Attributes on Env")
 
     def get(self, key, default=_DEFAULT):
-        return self.dict.get(key, default)
+        v = self.dict.get(key, default)
+        if v == _DEFAULT:
+            raise KeyError(key)
+        return v
 
-    def __getitem__(self, key):
-        return self.dict[key]
+    __getitem__ = get
 
-    __getattr__ = __getitem__
+    def __getattr__(self, key, default=_DEFAULT):
+        try:
+            return self.get(key)
+        except KeyError:
+            raise AttributeError(key) from None
 
     def __iter__(self):
         return iter(self.dict)
