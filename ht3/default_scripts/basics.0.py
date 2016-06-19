@@ -59,7 +59,7 @@ def _import():
         if k[:4] == 'HT3_':
             Env[k[4:]] = v
 
-    Env['PATH'] = [Path(p) for p in os.get_exec_path()]
+    Env['PATH'] = set(Path(p) for p in os.get_exec_path())
 
 _import()
 del _import

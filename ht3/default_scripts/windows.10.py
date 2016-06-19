@@ -1,6 +1,13 @@
 """Some default commands on Windows."""
 if CHECK.os.win:
 
+    # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
+    # lots of useful tools there.
+    _ = Path(r"C:\Windows\Sysnative")
+    if _.exists():
+        PATH.add(_)
+
+
     @cmd(name='o', args=1)
     def shellexecute(s):
         """Shell Execute, windows's all purpose opening function for files and programms."""
@@ -44,7 +51,6 @@ if CHECK.os.win:
                 r = GetWindowRect(h)
                 ht3.gui.cmd_win_set_rect(*r)
 
-        @Env
         @cmd
         def DockInTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
@@ -65,8 +71,6 @@ if CHECK.os.win:
             ht3.gui.GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
 
             SetParent(c, h)
-
-
 
 
     @cmd

@@ -1,4 +1,32 @@
 
+Processes
+=========
+
+Unlike on unix, Popen on windows does not scan PATH but the functions in
+`ht3.utils.windows.process` do. with the default scripts loaded, you can
+`execute("tool")` and the execute function will look through PATH, and
+will also try different extensions (`.exe`, `.bat`, ...) from PATHEXT
+
+Locating Tools can be weird!
+---------------------------
+
+When a 32bit application (python) accesses `C:\Windows\System32` that is
+retargeted to `C:\Windows\SysWOW64` because SysWOW64 contains all 32bit libs
+and System32 contains 64 bit binaries and executables.  Now you might want to
+execute tools like `SnippingTool` or `msconfig` which lie in (the real)
+System32 and thanks to windows thinking for you (?) you're Sytem32 path gets
+translated to SysWOW64 where the tool won't be found. To work arround exactly
+this problem, there is another virtual folder or replacement rule or whatever
+(You won't see it in the explorer but that doesn't say much), so that
+`C:\Windows\Sysnative` can be used to actually access System32.
+
+**TL;DR**
+To be able to execute tools like `msconfig` `Sysnative` is added to your PATH
+by the default scripts
+
+    PATH.append(Path(r"C:\Windows\Sysnative"))
+
+
 Win32 API
 ========
 
@@ -17,15 +45,16 @@ GUI Tipps
 You can add a folder to you task bar that is named `hanstool` by creating a
 folder somewhere. Then, by right clicking on the taskbar, selecting `Add
 Toolbar`, `New Toolbar` and choosing the `hanstool` folder, you get a new
-toolbar.  The `GetTaskBarHandle` function looks for this toolbar.  the
+toolbar.  The `GetTaskBarHandle` function looks for this toolbar.  The
 `windows.10.py` file defines a `gui_do_on_start` action that places the command
 window positionally over that toolbar. By calling `cmd_win_stay_on_top()`, the
 command window even stays on top of the tollbar most of the time.
 
-the DockInTaskbar function goes further and puts the command window inside the
+The DockInTaskbar function goes further and puts the command window inside the
 toolbar window using `SetParent`. This looks and feels like a `DeskBand` which
 are horribly difficult (activeX, Com, ...) to get working. However, if your HT
-hangs, the Taskbar hangs as well. This does not happen often.
+hangs, the Taskbar hangs as well. This does not happen often. Killing the
+relevant python instance helps.
 
 This is how it looks with a vertical Taskbar
 ![HT3 Gui Docked](./ht3-gui-docked.png)
