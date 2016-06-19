@@ -44,7 +44,12 @@ def cmd_func(name, func, *args, **kwargs):
         origin_stacked=3)
     Env[name] = cmdf
 
-def WordBool(s):
+def _complete_bool(s):
+    if s:
+        return filter_completions_i(s, ["yes", "no", "true", "false", "0", "1"])
+    return ["Yes", "No"]
+
+def _convert_bool(s):
     s = s.lower()
     if not s:
         raise ValueError()
@@ -54,4 +59,4 @@ def WordBool(s):
     if s[0] in 'jy1' or s == 'true':
         return True
 
-    raise ValueError("Not a boolean word: "+s)
+    raise ValueError("Not a boolean word", s)
