@@ -214,16 +214,24 @@ def add_command(script:_complete_script_names, name=None, text=None):
 import sys
 
 @cmd
-def reload(module:args.Union(args.Option(sys.modules, sort=True), str)=None):
+def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"])=None):
     import ht3.env
     import ht3.scripts
     import importlib
+    import sys
 
     if not ht3.scripts.check_all_compilable():
         return
     if module:
         if module.lower() == 'env':
+            log("\n==================== ENV RELOAD ===================\n")
+            Env._reload()
+            ht3.command.COMMANDS.clear()
+        elif module.lower() == 'ALL':
             log("\n==================== FULL RELOAD ===================\n")
+            for m in sys.modules:
+                importlib.import_module(m)
+                log("reloaded "+m)
             Env._reload()
             ht3.command.COMMANDS.clear()
         else:
