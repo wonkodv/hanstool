@@ -102,6 +102,9 @@ class TestShellArgParser(unittest.TestCase):
             pass
         p = args.ArgParser(f)
         assert list(p.complete("1 text")) == ["1 text"]
-        assert list(p.complete('1 ')) == ['1 "ws text"', "1 text", "singlequote's", 'doublequote"s']
+        assert list(p.complete('1 ')) == ['1 "ws text"', "1 text", '1 "singlequote\'s"', '1 "doublequote\\"s"']
+        assert list(p.complete('1  ')) == ['1  "ws text"', "1  text", '1  "singlequote\'s"', '1  "doublequote\\"s"']
+        assert list(p.complete("1 '")) == ["1 'ws text'", "1 'text'", "1 'singlequote\\'s'", "1 'doublequote\"s'"]
         assert list(p.complete('1 "w')) == ['1 "ws text"']
-        assert list(p.complete('1 w')) == ['1 ws\\ text']
+        assert list(p.complete('1 w')) == ['1 w"s text"']
+        assert list(p.complete('1  w')) == ['1  w"s text"']

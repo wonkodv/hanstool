@@ -296,23 +296,19 @@ class ShellArgParser(BaseArgParser):
 
         assert values[-1][-1] == '|'
 
-        values[-1] = values[-1][:-1]
+        current = values[-1][:-1]
+        values = values[:-1]
 
-        if values[-1] == '':
-            prefix = string + quote
-            if len(values) > 1:
-                prefix += " "
-        else:
-            s = values[-1]
-            prefix = string[:len(string)-len(s)]
+        prefix = string[:len(string)-len(current)]
 
 
-        if len(values) <= len(self.param_info):
-            pi = self.param_info[len(values)-1]
+        if len(values)+1 <= len(self.param_info):
+            pi = self.param_info[len(values)]
         else:
             pi = self.param_info[-1]
             if not pi.multiple:
                 raise ArgError("Too many arguments",i,len(self.params))
+            values = values[len(self.param_info):] + [current]
 
 
         if pi.multiple:
@@ -320,7 +316,7 @@ class ShellArgParser(BaseArgParser):
             compl = pi.typ.complete(values)
         else:
             assert isinstance(pi.typ, Param)
-            compl = pi.typ.complete(values[-1])
+            compl = pi.typ.complete(current)
 
         for v in compl:
             if shlex._find_unsafe(v) is None:
@@ -329,11 +325,20 @@ class ShellArgParser(BaseArgParser):
                     yield s
             else:
                 if quote:
-                    s = prefix + v.replace(quote, "\\"+quote) + "'"
+                    s = prefix + v.replace(quote, "\\"+quote) + quote
                     if s.startswith(string):
                         yield s
                 else:
-                    pass # can not help if it did not start with a quote
+                    if v.startswith(current):
+                        s = (
+                            prefix + 
+                            current +
+                            '"'+ 
+                            v[len(current):].replace('"', r'\"') +
+                            '"'
+                        )
+                        assert s.startswith(string)
+                        yield s
 
     def describe_params(self):
         param_info = self.param_info
@@ -347,18 +352,6 @@ class ShellArgParser(BaseArgParser):
                                        '?' if pi.optional else '',
                                         pi.typ))
             return "\n".join(s)
-
-
-def quote(s):
-    """Return a shell-escaped version of the string *s*."""
-    if not s:
-        return "''"
-    if _find_unsafe(s) is None:
-        return s
-
-    # use single quotes, and put single quotes into double quotes
-    # the string $'b is then quoted as '$'"'"'b'
-    return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
 def ArgParser(function, typ='auto'):
