@@ -20,3 +20,7 @@ def cmd_func(name, func, *args, **kwargs):
         origin_stacked=3)
     Env[name] = cmdf
 
+
+def run(f):
+    f()
+

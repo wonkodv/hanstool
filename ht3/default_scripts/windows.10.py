@@ -3,9 +3,12 @@ if CHECK.os.win:
 
     # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
     # lots of useful tools there.
-    _ = Path(r"C:\Windows\Sysnative")
-    if _.exists():
-        PATH.add(_)
+
+    @run
+    def _add_sysnative():
+        _ = Path(r"C:\Windows\Sysnative")
+        if _.exists():
+            PATH.add(_)
 
 
     @cmd(name='o')

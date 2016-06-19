@@ -11,11 +11,6 @@ from  ht3.command import RESULT_HISTORY as __
 
 from ht3.check import CHECK
 
-from ht3.complete import complete_py
-from ht3.complete import complete_commands, complete_command_args
-from ht3.complete import filter_completions, filter_completions_i
-from ht3.complete import complete_path
-
 from ht3 import args
 
 from ht3.command import cmd
@@ -41,7 +36,7 @@ from ht3.utils.dialog import *
 if CHECK.os.windows:
     from ht3.utils.windows import *
 
-
+@run
 def _import():
     import importlib
     excludes = ['start', 'loop', 'stop']
@@ -61,9 +56,6 @@ def _import():
             Env[k[4:]] = v
 
     Env['PATH'] = set(Path(p) for p in os.get_exec_path())
-
-_import()
-del _import
 
 def command_not_found_hook(s):
     """ Try to evaluate as expression and return the result,
@@ -87,20 +79,20 @@ def general_completion(string):
     if p_space == -1:
         if p_paren == -1:
             #ABC
-            return complete_commands(string)
+            return ht3.complete.complete_commands(string)
         else:
             #AB(C
-            return complete_py(string)
+            return ht3.complete.complete_py(string)
     else:
         if p_paren == -1:
             #AB C
-            return complete_command_args(string)
+            return ht3.complete.complete_command_args(string)
         else:
             if p_paren < p_space:
                 #ab( c)
-                return complete_py(string)
+                return ht3.complete.complete_py(string)
             else:
                 #a b(c)
-                return complete_command_args(string)
+                return ht3.complete.complete_command_args(string)
 
 CommandOrExpression = args.Param(complete=general_completion, doc="CommandOrExpression")
