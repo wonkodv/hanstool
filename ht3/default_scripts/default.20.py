@@ -212,18 +212,23 @@ def py():
     return execute_auto(sys.executable)
 
 @cmd
-def reload(full:'bool'=False):
+def reload(module=None):
     import ht3.env
     import ht3.scripts
+    import importlib
 
     if not ht3.scripts.check_all_compilable():
         return
-    if full:
-        log("\n==================== FULL RELOAD ===================\n")
-        Env._reload()
-        ht3.command.COMMANDS.clear()
-    else:
-        log("\n===== RELOAD SCRIPTS ====\n")
+    if module:
+        if module.lower() == 'env':
+            log("\n==================== FULL RELOAD ===================\n")
+            Env._reload()
+            ht3.command.COMMANDS.clear()
+        else:
+            m = importlib.import_module(module)
+            log("\n===== Reload Module "+module+" =========\n")
+            importlib.reload(m)
+    log("\n===== RELOAD SCRIPTS ====\n")
     ht3.scripts.reload_all()
 
     if CHECK.frontend('ht3.hotkey'):
