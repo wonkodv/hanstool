@@ -75,7 +75,7 @@ def _procio(cmd:args.ExecutableWithArgs):
 @cmd(name="!")
 def _execute(cmd:args.ExecutableWithArgs):
     """Execute a Program and wait for completion."""
-    p = execute(*cmd, is_split=False)
+    p = execute(cmd, is_split=False)
     p.wait()
     return p
 
@@ -159,7 +159,7 @@ def edit_command(c:args.Union(args.Command, args.Python)):
 
 def _complete_script_names(s):
     from ht3.scripts import SCRIPTS
-    return filter_completions(s, (p.name for p in SCRIPTS))
+    return reversed(list(filter_completions(s, (p.name for p in SCRIPTS))))
 
 @cmd(name="++")
 def add_command(script:_complete_script_names, name=None, text=None):

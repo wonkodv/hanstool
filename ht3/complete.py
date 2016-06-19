@@ -119,8 +119,9 @@ def complete_py(string):
 
 def complete_path(s):
     if not s:
-        return
-    p = pathlib.Path(os.path.expanduser(s))
+        p = pathlib.Path('.')
+    else:
+        p = pathlib.Path(os.path.expanduser(s))
     if s[-1] in ['/', os.sep]:
         stem = s
         mask = '*'

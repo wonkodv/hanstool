@@ -147,14 +147,13 @@ class Option(Param):
             ic = True
         else:
             ic = False
-        for opts in self.options:
-            for o in opts:
-                if ic:
-                    if sl == o.lower():
-                        return o
-                else:
-                    if s == o:
-                        return o
+        for o in self.options:
+            if ic:
+                if sl == o.lower():
+                    return o
+            else:
+                if s == o:
+                    return o
         raise ValueError(s)
 
     __str__ = lambda self: "Option of "+str([o for opts in self.options for o in opts])
