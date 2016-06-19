@@ -44,11 +44,7 @@ def reload_all():
         with path.open("rt") as f:
             c = f.read()
         c = compile(c, str(path), "exec")
-        try:
-            exec (c, Env.dict)
-        except NotImplementedError:
-            # Script wanted to be ignored
-            pass
+        exec (c, Env.dict)
 
 def check_all_compilable():
     r = True

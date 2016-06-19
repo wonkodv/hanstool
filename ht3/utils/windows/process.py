@@ -12,7 +12,7 @@ def execute(exe, *args, **kwargs):
     try:
         exe = next(_get_exe_path(exe, True))
     except StopIteration:
-        raise FileNotFoundError(exe)
+        raise FileNotFoundError(exe) from None
     return process.execute(exe, *args, **kwargs)
 
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)

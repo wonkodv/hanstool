@@ -73,9 +73,7 @@ def main(args):
         if not _r and _f:
             lib.run_frontends()
         return 0
-    except (KeyboardInterrupt, SystemExit):
-        raise
-    except:
+    except Exception:
         if Env.get('DEBUG',False):
             import traceback
             traceback.print_exc()

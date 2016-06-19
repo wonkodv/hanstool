@@ -31,8 +31,6 @@ def loop():
             s = b.decode('utf-8')
             try:
                 run_command(s)
-            except (KeyboardInterrupt, SystemExit):
-                raise
             except Exception as e:
                 Env.log_error(e)
                 pass

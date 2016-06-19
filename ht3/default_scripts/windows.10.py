@@ -24,18 +24,16 @@ if CHECK.os.win:
             strings = w.args
         else:
             strings = [s for s in w.__code__.co_consts if isinstance(s, str)]
-        try:
-            for s in strings:
-                p = Path(s)
-                if p.exists():
-                    if p.is_dir():
-                        arg = str(p)
-                    else:
-                        arg = '/select,' + str(p)
-                    execute(r'explorer', arg)
-                    return
-        except:
-            pass
+
+        for s in strings:
+            p = Path(s)
+            if p.exists():
+                if p.is_dir():
+                    arg = str(p)
+                else:
+                    arg = '/select,' + str(p)
+                execute(r'explorer', arg)
+                return
 
     if CHECK.frontend('ht3.gui'):
         @gui_do_on_start
