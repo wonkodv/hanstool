@@ -298,10 +298,10 @@ class AutoArgs(ArgParser):
                         return c(s)
                     return []
                 def convert(s):
-                    c = getattr(ht3.env.Env, '_convert_'+typ.__name__, False)
+                    c = getattr(ht3.env.Env, '_convert_'+typ, False)
                     if c:
                         return c(s)
-                    c = getattr(ht3.env.Env, 'convert_'+typ.__name__, False)
+                    c = getattr(ht3.env.Env, 'convert_'+typ, False)
                     if c:
                         return c(s)
                     return s
