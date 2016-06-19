@@ -69,7 +69,7 @@ class UserInterface():
                 run_command(string)
             except Exception as e:
                 self.cmd_win.set_state("Error")
-                log_error(e)
+                Env.error_hook(e)
                 return False
             else:
                 self.cmd_win.set_state("Waiting")
@@ -405,7 +405,7 @@ def stop():
         GUI.close_soon()
 
 def _reptor_tk_ex(self, typ, val, tb):
-    log_error(val)
+    Env.error_hook(val)
 
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
@@ -435,7 +435,6 @@ def log_error(e):
     if  not GUI:
         from ht3.utils.log import log_error
         log_error(e)
-    Env['_LAST_ERROR'] = e
 
 def log(s):
     _do_log('log', s)

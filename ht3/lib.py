@@ -50,11 +50,11 @@ def run_frontends():
         try:
             fe.loop()
         except Exception as e:
-            Env.log_error(e)
+            Env.error_hook(e)
         try:
             fe.stop()
         except Exception as e:
-            Env.log_error(e)
+            Env.error_hook(e)
         THREAD_LOCAL.frontend = None
     else:
         threads = []
@@ -68,7 +68,7 @@ def run_frontends():
             try:
                 fe.loop()
             except Exception as e:
-                Env.log_error(e)
+                Env.error_hook(e)
             finally:
                 evt.set()
         for fe in frontends:
@@ -84,7 +84,7 @@ def run_frontends():
                 try:
                     f.stop()
                 except Exception as e:
-                    Env.log_error(e)
+                    Env.error_hook(e)
 
             # wait for all frontends to finish.
             for t, f in threads:
@@ -116,7 +116,7 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if on_finish is None:
         on_finish = Env.log_thread_finished
     if on_exception is None:
-        on_exception = Env.log_error
+        on_exception = Env.error_hook
     if args is None:
         args=tuple()
     if kwargs is None:

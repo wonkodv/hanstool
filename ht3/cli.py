@@ -42,8 +42,8 @@ def loop():
             except SystemExit:
                 print("\nQuitting")
                 raise
-            except Exception:
-                traceback.print_exc()
+            except Exception as e:
+                Env.error_hook(e)
 
 def stop():
     _evt.set()
@@ -80,7 +80,7 @@ def _setup_readline():
                 completion_cache.clear()
                 completion_cache.extend(Env.general_completion(text))
             except Exception as e:
-                Env.log_error(e) # readline ignores all exceptions
+                Env.error_hook(e) # readline ignores all exceptions
         return completion_cache[n]
     readline.set_completer(rl_complete)
     readline.set_completer_delims('') # complete with the whole line

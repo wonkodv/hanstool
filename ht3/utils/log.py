@@ -32,7 +32,6 @@ def log_error(e):
     tb = e.__traceback__
     for s in traceback.format_exception(t, e, tb):
         print(s)
-    Env['_LAST_ERROR'] = e
 
 def log_subprocess(p):
     if Env.get('DEBUG', False):

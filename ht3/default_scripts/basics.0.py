@@ -57,6 +57,11 @@ def _import():
 
     Env['PATH'] = set(Path(p) for p in os.get_exec_path())
 
+def error_hook(e):
+    global _LAST_ERROR
+    _LAST_ERROR = e
+    log_error(e)
+
 def command_not_found_hook(s):
     """ Try to evaluate as expression and return the result,
         if that fails, execute as statements """
