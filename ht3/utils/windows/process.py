@@ -4,6 +4,7 @@ import pathlib
 import subprocess
 import os
 import shlex
+import ctypes
 from ht3.utils import process
 from ht3.env import Env
 
@@ -76,3 +77,12 @@ def complete_executable(s):
 
 def shellescape(*strings):
     return subprocess.list2cmdline(strings)
+
+
+def WaitForInputIdle(process, timeout=-1):
+    r = ctypes.windll.user32.WaitForInputIdle(process._handle, timeout)
+    if r == 0:
+        return True
+    if r == 0x102:
+        return False
+    raise ctypes.WinError()
