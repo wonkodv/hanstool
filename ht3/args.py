@@ -126,16 +126,20 @@ class Range(Param):
         raise ValueError("Out of range", i, self.range)
 
 class Option(Param):
-    def __init__(self, *options, ignore_case=False):
+    def __init__(self, options, ignore_case=False, sort=False):
         self.options = options
         self.ignore_case = ignore_case
+        self.sort = sort
         self.doc="Option"
 
     def complete(self, s):
         if self.ignore_case:
-            return ht3.complete.filter_completions_i(s, *self.options)
+            c = ht3.complete.filter_completions_i(s, self.options)
         else:
-            return ht3.complete.filter_completions(s, *self.options)
+            c = ht3.complete.filter_completions(s, self.options)
+        if self.sort:
+            c = sorted(c)
+        return c
 
     def convert(self, s):
         if self.ignore_case:
@@ -281,7 +285,7 @@ class ShellArgParser(BaseArgParser):
 
         for quote in ['', '"', "'"]:
             try:
-                values = self.split(string+quote+'|') # pipe for cursor pos
+                values = shlex.split(string+quote+'|') # pipe for cursor pos
             except ValueError:
                 continue
             else:
@@ -303,20 +307,20 @@ class ShellArgParser(BaseArgParser):
             prefix = string[:len(string)-len(s)]
 
 
-        if len(values) <= len(self.params):
-            param = self.params[len(values)-1]
+        if len(values) <= len(self.param_info):
+            pi = self.param_info[len(values)-1]
         else:
-            param = self.params[-1]
-            if not param.multiple:
+            pi = self.param_info[-1]
+            if not pi.multiple:
                 raise ArgError("Too many arguments",i,len(self.params))
 
 
-        if param.multiple:
-            assert isinstance(param.typ, MultiParam)
-            compl = param.typ.complete(values)
+        if pi.multiple:
+            assert isinstance(pi.typ, MultiParam)
+            compl = pi.typ.complete(values)
         else:
-            assert isinstance(param.typ, Param)
-            compl = param.typ.complete(values[-1])
+            assert isinstance(pi.typ, Param)
+            compl = pi.typ.complete(values[-1])
 
         for v in compl:
             if shlex._find_unsafe(v) is None:
@@ -332,16 +336,16 @@ class ShellArgParser(BaseArgParser):
                     pass # can not help if it did not start with a quote
 
     def describe_params(self):
-        params = self.param_info
-        if not params:
+        param_info = self.param_info
+        if not param_info:
             return "No Parameters"
         else:
             s =["Takes the following params:"]
-            for param in params:
-                s.append("%s%s%s: %s" % ("*" if param.multiple else '',
-                                        param.name,
-                                       '?' if param.optional else '',
-                                        param.typ))
+            for pi in param_info:
+                s.append("%s%s%s: %s" % ("*" if pi.multiple else '',
+                                        pi.name,
+                                       '?' if pi.optional else '',
+                                        pi.typ))
             return "\n".join(s)
 
 

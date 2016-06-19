@@ -70,3 +70,38 @@ class TestSequence(unittest.TestCase):
     def test_complete(self):
         p = args.Sequence(args.Int, args.Float, args.Bool)
         assert 'no' in list(p.complete(["32", "42", "n"]))
+
+
+class TestSingleArgParser(unittest.TestCase):
+    def test_convert(self):
+        def f(i:int):
+            pass
+        p = args.ArgParser(f)
+        assert p.convert("123") == ([123],{})
+
+    def test_complete(self):
+        def f(i:args.Param(complete=lambda s:["asd fgh"])):
+            pass
+        p = args.ArgParser(f)
+        assert list(p.complete("a")) == ["asd fgh"]
+
+class TestShellArgParser(unittest.TestCase):
+    def test_convert(self):
+        def f(i:int, b:bool, s):
+            pass
+        p = args.ArgParser(f)
+        assert p.convert("'123' 'No' 'Tes't' 'T'ext'") == ([123, False, "Test Text"],{})
+        assert p.convert("123 No 42.42") == ([123, False, "42.42"],{})
+
+    def test_complete(self):
+        def f(i:int, s:args.Param(complete=[
+                        "ws text",
+                        "text",
+                        "singlequote's",
+                        'doublequote"s'])):
+            pass
+        p = args.ArgParser(f)
+        assert list(p.complete("1 text")) == ["1 text"]
+        assert list(p.complete('1 ')) == ['1 "ws text"', "1 text", "singlequote's", 'doublequote"s']
+        assert list(p.complete('1 "w')) == ['1 "ws text"']
+        assert list(p.complete('1 w')) == ['1 ws\\ text']

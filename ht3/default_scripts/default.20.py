@@ -214,7 +214,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
 import sys
 
 @cmd
-def reload(module:args.Union(args.Option(sys.modules), str)=None):
+def reload(module:args.Union(args.Option(sys.modules, sort=True), str)=None):
     import ht3.env
     import ht3.scripts
     import importlib

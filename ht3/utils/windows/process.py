@@ -11,8 +11,11 @@ from ht3.complete import filter_completions_i
 
 def execute(exe, *args, is_split=True, shell=False, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
-    if not isinstance(exe,str) or not all(isinstance(a, str) for a in args):
-        raise TypeError("Expecting only strings")
+    if not isinstance(exe,str):
+        raise TypeError("Expecting a string as exe", exe, type(exe))
+    for a in args:
+        if not isinstance(a, str):
+            raise TypeError("Expecting only strings as args", a, type(a))
     if not shell:
         if not is_split:
             if args:
