@@ -230,7 +230,8 @@ class NoArgParser(BaseArgParser):
         self.param_info = param_info
 
     def convert(self, s):
-        assert not s.strip()
+        if s.strip():
+            raise ArgError("No Arguments Expected")
         return [],{}
 
     def complete(self, s):
@@ -264,18 +265,22 @@ class ShellArgParser(BaseArgParser):
 
     def convert(self, string):
         string = string.strip()
-        it = iter(shlex.split(string))
+        arg_iter = iter(shlex.split(string))
         args = []
         param_info = iter(self.param_info)
         for param in param_info:
             if param.multiple:
-                args.extend(param.typ.convert(list(it)))
+                args.extend(param.typ.convert(list(arg_iter)))
             else:
                 try:
-                    v = next(it)
+                    v = next(arg_iter)
                 except StopIteration:
                     break
                 args.append(param.typ.convert(v))
+        l = list(arg_iter)
+        if l:
+            raise ArgError("Too Many Parameters", l)
+
         return args, {}
 
     def complete(self, string):
