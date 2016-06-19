@@ -345,7 +345,7 @@ def _get_param(p, var_arg):
     if callable(p):
         try:
             if 'complete' in p.__name__.lower():
-                return Str(p)
+                return Str(complete=p)
         except AttributeError:
             pass
 

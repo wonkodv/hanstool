@@ -56,7 +56,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
         arg_parser.describe_params(), "\n",
         "Executed in a seperate Thread\n" if async else "",
         "\n",
-        doc, "\n",
+        doc + "\n" if doc else '',
         "\n",
         "Defined in:\n\t%s:%d" % origin
     ])

@@ -7,9 +7,8 @@ def list_commands():
     for n in sorted(COMMANDS):
         c = COMMANDS[n]
         d = c.doc
-        a = c.arg_parser
         doc = textwrap.shorten(d,60)
-        doc = "%- 20s %s %s\n" % (n, doc, a)
+        doc = "%- 20s %s\n" % (n, doc)
         text += doc
     Env.show(text)
 
@@ -47,7 +46,7 @@ def _complete_fake(self, string):
     return values
 
 @cmd(name=':')
-def test_fake(s:args.Str(_complete_fake)):
+def test_fake(s:_complete_fake):
     sleep(0.5)
     fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
@@ -149,7 +148,7 @@ def edit_file(file_name:Path, line:int=0):
 
 
 @cmd(name="+")
-def edit_command(c:args.Union(args.Command,args.Python)):
+def edit_command(c:args.Union(args.Command, args.Python)):
     """ Edit the location where a command or function was defined """
     if c in COMMANDS:
         f, l = COMMANDS[c].origin
@@ -168,7 +167,7 @@ def _complete_script_names(s):
     return filter_completions(s, (p.name for p in SCRIPTS))
 
 @cmd(name="++")
-def add_command(script:args.Str(_complete_script_names), name=None, text=None):
+def add_command(script:_complete_script_names, name=None, text=None):
     """ define a command in a script.
         1.  If `script` matches a loaded one, it is edited, otherwise
             a new script with the name
@@ -238,7 +237,7 @@ def py():
 import sys
 
 @cmd
-def reload(module:args.Union(args.Option(sys.modules),args.Str())=None):
+def reload(module:args.Union(args.Option(sys.modules), str)=None):
     import ht3.env
     import ht3.scripts
     import importlib
@@ -338,9 +337,10 @@ if CHECK.frontend('ht3.gui'):
         ht3.gui.cmd_win_stay_on_top()
 
 if CHECK.frontend('ht3.hotkey'):
-    _complete_hotkey=lambda s:sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values())
+    def _complete_hotkey(s):
+        return sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values())
     @cmd(name="disable_hotkey")
-    def _disable_hotkey(hk:Str(_complete_hotkey)=None):
+    def _disable_hotkey(hk:_complete_hotkey=None):
         if hk:
             disable_hotkey(hk)
         else:
