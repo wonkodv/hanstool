@@ -76,11 +76,11 @@ def test_argument_parsing():
 #### Name
 
 NAME_TEST=False
-@cmd(name='$')
+@cmd(name='$IsValid!')
 def name_test():
     global NAME_TEST
     NAME_TEST=True
 
 def test_names():
-    run_command('$')
+    run_command('$IsValid!')
     assert NAME_TEST
