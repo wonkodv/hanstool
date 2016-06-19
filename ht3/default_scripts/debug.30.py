@@ -24,6 +24,7 @@ def py():
 @cmd
 def debug_last_err():
     import inspect
+    import os.path
     e = _LAST_ERROR
     t = e.__traceback__
     s = ""
@@ -32,8 +33,8 @@ def debug_last_err():
         line = t.tb_lineno
         name = t.tb_next.tb_frame.f_code.co_name
         args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
-
-        s += "{0}:{1:d}:1:{2}{3}".format(file, line, name, args)+"\n"
+        if os.path.exists(file):
+            s += "{0}:{1:d}:1:{2}{3}".format(file, line, name, args)+"\n"
         t = t.tb_next
 
     file = t.tb_frame.f_code.co_filename

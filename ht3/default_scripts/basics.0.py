@@ -33,6 +33,8 @@ from ht3.utils.helpers import *
 from ht3.utils.log import *
 from ht3.utils.dialog import *
 
+from ht3.complete import *
+
 if CHECK.os.windows:
     from ht3.utils.windows import *
 

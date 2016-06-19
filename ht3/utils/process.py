@@ -46,6 +46,9 @@ def execute_auto(*args, **kwargs):
         p = Env.execute_disconnected(*args, **kwargs)
     return p
 
+class ProcIOException(Exception):
+    pass
+
 def procio(*args, input=None, timeout=None, **kwargs):
     """Get ouput from a program."""
     p = Env.execute(
@@ -58,7 +61,7 @@ def procio(*args, input=None, timeout=None, **kwargs):
 
     out, err = p.communicate(input=input, timeout=timeout)
     if p.returncode != 0:
-        raise IOError("Non-zero return code", p.returncode, out, err)
+        raise ProcIOException("Non-zero return code", args, p.returncode, out, err)
     return out
 
 def complete_executable(s):

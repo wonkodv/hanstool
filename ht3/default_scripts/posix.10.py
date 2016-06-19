@@ -27,9 +27,9 @@ if CHECK.os.posix:
         else:
             target.mkdir(parents=True)
 
-        fstyp = procio("lsblk", "-ln", "-o FILESYSTEM", str(dev))
+        fstype = procio("lsblk", "-ln", "-oFSTYPE", str(dev)).strip()
         options = "nosuid,nodev,noexec,nosuid,relatime,fmask=113,dmask=002"
-        if fstyp == 'ext4':
+        if fstype == 'ext4':
             pass
         elif fstype in[
             'fat', 'vfat', 'umsdos', 'msdos','ntfs',
@@ -37,7 +37,7 @@ if CHECK.os.posix:
             'iso9660', 'udf']:
             options += ",uid={:d},gid={:d}".format(os.geteuid(), os.getegid())
 
-        procio("sudo", "mount", "-t", fstype, "-o", options)
+        procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
     @cmd(name='o')
     def xdg_open(s):

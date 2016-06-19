@@ -227,7 +227,7 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
             log("\n==================== ENV RELOAD ===================\n")
             Env._reload()
             ht3.command.COMMANDS.clear()
-        elif module.lower() == 'ALL':
+        elif module.lower() == 'all':
             log("\n==================== FULL RELOAD ===================\n")
             for m in sys.modules:
                 importlib.import_module(m)
