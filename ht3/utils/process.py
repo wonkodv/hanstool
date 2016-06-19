@@ -15,8 +15,14 @@ from ht3.check import CHECK
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
-def execute(*args, shell=False, **kwargs):
+def execute(*args, shell=False, is_split=True, **kwargs):
     """Execute a program."""
+    if not all(isinstance(a, str) for a in args):
+        raise TypeError("Expecting strings")
+    if not is_split:
+        if len(args) != 1:
+            raise TypeError("Pass only 1 argument if not is_split", args)
+        args = args[0]
     p = subprocess.Popen(args, shell=shell, **kwargs)
     p.shell = shell
     Env.log_subprocess(p)
@@ -52,7 +58,7 @@ def procio(*args, input=None, timeout=None, **kwargs):
 
     out, err = p.communicate(input=input, timeout=timeout)
     if p.returncode != 0:
-        return IOError("Non-zero return code", p.returncode, out, err)
+        raise IOError("Non-zero return code", p.returncode, out, err)
     return out
 
 def complete_executable(s):

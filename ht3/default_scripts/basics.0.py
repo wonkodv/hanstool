@@ -103,6 +103,4 @@ def general_completion(string):
                 #a b(c)
                 return complete_command_args(string)
 
-class CommandOrExpression(args.BaseParam):
-    def complete(self, s):
-        return general_completion(s)
+CommandOrExpression = args.Param(complete=general_completion, doc="CommandOrExpression")

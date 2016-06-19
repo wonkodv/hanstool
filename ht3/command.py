@@ -16,7 +16,7 @@ _COMMAND_RUN_ID = 0
 
 
 def register_command(func, *, origin_stacked, name=_DEFAULT,
-                     async=False,
+                     async=False, args='auto',
                      doc=_DEFAULT, attrs=None):
     """ Register a function as Command """
 
@@ -38,7 +38,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
 
     Command.function = func
 
-    arg_parser = ht3.args.ArgParser(func)
+    arg_parser = ht3.args.ArgParser(func, args)
 
     if attrs is None:
         attrs = dict()

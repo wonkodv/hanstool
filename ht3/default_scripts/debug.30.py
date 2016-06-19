@@ -26,11 +26,12 @@ def debug_last_err():
     e = _LAST_ERROR
     import traceback
     tb = traceback.extract_tb(e.__traceback__)
-    s = "\n".join("{0}:{1:d}:".format(*l) for l in tb)
+    s = "\n".join("{0}:{1:d}:1: ".format(*l) for l in tb)
     s += type(e).__name__
     s += str(e.args)
     if isinstance(e, SyntaxError):
         s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}:{0.message}".format(e)
+    show(s)
     import tempfile
     with tempfile.NamedTemporaryFile('wt', delete=False) as f:
         f.write(s)
@@ -40,7 +41,7 @@ def debug_last_err():
         name = "GVIM-HT3" # Names with G are put to foreground on win32
         if name in vimservers:
             execute_auto('gvim', '--servername', name,
-                '--remote-expr', ':cfile ' + f.name)
+                '--remote-send', '<C-\><C-N>:tab cfile ' + f.name+"<CR>")
         else:
             execute_auto('gvim', '--servername', name,
                 '-c', ':cfile ' + f.name)

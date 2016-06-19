@@ -13,7 +13,7 @@ def list_commands():
     Env.show(text)
 
 @cmd(name='?')
-def _help(what:args.Union(args.Command,args.Python)):
+def _help(what:args.Union(args.Command, args.Python)):
     """ Show help on a command or evaluated python expression """
     if what in COMMANDS:
         obj = COMMANDS[what]
@@ -68,21 +68,21 @@ def exit():
 
 
 @cmd(name="$")
-def _procio(command:"shell_command"):
+def _procio(cmd:args.ExecutableWithArgs):
     """Get Programm output."""
-    show(procio(command, shell=True))
+    show(procio(cmd, shell=True, is_split=False))
 
 @cmd(name="!")
-def _execute(exe:"executable", *args):
+def _execute(cmd:args.ExecutableWithArgs):
     """Execute a Program and wait for completion."""
-    p = execute(exe, *[str(a) for a in args])
+    p = execute(*cmd, is_split=False)
     p.wait()
     return p
 
 @cmd(name="&")
-def _execute_bg(exe:"executable", *args):
+def _execute_bg(cmd:args.ExecutableWithArgs):
     """Execute a Program and let it run in background."""
-    p = execute_disconnected(exe, *[str(a) for a in args])
+    p = execute_disconnected(cmd, is_split=False)
     return p
 
 

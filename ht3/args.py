@@ -1,24 +1,36 @@
 """Argument Parsing for commands."""
 
-import shlex
-import pathlib
-import inspect
+import collections
 import collections.abc
 import getopt
 import ht3.complete
 import ht3.env
+import inspect
+import pathlib
+import shlex
 
-class BaseParam:
-    def __init__(self):
-        pass
+def _no_completion(s):
+    return []
 
-    def complete(self, string):
-        return []
+class Param:
+    def __init__(self, convert=str, complete=_no_completion, doc=None):
+        if not callable(convert):
+            raise TypeError("Convert should be callable", convert)
+        self.convert = convert
+        if not callable(complete):
+            if isinstance(complete, collections.abc.Sequence):
+                self.complete = lambda s: complete
+            else:
+                raise TypeError("Complete should be callable", convert)
+        else:
+            self.complete = complete
 
-    def convert(self, string):
-        return string
+        if doc is None:
+            doc = "Param(convert={0}, complete={1})".format(self.convert, self.complete)
+        self.doc = doc
 
-    __str__ = lambda self: type(self).__name__
+    def __repr__(self):
+        return self.doc
 
 class MultiParam:
     def __init__(self, param):
@@ -42,13 +54,13 @@ class Sequence(MultiParam):
         return p.complete(s)
 
     def convert(self, strings):
-        if len(self.params) < len(self.strings):
+        if len(self.params) < len(strings):
             raise ArgError("More arguments than specified types")
         return [p.convert(s) for p,s in zip(self.params, strings)]
 
     __str__ = lambda self: "Sequence of parameters with the Values: "+str(self.params)
 
-class Union(BaseParam):
+class Union(Param):
     def __init__(self, *params):
         self.params = [_get_param(p, False) for p in params]
 
@@ -68,30 +80,56 @@ class Union(BaseParam):
 
     __str__ = lambda self: "Parameter that has one of the types: "+str(self.params)
 
-class Str(BaseParam):
-    def __init__(self, complete=None):
-        if complete:
-            assert callable(complete)
-            self.complete=complete
+Str = Param(convert=str, doc="str")
+Int = Param(convert=lambda s:int(s,0), complete=['0x', '0b', '0o', '1', '2', '42'], doc="int")
+Float = Param(convert=float,complete=[], doc="float")
+Python = Param(complete=lambda s:ht3.env.Env.complete_py(s),
+                doc="PythonCode")
+Path = Param(convert=pathlib.Path,
+             complete=lambda s:ht3.env.Env.complete_path(s),
+             doc="Path")
+Executable = Param(complete=lambda s:ht3.env.Env.complete_executable(s), doc="Executable")
+ExecutableWithArgs = Param(complete=lambda s:ht3.env.Env.complete_executable_with_args(s), doc="ExecutableWithArgs")
+Command = Param(complete=lambda s:ht3.env.Env.complete_commands(s), doc="Command")
+CommandWithArgs = Param(complete=lambda s:ht3.env.Env.complete_command_with_args(s),
+                        doc="CommandWithArgs")
 
-    def __str__(self):
-        if self.complete.__name__ == 'complete':
-            return "String"
-        n = self.complete.__name__
-        return "String (%s) " % n.replace('_',' ').replace('complete','').strip()
+def _convert_bool(s):
+    s = s.lower()
+    if not s:
+        raise ValueError()
+    if s in ['n','no','false']:
+        return False
+    if s in ['yes','true','y']:
+        return True
+    raise ValueError("Not a boolean word", s)
 
-class Int(BaseParam):
-    complete = lambda _,s: ['0x', '0b', '0o']
-    convert  = lambda _,s: int(s,0)
+def _complete_bool(s):
+    if s:
+        return ht3.complete.filter_completions_i(s,
+            ["yes", "no", "true", "false", "0", "1"])
+    return ["Yes", "No"]
 
-class Float(BaseParam):
-    complete = lambda _,s: []
-    convert  = lambda _,s: float(s)
+Bool = Param(convert=_convert_bool, complete=_complete_bool, doc="bool")
 
-class Option(BaseParam):
+class Range(Param):
+    def __init__(self, range):
+        self.range = range
+
+    def complete(self, s):
+        return (str(i) for i in self.range)
+
+    def convert(self, s):
+        i = int(s, 0)
+        if i in self.range:
+            return i
+        raise ValueError("Out of range", i, self.range)
+
+class Option(Param):
     def __init__(self, *options, ignore_case=False):
         self.options = options
         self.ignore_case = ignore_case
+        self.doc="Option"
 
     def complete(self, s):
         if self.ignore_case:
@@ -117,115 +155,128 @@ class Option(BaseParam):
 
     __str__ = lambda self: "Option of "+str([o for opts in self.options for o in opts])
 
-class Python(BaseParam):
-    def complete (self, s):
-        return  ht3.env.Env.complete_py(s)
-    __str__ = lambda self: "Python Code"
+def _get_param(p, var_arg):
+    if var_arg:
+        if isinstance(p, MultiParam):
+            return p
+        if p is inspect.Parameter.empty:
+            return MultiParam(Str)
+        if isinstance(p, Param):
+            return MultiParam(p)
+        if inspect.isclass(p):
+            if issubclass(p, MultiParam):
+                raise TypeError("Instantiate your Param Type")
+        raise TypeError("Need Specific Parameter Annotation for *args", p)
 
-class Path(BaseParam):
-    def complete (self, s):
-        return  ht3.env.Env.complete_py(s)
+    if isinstance(p, Param):
+        return p
+    if isinstance(p, str):
+        raise TypeError("Can not convert a String to a Param", p)
 
-    def convert(self, s):
-        return pathlib.Path(s)
+    if isinstance(p, collections.abc.Sequence):
+        if (any(isinstance(e, (Param, MultiParam)) for e in p) or
+                not any(isinstance(e, str) for e in p)):
+            raise TypeError("Give a list of allowed strings")
 
-class Executable(BaseParam):
-    def complete (self, s):
-        return ht3.env.Env.complete_executable(s)
+        return Option(p)
 
-class ExecutableWithArgs(MultiParam):
-    def __init__(self):
-        pass
+    if p is inspect.Parameter.empty:
+        return Param()
+    if p is bool:
+        return Bool
+    if p is str:
+        return Str
+    if p is int:
+        return Int
+    if p is float:
+        return Float
+    if p is pathlib.Path:
+        return Path
+    if p is range:
+        return Range(p)
 
-    def complete(self, strings):
-        exe = strings[0]
-        args = strings[1:]
-        if not args:
-            return ht3.env.Env.complete_executable(exe)
-        raise NotImplementedError()
-
-class Command(BaseParam):
-    def complete (self, s):
-        return ht3.env.Env.complete_commands(s)
-
-class CommandWithArgs(BaseParam):
-    def complete (self, s):
-        return ht3.env.Env.complete_command_with_args(s)
-
-class Bool(BaseParam):
-    def complete(self, s):
-        if s:
-            return ht3.complete.filter_completions_i(s,
-                ["yes", "no", "true", "false", "0", "1"])
-        return ["Yes", "No"]
-    def convert(self, s):
-        s = s.lower()
-        if not s:
-            raise ValueError()
-        if s in ['n','no','false']:
-            return False
-        if s in ['yes','true','y']:
-            return True
-        raise ValueError("Not a boolean word", s)
-
-
-class ArgParser:
-    """Parses and completes a functions parameters."""
-
-    def __init__(self, function):
-        sig = inspect.signature(function)
-        params = iter(sig.parameters.items())
-        self.params = []
-        for name, param in params:
-            if param.kind in [param.POSITIONAL_ONLY, param.POSITIONAL_OR_KEYWORD]:
-                # X
-                # X=1
-                var_arg = False
-            elif param.kind == param.VAR_POSITIONAL:
-                # *args
-                var_arg = True
-            elif param.kind == param.KEYWORD_ONLY:
-                if param.default == param.empty:
-                    # *, X=1
-                    raise TypeError("Non positional parameter without default", name, param)
-                else:
-                    # *, X=1
-                    continue
-            elif param.kind == param.VAR_KEYWORD:
-                # **kwargs
-                continue
-            else:
-                assert False
-
-            self.params.append((var_arg, _get_param(param.annotation, var_arg), name))
-
-        if len(self.params) == 1 and not self.params[0][0]:
-            self.split = lambda s: [s]
+    if callable(p):
+        try:
+            n = p.__name__.lower()
+        except AttributeError:
+            pass
         else:
-            self.split = shlex.split
+            if 'convert' in n:
+                return Param(convert=p)
+            elif 'complete' in n:
+                return Param(complete=p)
+            else:
+                raise TypeError("Can not convert function to param if name does not"
+                    " contain 'convert' or 'complete'", p)
+
+    raise TypeError("Can not Guess Parameter type", p)
+
+_param_info = collections.namedtuple('param_info',['name', 'multiple', 'positional', 'keyword', 'optional', 'typ'])
 
 
+class BaseArgParser:
+    def __init__(self):
+        raise NotImplementedError("ABC")
+
+    def describe_params(self):
+        raise NotImplementedError("ABC")
+
+
+class NoArgParser(BaseArgParser):
+    def __init__(self, param_info):
+        self.param_info = param_info
+
+    def convert(self, s):
+        assert not s.strip()
+        return [],{}
+
+    def complete(self, s):
+        return []
+
+    def describe_params(self):
+        return "No Arguments"
+
+class SingleArgParser(BaseArgParser):
+    def __init__(self, param_info):
+        self.param_info = param_info
+
+    def convert(self, s):
+        if self.param_info.optional:
+            if not s.strip():
+                return [], {}
+        return [self.param_info.typ.convert(s)], {}
+
+    def complete(self, s):
+        return self.param_info.typ.complete(s)
+
+    def describe_params(self):
+        return ("Takes one param:\n"
+                "%s%s: %s" % ( self.param_info.name,
+                            '?' if self.param_info.optional else '',
+                            self.param_info.typ))
+
+class ShellArgParser(BaseArgParser):
+    def __init__(self, param_info):
+        self.param_info = [pi for pi in param_info if pi.positional]
 
     def convert(self, string):
         string = string.strip()
-        if not string:
-            return [],{}
-        it = iter(self.split(string))
+        it = iter(shlex.split(string))
         args = []
-        params = iter(self.params)
-        for var_arg, param, name in params:
-            if var_arg:
-                args.extend(param.convert(list(it)))
+        param_info = iter(self.param_info)
+        for param in param_info:
+            if param.multiple:
+                args.extend(param.typ.convert(list(it)))
             else:
                 try:
                     v = next(it)
                 except StopIteration:
                     break
-                args.append(param.convert(v))
+                args.append(param.typ.convert(v))
         return args, {}
 
     def complete(self, string):
-        if len(self.params) == 0:
+        if len(self.param_info) == 0:
             return []
 
         for quote in ['', '"', "'"]:
@@ -237,7 +288,7 @@ class ArgParser:
                 break
         else:
             # raise the error:
-            self.split(string)
+            shelx.split(string)
 
         assert values[-1][-1] == '|'
 
@@ -253,19 +304,19 @@ class ArgParser:
 
 
         if len(values) <= len(self.params):
-            var_arg, param, name = self.params[len(values)-1]
+            param = self.params[len(values)-1]
         else:
-            var_arg, param, name = self.params[-1]
-            if not var_arg:
+            param = self.params[-1]
+            if not param.multiple:
                 raise ArgError("Too many arguments",i,len(self.params))
 
-        assert var_arg == isinstance(param, MultiParam)
-        assert var_arg != isinstance(param, BaseParam)
 
-        if var_arg:
-            compl = param.complete(values)
+        if param.multiple:
+            assert isinstance(param.typ, MultiParam)
+            compl = param.typ.complete(values)
         else:
-            compl = param.complete(values[-1])
+            assert isinstance(param.typ, Param)
+            compl = param.typ.complete(values[-1])
 
         for v in compl:
             if shlex._find_unsafe(v) is None:
@@ -279,14 +330,18 @@ class ArgParser:
                         yield s
                 else:
                     pass # can not help if it did not start with a quote
+
     def describe_params(self):
-        params = self.params
+        params = self.param_info
         if not params:
             return "No Parameters"
         else:
             s =["Takes the following params:"]
-            for var_arg, param, name in params:
-                s.append("%s%s: %s" % ("*" if var_arg else '', name, param))
+            for param in params:
+                s.append("%s%s%s: %s" % ("*" if param.multiple else '',
+                                        param.name,
+                                       '?' if param.optional else '',
+                                        param.typ))
             return "\n".join(s)
 
 
@@ -302,51 +357,78 @@ def quote(s):
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
 
+def ArgParser(function, typ='auto'):
+    sig = inspect.signature(function)
+    param_info = []
+    sig_params = iter(sig.parameters.items())
+    for name, sig_param in sig_params:
+        if sig_param.kind == sig_param.POSITIONAL_ONLY:
+            # some builtin functions. shouldnt happen often!
+            multiple=False
+            positional=True
+            keyword=False
+            optional=(sig_param.default != sig_param.empty)
+        elif sig_param.kind == sig_param.POSITIONAL_OR_KEYWORD:
+            # X=1
+            multiple=False
+            positional=True
+            keyword=True
+            optional=(sig_param.default != sig_param.empty)
+        elif sig_param.kind == sig_param.KEYWORD_ONLY:
+            # *, X=1
+            multiple = False
+            positional = False
+            keyword = True
+            optional=(sig_param.default != sig_param.empty)
+        elif sig_param.kind == sig_param.VAR_POSITIONAL:
+            # *args
+            multiple = True
+            positional = True
+            keyword = True
+            optional = True
+        elif sig_param.kind == sig_param.VAR_KEYWORD:
+            # **kwargs
+            multiple = True
+            positional = False
+            keyword = True
+            optional = True
+        else:
+            assert False
 
-def _get_param(p, var_arg):
-    if var_arg:
-        if isinstance(p, MultiParam):
-            return p
-        if p is inspect.Parameter.empty:
-            return MultiParam(Str())
-        if isinstance(p, BaseParam):
-            return MultiParam(p)
-        raise TypeError("Need Specific Parameter Annotation for *args", p)
+        pi = _param_info(
+            multiple=multiple,
+            positional=positional,
+            keyword=keyword,
+            optional=optional,
+            name=name,
+            typ=_get_param(sig_param.annotation, multiple))
+        param_info.append(pi)
 
-    if isinstance(p, BaseParam):
-        return p
+    if typ == 'auto':
+        if len(param_info) == 1 and not param_info[0].multiple:
+            return SingleArgParser(param_info[0])
 
-    if isinstance(p, collections.abc.Sequence):
-        if (any(isinstance(e, (BaseParam, MultiParam)) for e in p) or 
-                not any(isinstance(e, str) for e in p)):
-            raise TypeError("Give a list of allowed strings")
+        if all(i.positional or i.optional for i in param_info):
+            return ShellArgParser(param_info)
 
-        return Option(p)
+        #if all(i.keyword or i.optional for i in param_info):
+        #    return GetOptArgParser()
+        # TODO
 
-    if p is inspect.Parameter.empty:
-        return BaseParam()
-    if p is bool:
-        return Bool()
-    if p is str:
-        return Str()
-    if p is int:
-        return Int()
-    if p is float:
-        return Float()
-    if p is pathlib.Path:
-        return Path()
+        raise TypeError("No matching argument parser", param_info)
 
-    try:
-        if issubclass(p, BaseParam):
-            return p()
-    except TypeError:
-        pass
+    if typ in [None, 0]:
+        if all(i.optional for i in param_info):
+            return NoArgParser()
+        raise TypeError("There are required paramertes", param_info)
 
-    if callable(p):
-        try:
-            if 'complete' in p.__name__.lower():
-                return Str(complete=p)
-        except AttributeError:
-            pass
+    if typ in ['shell']:
+        if all(i.positional or i.optional for i in param_info):
+            return ShellArgParser(param_info)
+        raise TypeError("There are required non-positional paramertes", param_info)
 
-    raise TypeError("Can not Guess Parameter type", p)
+    #if all(i.keyword or i.optional for i in param_info):
+    #    return GetOptArgParser()
+    # TODO
+
+    raise TypeError("No matching argument parser", param_info)

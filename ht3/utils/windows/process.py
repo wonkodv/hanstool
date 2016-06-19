@@ -9,14 +9,23 @@ from ht3.utils import process
 from ht3.env import Env
 from ht3.complete import filter_completions_i
 
-def execute(exe, *args, **kwargs):
+def execute(exe, *args, is_split=True, shell=False, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
-    if not kwargs.get('shell',False):
+    if not isinstance(exe,str) or not all(isinstance(a, str) for a in args):
+        raise TypeError("Expecting only strings")
+    if not shell:
+        if not is_split:
+            if args:
+                raise ValueError("Expecting only 1 string if not `is_split`")
+            args = shlex.split(exe)
+            exe = args[0]
+            args = args[1:]
+            is_split=True
         try:
             exe = next(_get_exe_path(exe, True))
         except StopIteration:
             raise FileNotFoundError(exe) from None
-    return process.execute(exe, *args, **kwargs)
+    return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
 
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]

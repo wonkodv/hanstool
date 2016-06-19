@@ -10,7 +10,7 @@ if CHECK.os.posix:
                     yield dev.name
 
     @cmd
-    def mount(device:"mount_device"):
+    def mount(device:_complete_mount_device):
         import os
         for d in ('/dev/', '/dev/disk/by-label', '/dev/disk/by-partlabel'):
             dev = Path(d) / device
