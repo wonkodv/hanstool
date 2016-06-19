@@ -23,12 +23,22 @@ def py():
 
 @cmd
 def debug_last_err():
+    import inspect
     e = _LAST_ERROR
-    import traceback
-    tb = traceback.extract_tb(e.__traceback__)
-    s = "\n".join("{0}:{1:d}:1: ".format(*l) for l in tb)
-    s += type(e).__name__
-    s += str(e.args)
+    t = e.__traceback__
+    s = ""
+    while(t.tb_next):
+        file = t.tb_frame.f_code.co_filename
+        line = t.tb_lineno
+        name = t.tb_next.tb_frame.f_code.co_name
+        args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
+
+        s += "{0}:{1:d}:1:{2}{3}".format(file, line, name, args)+"\n"
+        t = t.tb_next
+
+    file = t.tb_frame.f_code.co_filename
+    line = t.tb_lineno
+    s += "{0}:{1:d}:1:{2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
     if isinstance(e, SyntaxError):
         s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}:{0.message}".format(e)
     show(s)
@@ -45,3 +55,7 @@ def debug_last_err():
         else:
             execute_auto('gvim', '--servername', name,
                 '-c', ':cfile ' + f.name)
+
+@cmd(name='import')
+def _import(m:args.Option(sys.modules)):
+    Env[m] = sys.modules[m]
