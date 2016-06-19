@@ -8,7 +8,7 @@ if CHECK.os.win:
         PATH.add(_)
 
 
-    @cmd(name='o', args=1)
+    @cmd(name='o')
     def shellexecute(s):
         """Shell Execute, windows's all purpose opening function for files and programms."""
         from ctypes import windll
@@ -18,8 +18,8 @@ if CHECK.os.win:
         else:
             raise OSError("ShellExecute returned an error: %d" % r)
 
-    @cmd(args="1", complete=complete_commands, name="#")
-    def explore_command(cmd):
+    @cmd(name="#")
+    def explore_command(cmd:args.Command):
         """Show the directory or file used in the target commands source in explorer."""
         from pathlib import Path
         import functools

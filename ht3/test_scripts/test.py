@@ -1,7 +1,7 @@
 """A set of commands that test if scripts and commands work as expected."""
 
-@cmd(args="?")
-def test(silent=False):
+@cmd
+def test(silent:args.Bool=False):
 
     test_assertions_enabled()
     test_script_order()
@@ -12,7 +12,7 @@ def test(silent=False):
     if not silent:
         print ("Test OK")
 
-    @cmd(args="?")
+    @cmd
     def test(*a):
         raise NotImplementedError("Don't run test twice")
 
@@ -62,7 +62,7 @@ def test_decorator():
 #### Args
 
 ARG_TEST = []
-@cmd(args='shell')
+@cmd
 def argtest(*args):
     ARG_TEST.append(args)
 

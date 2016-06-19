@@ -2,14 +2,14 @@ import unittest
 import pathlib
 from unittest.mock import patch, Mock
 
-from ht3.complete import complete_py, complete_commands, complete_command_args, complete_Path, filter_completions, filter_completions_i
+from ht3.complete import complete_py, complete_commands, complete_command_args, complete_path, filter_completions, filter_completions_i
 
 
 class Test_Completion(unittest.TestCase):
 
     def test_command_completion(self):
         c1 = Mock()
-        c1.complete = lambda s: ["arg1", "a2"]
+        c1.arg_parser.complete = lambda s: ["arg1", "a2"]
         c1.name='c1'
         c2 = Mock()
         c2.name='c2'
@@ -79,7 +79,7 @@ class Test_Completion(unittest.TestCase):
             assert False, "The iterator was consumed without need"
             yield "c"
         c = Mock()
-        c.complete = compl
+        c.arg_parser.complete = compl
         c.name = 'c'
 
         with patch("ht3.command.COMMANDS", {'c':c}):
@@ -89,16 +89,16 @@ class Test_Completion(unittest.TestCase):
 
 
     def test_complete_path_dir_slash(self):
-        l = list(complete_Path('ht'))
+        l = list(complete_path('ht'))
         assert 'ht3/' in l
 
     def test_complete_path_local(self):
-        l = list(complete_Path('ht3/comple'))
+        l = list(complete_path('ht3/comple'))
         assert 'ht3/complete.py' in l
 
     def test_complete_path_dir_slash(self):
         a = str(pathlib.Path(__file__).parent.absolute()).replace('\\','/')
-        l = list(complete_Path(a+'/comple'))
+        l = list(complete_path(a+'/comple'))
         assert a+'/complete.py' in l
 
 

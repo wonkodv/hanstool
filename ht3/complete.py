@@ -57,10 +57,18 @@ def complete_command_args(string):
     if not sep:
         raise ValueError()
     c = ht3.command.COMMANDS[cmd]
-    return (cmd + sep + a for a in filter_completions(args, c.complete(args)))
+    return (cmd + sep + a for a in filter_completions(args, c.arg_parser.complete(args)))
 
 def complete_commands(string):
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
+
+def complete_command_with_args(string):
+    p_space = string.find(' ')
+
+    if p_space == -1:
+        return complete_commands(string)
+    else:
+        return complete_command_args(string)
 
 def _get_attributes_rec(obj, privates):
     values = set()
@@ -109,7 +117,7 @@ def complete_py(string):
 
     return values
 
-def complete_Path(s):
+def complete_path(s):
     if not s:
         return
     p = pathlib.Path(os.path.expanduser(s))

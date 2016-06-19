@@ -8,169 +8,172 @@ import getopt
 import ht3.complete
 import ht3.env
 
-__all__ = ('Args', )
-
-_DEFAULT=object()
-
-class ArgError(ValueError):
-    pass
-
-def filterDict(d, *keys):
-    return dict((k,d[k]) for k in d if k in keys)
-
-class ArgParser:
+class BaseParam:
     def __init__(self):
         pass
-
-    def __call__(self, string):
-        raise NotImplementedError()
 
     def complete(self, string):
         return []
 
-    def __str__(self):
-        return self.__doc__
+    def convert(self, string):
+        return string
 
-class NoArgs(ArgParser):
-    """Takes no arguments."""
+    __str__ = lambda self: type(self).__name__
 
-    def __call__ (self, string):
-        string = string.strip()
-        if string:
-            raise ArgError("Expecting no args, got: " + string)
-        return [],{}
+class MultiParam:
+    def __init__(self, param):
+        self.param = _get_param(param, False)
 
-class NoOrOneArgs(ArgParser):
-    """Takes no or one argument of arbitrary format."""
+    def complete(self, strings):
+        return self.param.complete(strings[-1])
 
-    def __call__ (self, string):
-        string = string.strip()
-        if string:
-            return [string], {}
-        return [],{}
+    def convert(self, strings):
+        return [self.param.convert(s) for s in strings]
 
-class AllArgs(ArgParser):
-    """Takes one argument of arbitrary format."""
-    def __init__(self, default=_DEFAULT):
-        self.default=default
+    __str__ = lambda self: str(self.param)
 
-    def __call__ (self, string):
-        string = string.strip()
-        if not string:
-            if self.default is not _DEFAULT:
-                return [self.default],{}
-            raise ArgError("Expecting an argument, got none")
-        return [string],{}
+class Sequence(MultiParam):
+    def __init__(self, *params):
+        self.params = [_get_param(p, False) for p in params]
 
-class ShellArgs(ArgParser):
-    """Takes shellencoded arguments."""
+    def complete(self, strings):
+        s = strings[-1]
+        p = self.params[len(strings)-1]
+        return p.complete(s)
 
-    def __call__(self, string):
-        a = shlex.split(string)
-        return a,{}
+    def convert(self, strings):
+        if len(self.params) < len(self.strings):
+            raise ArgError("More arguments than specified types")
+        return [p.convert(s) for p,s in zip(self.params, strings)]
 
-class PathArgs(ArgParser):
-    """Takes shellencoded arguments."""
+    __str__ = lambda self: "Sequence of parameters with the Values: "+str(self.params)
 
-    def __call__(self, string):
-        return [pathlib.Path(string)],{}
-
+class Union(BaseParam):
+    def __init__(self, *params):
+        self.params = [_get_param(p, False) for p in params]
 
     def complete(self, s):
-        ht3.complete.complete_Path(s)
+        for p in self.params:
+            for c in p.complete(s):
+                yield c
 
-class GetOptsArgs(ArgParser):
-    """Takes "getopt" arguments: %s."""
-    def __init__(self, opts):
-        super().__init__()
-        self.opts = opts
-        self.__doc__ = self.__doc__ % (opts,)
+    def convert(self, s):
+        for p in self.params:
+            try:
+                return p.convert(s)
+            except ValueError:
+                continue
+        else:
+            raise ValueError("No Conversion succeeded", s)
 
-    def __call__(self, string):
-        args = string.split()
-        optlist, args = getopt.gnu_getopt(args, self.opts)
-        kwargs = {}
-        for k, v in optlist:
-            k = k[1:]
-            if v == '':
-                # opts a:b, args -a '' -a '' will give a:2 but who would do such a thing
-                if k in kwargs:
-                    v = kwargs[k] + 1
+    __str__ = lambda self: "Parameter that has one of the types: "+str(self.params)
+
+class Str(BaseParam):
+    def __init__(self, complete=None):
+        if complete:
+            assert callable(complete)
+            self.complete=complete
+
+    def __str__(self):
+        if self.complete.__name__ == 'complete':
+            return "String"
+        n = self.complete.__name__
+        return "String (%s) " % n.replace('_',' ').replace('complete','').strip()
+
+class Int(BaseParam):
+    complete = lambda _,s: ['0x', '0b', '0o']
+    convert  = lambda _,s: int(s,0)
+
+class Float(BaseParam):
+    complete = lambda _,s: []
+    convert  = lambda _,s: float(s)
+
+class Option(BaseParam):
+    def __init__(self, *options, ignore_case=False):
+        self.options = options
+        self.ignore_case = ignore_case
+
+    def complete(self, s):
+        if self.ignore_case:
+            return ht3.complete.filter_completions_i(s, *self.options)
+        else:
+            return ht3.complete.filter_completions(s, *self.options)
+
+    def convert(self, s):
+        if self.ignore_case:
+            sl = s.lower()
+            ic = True
+        else:
+            ic = False
+        for opts in self.options:
+            for o in opts:
+                if ic:
+                    if sl == o.lower():
+                        return o
                 else:
-                    v = 1
-            else:
-                if k in kwargs:
-                    raise ArgError("option -%s occured multiple times" % k)
-            kwargs[k] = v
+                    if sl == o:
+                        return o
+        raise ValueError(s)
 
-        return args, kwargs
+    __str__ = lambda self: "Option of "+str([o for opts in self.options for o in opts])
 
-class SetArgs(ArgParser):
-    """Takes one of a set of arguments."""
-    def __init__(self, *sets, default=_DEFAULT):
-        self.sets=sets
-        self.default=default
+class Python(BaseParam):
+    def complete (self, s):
+        return  ht3.env.Env.complete_py(s)
+    __str__ = lambda self: "Python Code"
 
-    def __call__(self, string):
-        string = string.strip()
-        if not string:
-            if self.default is _DEFAULT:
-                raise ArgError ("Expected an argument, got none")
-            return [self.default],{}
-        for s in self.sets:
-            if string in s:
-                return [string],{}
-        raise ArgError("illegal argument", string, self.sets)
+class Path(BaseParam):
+    def complete (self, s):
+        return  ht3.env.Env.complete_py(s)
 
-    def complete(self, string):
-        string = string.strip()
-        return ht3.complete.filter_completions(string, *self.sets)
+    def convert(self, s):
+        return pathlib.Path(s)
 
+class Executable(BaseParam):
+    def complete (self, s):
+        return ht3.env.Env.complete_executable(s)
 
-class DictArgs(ArgParser):
-    """Takes one of a set of arguments."""
-    def __init__(self, *dicts, default=_DEFAULT):
-        self.default = default
-        self.dicts = dicts
+class ExecutableWithArgs(MultiParam):
+    def __init__(self):
+        pass
 
-    def __call__(self, string):
-        string = string.strip()
-        for s in self.dicts:
-            if string in s:
-                return [s[string]], {}
-        if self.default is not _DEFAULT:
-            return [self.default],{}
-        raise ArgError ("Key not in dicts, no default", string, self.dicts)
+    def complete(self, strings):
+        exe = strings[0]
+        args = strings[1:]
+        if not args:
+            return ht3.env.Env.complete_executable(exe)
+        raise NotImplementedError()
 
-    def complete(self, string):
-        string = string.strip()
-        return sorted(ht3.complete.filter_completions(string, *self.dicts))
+class Command(BaseParam):
+    def complete (self, s):
+        return ht3.env.Env.complete_commands(s)
 
-class CallableArgParser(ArgParser):
-    """Takes a String that is accepted by %s()."""
-    def __init__(self, call, default=_DEFAULT):
-        self.call = call
-        self.default = default
-        self.__doc__ = self.__doc__ % (call,)
+class CommandWithArgs(BaseParam):
+    def complete (self, s):
+        return ht3.env.Env.complete_command_with_args(s)
 
-    def __call__(self, string):
-        string = string.strip()
-        if not string:
-            if self.default is _DEFAULT:
-                raise ArgError ("Expected an argument, got none")
-            return [self.default],{}
-        return [self.call(string)],{}
+class Bool(BaseParam):
+    def complete(self, s):
+        if s:
+            return ht3.complete.filter_completions_i(s,
+                ["yes", "no", "true", "false", "0", "1"])
+        return ["Yes", "No"]
+    def convert(self, s):
+        s = s.lower()
+        if not s:
+            raise ValueError()
+        if s in ['n','no','false']:
+            return False
+        if s in ['yes','true','y']:
+            return True
+        raise ValueError("Not a boolean word", s)
 
 
-class AutoArgs(ArgParser):
-    """Parses args matching the signature %s."""
+class ArgParser:
+    """Parses and completes a functions parameters."""
 
-
-    def __init__(self, command):
-        self.command = command
-        sig = inspect.signature(command.function)
-        self.__doc__ = self.__doc__ % (sig)
-
+    def __init__(self, function):
+        sig = inspect.signature(function)
         params = iter(sig.parameters.items())
         self.params = []
         for name, param in params:
@@ -194,7 +197,7 @@ class AutoArgs(ArgParser):
             else:
                 assert False
 
-            self.params.append((var_arg, self.ParamAnno(param.annotation)))
+            self.params.append((var_arg, _get_param(param.annotation, var_arg), name))
 
         if len(self.params) == 1 and not self.params[0][0]:
             self.split = lambda s: [s]
@@ -203,16 +206,16 @@ class AutoArgs(ArgParser):
 
 
 
-    def __call__(self, string):
+    def convert(self, string):
         string = string.strip()
         if not string:
             return [],{}
         it = iter(self.split(string))
         args = []
         params = iter(self.params)
-        for var_arg, param in params:
+        for var_arg, param, name in params:
             if var_arg:
-                args.extend(param.convert(v) for v in it)
+                args.extend(param.convert(list(it)))
             else:
                 try:
                     v = next(it)
@@ -238,28 +241,33 @@ class AutoArgs(ArgParser):
 
         assert values[-1][-1] == '|'
 
-        if values[-1] == '|':
-            values = values[:-1]
-            new = True
-            i = len(values)
-            s = ""
+        values[-1] = values[-1][:-1]
+
+        if values[-1] == '':
             prefix = string + quote
             if len(values) > 1:
                 prefix += " "
         else:
-            s = values[-1][:-1]
-            i = len(values) - 1
+            s = values[-1]
             prefix = string[:len(string)-len(s)]
 
 
-        if i <= len(self.params):
-            var_arg, param = self.params[i]
+        if len(values) <= len(self.params):
+            var_arg, param, name = self.params[len(values)-1]
         else:
-            var_arg, param = self.params[-1]
+            var_arg, param, name = self.params[-1]
             if not var_arg:
                 raise ArgError("Too many arguments",i,len(self.params))
 
-        for v in param.complete(s):
+        assert var_arg == isinstance(param, MultiParam)
+        assert var_arg != isinstance(param, BaseParam)
+
+        if var_arg:
+            compl = param.complete(values)
+        else:
+            compl = param.complete(values[-1])
+
+        for v in compl:
             if shlex._find_unsafe(v) is None:
                 s = prefix + v + quote
                 if s.startswith(string):
@@ -271,52 +279,16 @@ class AutoArgs(ArgParser):
                         yield s
                 else:
                     pass # can not help if it did not start with a quote
+    def describe_params(self):
+        params = self.params
+        if not params:
+            return "No Parameters"
+        else:
+            s =["Takes the following params:"]
+            for var_arg, param, name in params:
+                s.append("%s%s: %s" % ("*" if var_arg else '', name, param))
+            return "\n".join(s)
 
-    class ParamAnno:
-        def __init__(self, typ):
-            if typ is inspect.Parameter.empty:
-                complete = None
-                convert  = str
-            elif callable(typ):
-                def complete(s):
-                    c = getattr(ht3.env.Env, '_complete_'+typ.__name__, False)
-                    if c:
-                        return c(s)
-                    c = getattr(ht3.env.Env, 'complete_'+typ.__name__, False)
-                    if c:
-                        return c(s)
-                    return []
-                convert = typ
-            elif isinstance(typ, str):
-                def complete(s):
-                    c = getattr(ht3.env.Env, '_complete_'+typ, False)
-                    if c:
-                        return c(s)
-                    c = getattr(ht3.env.Env, 'complete_'+typ, False)
-                    if c:
-                        return c(s)
-                    return []
-                def convert(s):
-                    c = getattr(ht3.env.Env, '_convert_'+typ, False)
-                    if c:
-                        return c(s)
-                    c = getattr(ht3.env.Env, 'convert_'+typ, False)
-                    if c:
-                        return c(s)
-                    return s
-            elif (isinstance(typ, collections.abc.Mapping)
-                    or isinstance(typ, collections.abc.Sequence)):
-                complete = lambda s: ht3.complete.filter_completions(s, typ)
-                def convert(s):
-                    if not s in typ:
-                        raise KeyError("not in list", s, typ)
-                    return s
-            # UPGRADE: Add typing.Union once support for python3.4 is dropped
-            else:
-                raise TypeError(typ)
-
-            self.complete = complete
-            self.convert = convert
 
 def quote(s):
     """Return a shell-escaped version of the string *s*."""
@@ -329,65 +301,52 @@ def quote(s):
     # the string $'b is then quoted as '$'"'"'b'
     return "'" + s.replace("'", "'\"'\"'") + "'"
 
-def Args(spec, **kwargs):
-    if not spec:
-        return NoArgs()
 
-    if spec in ['1', 1, 'all']:
-        return AllArgs()
 
-    if isinstance(spec, str):
-        if spec == '?':
-            return NoOrOneArgs()
+def _get_param(p, var_arg):
+    if var_arg:
+        if isinstance(p, MultiParam):
+            return p
+        if p is inspect.Parameter.empty:
+            return MultiParam(Str())
+        if isinstance(p, BaseParam):
+            return MultiParam(p)
+        raise TypeError("Need Specific Parameter Annotation for *args", p)
 
-        if spec == 'shell':
-            return ShellArgs()
+    if isinstance(p, BaseParam):
+        return p
 
-        if spec == 'path':
-            return PathArgs()
+    if isinstance(p, collections.abc.Sequence):
+        if (any(isinstance(e, (BaseParam, MultiParam)) for e in p) or 
+                not any(isinstance(e, str) for e in p)):
+            raise TypeError("Give a list of allowed strings")
 
-        if spec == 'set':
-            s = []
-            if 'set' in kwargs:
-                s.append(kwargs['set'])
-            if 'sets' in kwargs:
-                s.extend(kwargs['sets'])
-            if not s:
-                raise KeyError('Pass a set in `set` or `sets`')
-            return SetArgs(*s, **filterDict(kwargs, 'default'))
+        return Option(p)
 
-        if spec == 'dict':
-            d = []
-            if 'dict' in kwargs:
-                d.append(kwargs['dict'])
-            if 'dicts' in kwargs:
-                d.extend(kwargs['dicts'])
-            if not d:
-                raise KeyError('Pass a dict in `dict` or `dicts`')
-            return DictArgs(*d, **filterDict(kwargs, 'default'))
+    if p is inspect.Parameter.empty:
+        return BaseParam()
+    if p is bool:
+        return Bool()
+    if p is str:
+        return Str()
+    if p is int:
+        return Int()
+    if p is float:
+        return Float()
+    if p is pathlib.Path:
+        return Path()
 
-        if spec == 'callable':
-            return CallableArgParser(kwargs['call'], **filterDict(kwargs, 'default'))
+    try:
+        if issubclass(p, BaseParam):
+            return p()
+    except TypeError:
+        pass
 
-        if spec == 'getopt':
-            return GetOptsArgs(kwargs['opt'])
+    if callable(p):
+        try:
+            if 'complete' in p.__name__.lower():
+                return Str(p)
+        except AttributeError:
+            pass
 
-        if spec.startswith(':'):
-            return GetOptsArgs(spec[1:])
-
-        if spec == 'auto':
-            return AutoArgs(kwargs['_command'])
-
-    if isinstance(spec, ArgParser):
-        return spec
-
-    if isinstance(spec, collections.abc.Mapping):
-        return DictArgs(spec, **filterDict(kwargs, 'default'))
-
-    if isinstance(spec, collections.abc.Container):
-        return SetArgs(spec, **filterDict(kwargs, 'default'))
-
-    if callable(spec):
-        return CallableArgParser(spec, **filterDict(kwargs, 'default'))
-
-    raise ValueError(spec)
+    raise TypeError("Can not Guess Parameter type", p)

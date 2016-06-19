@@ -1,205 +1,72 @@
 import unittest
 import pathlib
 from unittest.mock import Mock, patch
-from ht3.args import Args
+from ht3 import args
 
-class TestArgs(unittest.TestCase):
-    def test_shell_args(self):
-        a = Args('shell')
+class TestStrParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.Str()
+        s = "Test"
+        assert p.convert(s) is s
 
-        assert a('a "b" \'C\'" "') == (['a', 'b', 'C '], {})
-        with self.assertRaises(ValueError):
-            a('a "')
+    def test_complete(self):
+        p = args.Str()
+        s = "Test"
+        assert list(p.complete(s)) == []
 
-    def test_one_arg(self):
-        a = Args(1)
+class TestIntParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.Int()
+        s = "0xf"
+        assert p.convert(s) == 15
 
-        assert a(" a ") == (["a"],{})
-        with self.assertRaises(ValueError):
-            a('')
+    def test_complete(self):
+        p = args.Int()
+        s = "0"
+        assert p.complete(s) is not None
 
-    def test_no_arg(self):
-        a = Args(None)
-        assert a('') == ([],{})
-        assert a('       ') == ([],{})
-        with self.assertRaises(ValueError):
-            a('asdfg')
+class TestBoolParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.Bool()
+        assert p.convert("No") is False
+        assert p.convert("Yes") is True
 
-    def test_callable_arg(self):
-        a = Args(int)
-
-        assert a("42") == ([42],{})
-
-    def test_dict_args(self):
-        d = {'a': 1, 'b':2}
-        a = Args(d)
-
-        assert a('a') == ([1],{})
-    def test_dict_args_explicit(self):
-        d = {'a': 1, 'b':2}
-        a = Args('dict', dict=d)
-
-        assert a('a') == ([1],{})
-
-    def test_dict_multiple(self):
-        d1 = {'a': 1, 'b':2}
-        d2 = {'c': 3, 'd':4}
-        a = Args('dict', dicts=[d1,d2])
-
-        assert a('a') == ([1],{})
-        assert a('c') == ([3],{})
-
-    def test_dict_args_compl(self):
-        d = {'foo': 1, 'bar':2, 'baz':3}
-        a = Args('dict', dict=d)
-        assert set(a.complete('')) == {'foo','bar','baz'}
-        assert set(a.complete('b')) == {'bar','baz'}
-
-    def test_set_args(self):
-        s = {'a', 'b'}
-        a = Args(s)
-
-        assert a('a') == (['a'],{})
-
-    def test_set_args_explicit(self):
-        s = {'a', 'b'}
-        a = Args('set', set=s)
-
-        assert a('a') == (['a'],{})
-
-    def test_set_multiple(self):
-        s1 = {'a', 'b'}
-        s2 = {'c', 'd'}
-        a = Args('set', sets=[s1, s2])
-
-        assert a('a') == (['a'], {})
-        assert a('c') == (['c'], {})
-
-    def test_set_args_compl(self):
-        s = {'foo', 'bar', 'baz'}
-        a = Args('set', set=s)
-        assert set(a.complete('')) == {'foo','bar','baz'}
-        assert set(a.complete('b')) == {'bar','baz'}
+    def test_complete(self):
+        p = args.Bool()
+        assert "YES" in list(p.complete("YE"))
+        assert "yes" in list(p.complete("y"))
 
 
-    def test_auto_full(self):
-        typ = Mock()
-        cmd = Mock()
 
-        typ.__name__ = 'typ'
-        def f(s : str, n, t: typ, *args:int, kwa=42):
-            assert s == 'Hans'
-            assert kwa == 42
-            assert len(args) == 4
-            all(isinstance(i,int) for i in args)
-            return 'OK'
+class TestUnionParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.Union(args.Bool(), args.Int())
+        assert p.convert("32") == 32
+        assert p.convert("False") is False
 
-        cmd.function = f
-
-        a = Args('auto', _command=cmd)
-
-        args, kwargs = a('Hans fred typ 0 1 2 3')
-        assert f(*args, **kwargs) == 'OK'
-
-        assert kwargs == {}
-        s, n, t, a0, a1, a2, a3= args
+    def test_complete(self):
+        p = args.Union(args.Bool(), args.Int())
+        assert 'Yes' in list(p.complete(''))
+        assert '0b'  in list(p.complete('0'))
 
 
-        assert s == 'Hans'
-        assert n == 'fred'
-        typ.assert_called_once_with('typ')
-        assert t is typ('Some String')
-        assert a0 == 0
-        assert a1 == 1
-        assert a2 == 2
-        assert a3 == 3
-
-    def test_auto_partial(self):
-        cmd = Mock()
-        def f(a,b=0):
-            pass
-        cmd.function = f
-
-        a = Args('auto', _command=cmd)
-
-        args, kwargs = a('a')
-        assert kwargs == {}
-        assert args == ['a']
-
-    def test_auto_onearg_vararg(self):
-        cmd = Mock()
-        def f(*a):
-            pass
-        cmd.function = f
-
-        a = Args('auto', _command=cmd)
-
-        args, kwargs = a('1 2 3')
-        assert kwargs == {}
-        assert args == ['1', '2', '3']
-
-    def test_auto_onearg(self):
-        cmd = Mock()
-        def f(a):
-            pass
-        cmd.function = f
-
-        a = Args('auto', _command=cmd)
-
-        args, kwargs = a('1 2 3')
-        assert kwargs == {}
-        assert args == ['1 2 3']
-
-    def test_auto_noargs(self):
-        cmd = Mock()
-        def f(a=0):
-            pass
-        cmd.function = f
-
-        a = Args('auto', _command=cmd)
-
-        args, kwargs = a('')
-        assert kwargs == {}
-        assert args == []
+class TestMultiParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.MultiParam(args.Int())
+        assert p.convert(["32", "42"]) == [32, 42]
 
 
-    @patch('ht3.env.Env')
-    def test_auto_complete_full(self, Env):
-        def compl_f(s):
-            return ['foo','FUU', 'FOO']
+    def test_complete(self):
+        p = args.MultiParam(args.Bool())
+        assert 'False' in list(p.complete(['FooBar', 'Fa']))
 
-        def compl_b(s):
-            return ['Bar','baz', "x = 42"]
 
-        Env._complete_f = compl_f
-        Env._complete_b = compl_b
+class TestSequence(unittest.TestCase):
+    def test_convert(self):
+        p = args.Sequence(args.Int(), args.Float(), args.Bool())
+        assert p.convert(["32", "42", "no"]) == [32, 42.0, False]
 
-        def f(t1:'f', t2:'b'):
-            pass
-        cmd = Mock()
-        cmd.function = f
-        a = Args('auto', _command=cmd)
 
-        def t(s):
-            return list(a.complete(s))
-
-        assert 'foo' in t('fo')
-        assert '"foo"' in t('"fo')
-        assert 'foo Bar' in t('foo B')
-        assert '"foo" "baz"' in t('"foo" "ba')
-
-        assert 0==len(t('foo x'))
-
-    def test_getopt(self):
-        a = Args(':ab:c')
-
-        args, kwargs = a('-ac -aa -b foo bar baz')
-        assert args == ['bar', 'baz']
-        assert kwargs == {'a': 3, 'c': 1, 'b': 'foo'}
-
-    def test_getopt_explicit(self):
-        a = Args('getopt', opt='abc')
-
-        args, kwargs = a('-ac -aa -b foo bar baz')
-        assert args == ['foo', 'bar', 'baz']
-        assert kwargs == {'a': 3, 'c': 1, 'b': 1}
+    def test_complete(self):
+        p = args.Sequence(args.Int(), args.Float(), args.Bool())
+        assert 'no' in list(p.complete(["32", "42", "n"]))

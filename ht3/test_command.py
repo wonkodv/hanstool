@@ -21,8 +21,8 @@ class TestCmd(unittest.TestCase):
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_command_called(self):
         x = 0
-        @cmd(args=int)
-        def someCommand(arg):
+        @cmd
+        def someCommand(arg:int):
             nonlocal x
             x = arg
 

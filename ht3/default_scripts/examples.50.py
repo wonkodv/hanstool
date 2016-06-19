@@ -20,7 +20,7 @@ def timer(t:float=3, event:str="Done"):
     option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
 
-def _vb_get_vms(s=None):
+def _complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
     import subprocess
     p = subprocess.Popen(
@@ -33,8 +33,8 @@ def _vb_get_vms(s=None):
         if x:
             yield x[0][1:-1]
 
-@cmd(args='?', complete=_vb_get_vms)
-def vb(box=None):
+@cmd
+def vb(box:_complete_virtualbox=None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
         execute_disconnected("virtualbox")

@@ -14,7 +14,9 @@ from ht3.check import CHECK
 from ht3.complete import complete_py
 from ht3.complete import complete_commands, complete_command_args
 from ht3.complete import filter_completions, filter_completions_i
-from ht3.complete import complete_Path
+from ht3.complete import complete_path
+
+from ht3 import args
 
 from ht3.command import cmd
 from ht3.command import COMMANDS
@@ -33,7 +35,6 @@ from ht3.check import CHECK
 from ht3.utils.fake_input import *
 from ht3.utils.process import *
 from ht3.utils.helpers import *
-from ht3.utils.helpers import _convert_bool, _complete_bool
 from ht3.utils.log import *
 from ht3.utils.dialog import *
 
@@ -101,3 +102,7 @@ def general_completion(string):
             else:
                 #a b(c)
                 return complete_command_args(string)
+
+class CommandOrExpression(args.BaseParam):
+    def complete(self, s):
+        return general_completion(s)

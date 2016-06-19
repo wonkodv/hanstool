@@ -1,16 +1,38 @@
 """The default commands that make the HT3 usable."""
 
-# Helpers
-cmd(name='l')(list_commands)
-cmd(name='e')(list_env)
-cmd(name='?', args=1, complete=general_completion)(help_command)
+@cmd(name='l')
+def list_commands():
+    """ List all commands """
+    text = ""
+    for n in sorted(COMMANDS):
+        c = COMMANDS[n]
+        d = c.doc
+        a = c.arg_parser
+        doc = textwrap.shorten(d,60)
+        doc = "%- 20s %s %s\n" % (n, doc, a)
+        text += doc
+    Env.show(text)
+
+@cmd
+def list_env():
+    """ List all commands """
+    Env.show("\n".join(sorted(Env.dict.keys(), key=lambda k:k.lower())))
+
+@cmd(name='?')
+def _help(what:args.Union(args.Command,args.Python)):
+    """ Show help on a command or evaluated python expression """
+    if what in COMMANDS:
+        obj = COMMANDS[what]
+    else:
+        obj = evaluate_py_expression(exp)
+    help(obj)
 
 # Some Eval Python functions
-@cmd(name=';',args=1, complete=complete_py)
-def _execute_py_expression(s):
+@cmd(name=';')
+def _execute_py_expression(s:args.Python):
     execute_py_expression(s.lstrip())
 
-def _complete_fake(string):
+def _complete_fake(self, string):
     import re
     parts = re.split('[^A-Za-z0-9]+', string)
     if len(parts) > 0:
@@ -24,20 +46,20 @@ def _complete_fake(string):
     values = (prefix + x for x in values)
     return values
 
-@cmd(name=':', args=1, complete=_complete_fake)
-def test_fake(s):
+@cmd(name=':')
+def test_fake(s:args.Str(_complete_fake)):
     sleep(0.5)
     fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
     FAKE_TEXT = s
 
-@cmd(HotKey='F10')
+@cmd(attrs=dict(HotKey='F10'))
 def repeat_fake():
     global FAKE_TEXT
     fake(FAKE_TEXT)
 
-@cmd(name='=',args='?', complete=complete_py)
-def _show_eval(s=""):
+@cmd(name='=')
+def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
     global _
@@ -126,25 +148,27 @@ def edit_file(file_name:Path, line:int=0):
     return p
 
 
-@cmd(name="+", args="1", complete=general_completion)
-def edit_command(c):
+@cmd(name="+")
+def edit_command(c:args.Union(args.Command,args.Python)):
     """ Edit the location where a command or function was defined """
     if c in COMMANDS:
         f, l = COMMANDS[c].origin
     else:
         o = evaluate_py_expression(c)
         import inspect
-        if not inspect.isfunction(o):
-            raise TypeError("Not a function", o)
-        f, l = inspect.getsourcefile(o), o.__code__.co_firstlineno
+        f = inspect.getsourcefile(o)
+        try:
+            _, l = inspect.getsourcelines(o)
+        except TypeError:
+            l = 0
     p = edit_file(f, l)
 
 def _complete_script_names(s):
     from ht3.scripts import SCRIPTS
     return filter_completions(s, (p.name for p in SCRIPTS))
 
-@cmd(name="++", args="auto", complete=_complete_script_names)
-def add_command(script, name=None, text=None):
+@cmd(name="++")
+def add_command(script:args.Str(_complete_script_names), name=None, text=None):
     """ define a command in a script.
         1.  If `script` matches a loaded one, it is edited, otherwise
             a new script with the name
@@ -193,8 +217,8 @@ def add_command(script, name=None, text=None):
     p = edit_file(s, l)
     p.wait()
 
-@cmd(args=1, complete=general_completion)
-def debug(what):
+@cmd
+def debug(what:CommandOrExpression):
     """ Debug a Command """
     import pdb, ht3.command, inspect
     try:
@@ -211,8 +235,10 @@ def py():
     import sys
     return execute_auto(sys.executable)
 
+import sys
+
 @cmd
-def reload(module=None):
+def reload(module:args.Union(args.Option(sys.modules),args.Str())=None):
     import ht3.env
     import ht3.scripts
     import importlib
@@ -237,7 +263,7 @@ def reload(module=None):
 
 
 
-@cmd(args="shell")
+@cmd
 def restart(*more_args):
     """ Check if all loaded Scripts can be compiled and then restart the python
         programm using sys.executable, "-m ht3" and args, where args is all
@@ -296,7 +322,7 @@ def restart(*more_args):
 
 if CHECK.frontend('ht3.gui'):
     _httofront_time=0
-    @cmd(HotKey="F8")
+    @cmd(attrs=dict(HotKey="F8"))
     def httofront():
         """ Show the input and, if executed twice within short time, show log win """
         global _httofront_time
@@ -312,8 +338,9 @@ if CHECK.frontend('ht3.gui'):
         ht3.gui.cmd_win_stay_on_top()
 
 if CHECK.frontend('ht3.hotkey'):
-    @cmd(name="disable_hotkey", args='?', complete=lambda s:sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values()))
-    def _disable_hotkey(hk=None):
+    _complete_hotkey=lambda s:sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values())
+    @cmd(name="disable_hotkey")
+    def _disable_hotkey(hk:Str(_complete_hotkey)=None):
         if hk:
             disable_hotkey(hk)
         else:

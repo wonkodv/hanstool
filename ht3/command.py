@@ -15,10 +15,10 @@ _COMMAND_RUN_ID = 0
 
 
 
-def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
+def register_command(func, *, origin_stacked, name=_DEFAULT,
                      func_name=_DEFAULT,
                      async=False, complete=_DEFAULT,
-                     doc=_DEFAULT, **attrs):
+                     doc=_DEFAULT, attrs=None):
     """ Register a function as Command """
 
     origin = traceback.extract_stack()
@@ -28,16 +28,19 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
     def Command(arg_string=""):
         """ The function that will be executed """
         nonlocal arg_parser, func
-        args, kwargs = arg_parser(arg_string)
+        args, kwargs = arg_parser.convert(arg_string)
         if async:
-            t = start_thread(func, args=args, kwargs=kwargs)
+            t = start_thread(func, kwargs=kwargs)
             return t
         r = func(*args, **kwargs)
         return r
 
     Command.function = func
 
-    arg_parser = ht3.args.Args(args, _command=Command, **attrs)
+    arg_parser = ht3.args.ArgParser(func)
+
+    if attrs is None:
+        attrs = dict()
 
     if func_name is _DEFAULT:
         func_name = func.__name__
@@ -45,15 +48,12 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
     if name is _DEFAULT:
         name = func_name
 
-    if complete is _DEFAULT:
-        complete = arg_parser.complete
-
     if doc is _DEFAULT:
         doc = inspect.getdoc(func) or ''
 
     long_doc = "".join(["Command '%s'" % name, "\n",
         ("Calls %s\n" % func_name ) if func_name != name else "",
-        inspect.getdoc(arg_parser), "\n",
+        arg_parser.describe_params(), "\n",
         "Executed in a seperate Thread\n" if async else "",
         "\n",
         doc, "\n",
@@ -67,7 +67,6 @@ def register_command(func, *, origin_stacked, args='auto', name=_DEFAULT,
     Command.name = name
     Command.async = async
     Command.origin = origin
-    Command.complete = complete
     Command.attrs = attrs
     Command.arg_parser = arg_parser
 
