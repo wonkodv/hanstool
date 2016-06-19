@@ -60,11 +60,12 @@ def complete_command_args(string):
 def complete_commands(string):
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
 
-def _get_attributes_rec(obj):
+def _get_attributes_rec(obj, privates):
     values = set()
     for v in sorted(dir(obj)):
-        values.add(v)
-        yield v
+        if privates or v[0] != '_':
+            values.add(v)
+            yield v
 
     if hasattr(obj, '__class__'):
         c = obj.__class__
@@ -72,8 +73,9 @@ def _get_attributes_rec(obj):
             c = c.__base__
             for v in sorted(dir(c)):
                 if v not in values:
-                    values.add(v)
-                    yield v
+                    if privates or v[0] != '_':
+                        values.add(v)
+                        yield v
 
 _COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
 
@@ -95,7 +97,7 @@ def complete_py(string):
         except (KeyError, AttributeError):
             return [] # when the string contains illegal keys/attributes
 
-        values = _get_attributes_rec(val)
+        values = _get_attributes_rec(val, pl.find('_') == 0)
 
 
     prefix = string[:len(string)-len(pl)]
