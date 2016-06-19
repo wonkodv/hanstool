@@ -122,7 +122,7 @@ def edit_file(file_name:Path, line:int=0):
             args.append('+%d'%l )
         elif 'notepad++' in e:
             args.append('-n%d'%l)
-    execute_auto(*args)
+    p = execute_auto(*args)
     return p
 
 

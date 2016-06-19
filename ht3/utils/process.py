@@ -38,6 +38,7 @@ def execute_auto(*args, **kwargs):
         p.wait()
     else:
         p = Env.execute_disconnected(*args, **kwargs)
+    return p
 
 def procio(*args, input=None, timeout=None, **kwargs):
     """Get ouput from a program."""
