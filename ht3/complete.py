@@ -8,6 +8,16 @@ import os.path
 import collections.abc
 from .env import Env
 
+__all__ = (
+    'filter_completions_i',
+    'filter_completions',
+    'complete_command_args',
+    'complete_commands',
+    'complete_command_with_args',
+    '_get_attributes_rec',
+    'complete_py',
+    'complete_path',
+)
 
 SCOPE = ChainMap(Env, __builtins__)
 
