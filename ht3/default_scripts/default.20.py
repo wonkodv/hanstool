@@ -51,40 +51,24 @@ def exit():
     sys.exit(0)
 
 
-# Execute Programms and Shell
+@cmd(name="$")
+def _procio(command:"shell_command"):
+    """Get Programm output."""
+    show(procio(command, shell=True))
 
-if CHECK.frontend('ht3.cli'):
-    # Programms should run in foreground when invoked from CLI
-    @cmd(name="$", args=1, complete=complete_executable)
-    def _shell(arg):
-        p = shell(arg)
-        if CHECK.current_frontend('ht3.cli'):
-            return p.wait()
-        return p
+@cmd(name="!")
+def _execute(exe:"executable", *args):
+    """Execute a Program and wait for completion."""
+    p = execute(exe, *[str(a) for a in args])
+    p.wait()
+    return p
 
-    @cmd(name="!")
-    def _execute(exe:"executable", *args:Path):
-        p = execute(exe, *args)
-        if CHECK.current_frontend('ht3.cli'):
-            return p.wait()
-        return p
+@cmd(name="&")
+def _execute_bg(exe:"executable", *args):
+    """Execute a Program and let it run in background."""
+    p = execute_disconnected(exe, *[str(a) for a in args])
+    return p
 
-    # TODO disconnect stdinout for bg
-    @cmd(name="$&", args=1, complete=complete_executable)
-    def _shell_bg(arg):
-        p = shell(arg)
-        return p
-
-    @cmd(name="!&")
-    def _execute_bg(exe:"executable", *args:Path):
-        p = execute(exe, *args)
-        return p
-else:
-    cmd(name="$", args=1, complete=complete_executable)(shell)
-    @cmd(name="!")
-    def _execute(exe:"executable", *args:Path):
-        p = execute(exe, *args)
-        return p
 
 def _get_the_editor():
     import os
@@ -138,9 +122,7 @@ def edit_file(file_name:Path, line:int=0):
             args.append('+%d'%l )
         elif 'notepad++' in e:
             args.append('-n%d'%l)
-    p = execute(*args)
-    if CHECK.current_frontend == 'ht3.cli':
-        p.wait()
+    execute_auto(*args)
     return p
 
 
@@ -156,7 +138,6 @@ def edit_command(c):
             raise TypeError("Not a function", o)
         f, l = inspect.getsourcefile(o), o.__code__.co_firstlineno
     p = edit_file(f, l)
-    p.wait()
 
 def _complete_script_names(s):
     from ht3.scripts import SCRIPTS
@@ -228,10 +209,10 @@ def debug(what):
 def py():
     """ start a python repl """
     import sys
-    return execute(sys.executable)
+    return execute_auto(sys.executable)
 
 @cmd
-def reload(full:WordBool=False):
+def reload(full:'bool'=False):
     import ht3.env
     import ht3.scripts
 

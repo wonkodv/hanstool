@@ -15,29 +15,44 @@ from ht3.check import CHECK
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
-def shell(string, cwd=None, env=None, **kwargs):
-    """ pass a string to a shell. The shell will parse it. """
-    p = subprocess.Popen(
-        string,
-        shell=True,
-        cwd=cwd,
-        env=env,
-        universal_newlines=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        **kwargs)
-    p.shell=True
+def execute(*args, shell=False, **kwargs):
+    """Execute a program."""
+    p = subprocess.Popen(args, shell=shell, **kwargs)
+    p.shell = shell
     Env.log_subprocess(p)
     watch(p, lambda p: Env.log_subprocess_finished(p))
     return p
 
-def execute(*args, cwd=None, env=None, **kwargs):
-    """ Execute a programm with arguments """
-    p = subprocess.Popen(args, shell=False, cwd=cwd, env=env, **kwargs)
-    Env.log_subprocess(p)
-    watch(p, lambda p: Env.log_subprocess_finished(p))
-    p.shell=False
-    return p
+def execute_disconnected(*args, **kwargs):
+    """Execute a program without any file handles attached."""
+    return Env.execute(*args,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        **kwargs)
+
+def execute_auto(*args, **kwargs):
+    """Execute a program, in foreground if on CLI, else in background."""
+    if CHECK.current_frontend('ht3.cli'):
+        p = Env.execute(*args, **kwargs)
+        p.wait()
+    else:
+        p = Env.execute_disconnected(*args, **kwargs)
+
+def procio(*args, input=None, timeout=None, **kwargs):
+    """Get ouput from a program."""
+    p = Env.execute(
+        *args,
+        universal_newlines=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        **kwargs)
+
+    out, err = p.communicate(input=input, timeout=timeout)
+    if p.returncode != 0:
+        return IOError("Non-zero return code", p.returncode, out, err)
+    return out
 
 def complete_executable(s):
     s = shlex.split(s)

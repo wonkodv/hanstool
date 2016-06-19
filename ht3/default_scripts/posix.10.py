@@ -7,4 +7,4 @@ if CHECK.os.posix:
 
     @cmd(args=1, name='o')
     def xdg_open(s):
-        return execute('xdg-open', s)
+        return execute_disconnected('xdg-open', s)

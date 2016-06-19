@@ -9,10 +9,11 @@ from ht3.env import Env
 
 def execute(exe, *args, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
-    try:
-        exe = next(_get_exe_path(exe, True))
-    except StopIteration:
-        raise FileNotFoundError(exe) from None
+    if not kwargs.get('shell',False):
+        try:
+            exe = next(_get_exe_path(exe, True))
+        except StopIteration:
+            raise FileNotFoundError(exe) from None
     return process.execute(exe, *args, **kwargs)
 
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)

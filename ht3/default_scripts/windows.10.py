@@ -32,7 +32,7 @@ if CHECK.os.win:
                     arg = str(p)
                 else:
                     arg = '/select,' + str(p)
-                execute(r'explorer', arg)
+                execute_disconnected('explorer', arg)
                 return
 
     if CHECK.frontend('ht3.gui'):

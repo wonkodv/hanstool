@@ -37,12 +37,12 @@ def _vb_get_vms(s=None):
 def vb(box=None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
-        execute("virtualbox")
+        execute_disconnected("virtualbox")
     else:
         import difflib
         boxes = _vb_get_vms()
         box = difflib.get_close_matches(box, boxes, 1, 0.1)[0]
-        execute("vboxmanage", "startvm", box)
+        execute_disconnected("vboxmanage", "startvm", box)
 
 @cmd
 def history_stats(n:int=10):

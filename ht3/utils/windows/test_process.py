@@ -14,7 +14,6 @@ class TestWinExecute(unittest.TestCase):
 
     @patch('ht3.utils.process.Env')
     def test_execute(self, Env):
-        s = sys.executable
-        p = execute(s,'-c','import sys; sys.exit(42)')
+        p = execute('python', '-c','import sys; sys.exit(42)')
         p.wait()
         assert p.returncode == 42
