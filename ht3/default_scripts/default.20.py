@@ -12,18 +12,13 @@ def list_commands():
         text += doc
     Env.show(text)
 
-@cmd
-def list_env():
-    """ List all commands """
-    Env.show("\n".join(sorted(Env.dict.keys(), key=lambda k:k.lower())))
-
 @cmd(name='?')
 def _help(what:args.Union(args.Command,args.Python)):
     """ Show help on a command or evaluated python expression """
     if what in COMMANDS:
         obj = COMMANDS[what]
     else:
-        obj = evaluate_py_expression(exp)
+        obj = evaluate_py_expression(what)
     help(obj)
 
 # Some Eval Python functions
@@ -215,24 +210,6 @@ def add_command(script:_complete_script_names, name=None, text=None):
         l = len(list(f))
     p = edit_file(s, l)
     p.wait()
-
-@cmd
-def debug(what:CommandOrExpression):
-    """ Debug a Command """
-    import pdb, ht3.command, inspect
-    try:
-        cmd, _, args = ht3.command.get_command(what)
-        pdb.set_trace()
-        return cmd(args)
-    except KeyError:
-        x = pdb.runeval(what, Env.dict)
-        return x
-
-@cmd
-def py():
-    """ start a python repl """
-    import sys
-    return execute_auto(sys.executable)
 
 import sys
 

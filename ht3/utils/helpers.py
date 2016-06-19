@@ -16,7 +16,6 @@ def cmd_func(name, func, *args, **kwargs):
     cmdf = functools.partial(func, *args, **kwargs)
     register_command(cmdf,
         name=name,
-        func_name=name,
         doc='executes\n'+" ".join(shlex.quote(x) for x in args),
         origin_stacked=3)
     Env[name] = cmdf

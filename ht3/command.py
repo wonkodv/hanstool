@@ -16,8 +16,7 @@ _COMMAND_RUN_ID = 0
 
 
 def register_command(func, *, origin_stacked, name=_DEFAULT,
-                     func_name=_DEFAULT,
-                     async=False, complete=_DEFAULT,
+                     async=False,
                      doc=_DEFAULT, attrs=None):
     """ Register a function as Command """
 
@@ -25,15 +24,17 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
     origin = origin[-origin_stacked]
     origin = origin[0:2]
 
-    def Command(arg_string=""):
-        """ The function that will be executed """
-        nonlocal arg_parser, func
-        args, kwargs = arg_parser.convert(arg_string)
-        if async:
-            t = start_thread(func, kwargs=kwargs)
+    if async:
+        def Command(arg_string=""):
+            """ The function that will be executed """
+            args, kwargs = arg_parser.convert(arg_string)
+            t = start_thread(func, args=args, kwargs=kwargs)
             return t
-        r = func(*args, **kwargs)
-        return r
+    else:
+        def Command(arg_string=""):
+            args, kwargs = arg_parser.convert(arg_string)
+            r = func(*args, **kwargs)
+            return r
 
     Command.function = func
 
@@ -42,7 +43,9 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
     if attrs is None:
         attrs = dict()
 
-    if func_name is _DEFAULT:
+    if isinstance(func,functools.partial):
+        func_name = func.func.__name__
+    else:
         func_name = func.__name__
 
     if name is _DEFAULT:

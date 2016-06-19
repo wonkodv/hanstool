@@ -111,7 +111,7 @@ class Option(BaseParam):
                     if sl == o.lower():
                         return o
                 else:
-                    if sl == o:
+                    if s == o:
                         return o
         raise ValueError(s)
 

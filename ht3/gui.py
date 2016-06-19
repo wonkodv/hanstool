@@ -435,6 +435,7 @@ def log_error(e):
     if  not GUI:
         from ht3.utils.log import log_error
         log_error(e)
+    Env['_LAST_ERROR'] = e
 
 def log(s):
     _do_log('log', s)

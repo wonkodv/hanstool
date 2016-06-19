@@ -13,6 +13,10 @@ def show(s):
     else:
         pprint.pprint(s)
 
+def log(s):
+    if Env.get('DEBUG', False):
+        print(s)
+
 def log_command(cmd):
     if Env.get('DEBUG', False):
         print("command: " + cmd)
@@ -28,10 +32,7 @@ def log_error(e):
     tb = e.__traceback__
     for s in traceback.format_exception(t, e, tb):
         print(s)
-
-def log(s):
-    if Env.get('DEBUG', False):
-        print(s)
+    Env['_LAST_ERROR'] = e
 
 def log_subprocess(p):
     if Env.get('DEBUG', False):
