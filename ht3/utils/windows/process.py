@@ -7,6 +7,7 @@ import shlex
 import ctypes
 from ht3.utils import process
 from ht3.env import Env
+from ht3.complete import filter_completions_i
 
 def execute(exe, *args, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
@@ -67,12 +68,14 @@ def complete_executable(s):
         else:
             values[short] = {exe}
 
-    for short, longs in sorted(values.items()):
-        if len(longs) == 1:
-            yield short
-        else:
-            for l in longs:
-                yield l
+    def gen():
+        for short, longs in sorted(values.items()):
+            if len(longs) == 1:
+                yield short
+            else:
+                for l in longs:
+                    yield l
+    return filter_completions_i(s, gen())
 
 
 def shellescape(*strings):
