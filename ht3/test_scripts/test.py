@@ -26,8 +26,7 @@ def test_assertions_enabled():
     except AssertionError:
         pass
     else:
-        print("Who runs a Test suite with Assertions disabled?")
-        raise SystemExit(1)
+        raise Exception("Who runs a Test suite with Assertions disabled?")
 
 #### Script Order
 
