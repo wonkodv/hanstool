@@ -33,6 +33,7 @@ from ht3.check import CHECK
 from ht3.utils.fake_input import *
 from ht3.utils.process import *
 from ht3.utils.helpers import *
+from ht3.utils.helpers import _convert_bool, _complete_bool
 from ht3.utils.log import *
 from ht3.utils.dialog import *
 

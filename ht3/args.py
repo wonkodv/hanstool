@@ -219,7 +219,6 @@ class AutoArgs(ArgParser):
                 except StopIteration:
                     break
                 args.append(param.convert(v))
-        assert not list(params)
         return args, {}
 
     def complete(self, string):
