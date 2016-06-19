@@ -43,3 +43,14 @@ def vb(box=None):
         boxes = _vb_get_vms()
         box = difflib.get_close_matches(box, boxes, 1, 0.1)[0]
         execute("vboxmanage", "startvm", box)
+
+@cmd
+def history_stats(n:int=10):
+    with open(GUI_HISTORY) as f:
+        show(
+            sorted((b,a) for a,b in
+                collections.Counter(
+                    ht3.command.parse_command(s.strip())[0] for s in f
+                ).items()
+            )[-n:]
+        )
