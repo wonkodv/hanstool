@@ -28,6 +28,16 @@ def execute(exe, *args, is_split=True, shell=False, **kwargs):
             exe = next(_get_exe_path(exe, True))
         except StopIteration:
             raise FileNotFoundError(exe) from None
+
+    # Ugly flag stuff so windows does not create ConsoleWindows for processes which have the io streams set.
+    if all(x in kwargs and kwargs[x] is subprocess.PIPE for x in ('stdin','stdout','stderr')):
+        if not 'startupinfo' in kwargs:
+            si = subprocess.STARTUPINFO()
+            si.dwFlags = subprocess.STARTF_USESHOWWINDOW
+            si.wShowWindow = subprocess.SW_HIDE
+            kwargs['startupinfo'] = si
+            Env.log("kwargs %r" % kwargs)
+
     return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
 
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)
