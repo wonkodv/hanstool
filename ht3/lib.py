@@ -17,6 +17,7 @@ THREAD_LOCAL.frontend = None
 
 check.CHECK.frontend = check.Group(FRONTENDS)
 check.CHECK.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
+check.CHECK.frontends_running = False
 
 
 def load_frontend(name):
@@ -47,10 +48,12 @@ def run_frontends():
         fe = frontends[0]
         THREAD_LOCAL.frontend = fe.__name__
         fe.start()
+        check.CHECK.frontends_running = True # Can set before loop() because singlethreaded
         try:
             fe.loop()
         except Exception as e:
             Env.error_hook(e)
+        check.CHECK.frontends_running = False
         try:
             fe.stop()
         except Exception as e:
@@ -75,11 +78,13 @@ def run_frontends():
             t = threading.Thread(target=_run_fe, args=[fe], name=fe.__name__)
             t.start()
             threads.append((t, fe))
+        check.CHECK.frontends_running = True
 
         try:
             evt.wait() # wait till some Frontend's loop() method returns
         finally:
             # stop all frontends
+            check.CHECK.frontends_running = False
             for t, f in threads:
                 try:
                     f.stop()
