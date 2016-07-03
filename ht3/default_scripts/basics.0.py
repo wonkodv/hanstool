@@ -57,7 +57,8 @@ def _import():
         if k[:4] == 'HT3_':
             Env[k[4:]] = v
 
-    Env['PATH'] = set(Path(p) for p in os.get_exec_path())
+    global PATH
+    PATH = [Path(p) for p in os.get_exec_path()]
 
 def error_hook(e):
     global _LAST_ERROR

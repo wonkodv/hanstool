@@ -8,7 +8,7 @@ if CHECK.os.win:
     def _add_sysnative():
         _ = Path(r"C:\Windows\Sysnative")
         if _.exists():
-            PATH.add(_)
+            PATH.append(_)
 
 
     @cmd(name='o')
