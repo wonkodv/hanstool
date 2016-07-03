@@ -26,7 +26,7 @@ def _help(what:args.Union(args.Command, args.Python)):
 def _execute_py_expression(s:args.Python):
     execute_py_expression(s.lstrip())
 
-def _complete_fake(self, string):
+def _complete_fake(string):
     import re
     parts = re.split('[^A-Za-z0-9]+', string)
     if len(parts) > 0:
