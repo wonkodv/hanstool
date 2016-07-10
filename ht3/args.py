@@ -9,28 +9,47 @@ import inspect
 import pathlib
 import shlex
 
-def _no_completion(s):
-    return []
+
+_DEFAULT = object()
+
 
 class Param:
-    def __init__(self, convert=str, complete=_no_completion, doc=None):
-        if not callable(convert):
-            raise TypeError("Convert should be callable", convert)
-        self.convert = convert
-        if not callable(complete):
-            if isinstance(complete, collections.abc.Sequence):
-                self.complete = lambda s: complete
-            else:
-                raise TypeError("Complete should be callable", convert)
-        else:
-            self.complete = complete
+    def __init__(self, convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
+        if convert is not _DEFAULT:
+            if not callable(convert):
+                raise TypeError("Convert should be callable", convert)
+            self.convert = convert
 
-        if doc is None:
-            doc = "Param(convert={0}, complete={1})".format(self.convert, self.complete)
-        self.doc = doc
+        if complete is not _DEFAULT:
+            if not callable(complete):
+                if isinstance(complete, collections.abc.Sequence):
+                    self.complete = lambda s: complete
+                else:
+                    raise TypeError("Complete should be callable", convert)
+             else:
+                self.complete = complete
+
+        if doc is not _DEFAULT:
+            self.doc = doc
+        elif complete is not _DEFAULT or convert is not _DEFAULT:
+            self.doc = "Param(convert={0}, complete={1})".format(self.convert, self.complete)
+
+    def _no_completion(self, s):
+        return []
+
+    def _no_conversion(self, s):
+        return s
+
+    complete = _no_completion
+    convert = _no_conversion
 
     def __repr__(self):
-        return self.doc
+        if hasattr(self,'doc'):
+            return self.doc
+        if self.__doc__ is None:
+            return str(type(self))
+
+        return self.__doc__
 
 class MultiParam:
     def __init__(self, param):
@@ -126,11 +145,11 @@ class Range(Param):
         raise ValueError("Out of range", i, self.range)
 
 class Option(Param):
-    def __init__(self, options, ignore_case=False, sort=False):
+    def __init__(self, options, ignore_case=False, sort=False, allow_others=False):
         self.options = options
         self.ignore_case = ignore_case
         self.sort = sort
-        self.doc="Option"
+        self.allow_others = allow_others
 
     def complete(self, s):
         if self.ignore_case:
@@ -154,6 +173,8 @@ class Option(Param):
             else:
                 if s == o:
                     return o
+        if self.allow_others:
+            return s
         raise ValueError(s)
 
     __str__ = lambda self: "Option of "+str([o for opts in self.options for o in opts])
@@ -173,12 +194,21 @@ def _get_param(p, var_arg):
 
     if isinstance(p, Param):
         return p
+
+    try:
+        b = issubclass(p, Param)
+    except TypeError:
+        pass
+    else:
+        if b:
+            return p() # do here to raise type errors if there are
+
     if isinstance(p, str):
         raise TypeError("Can not convert a String to a Param", p)
 
     if isinstance(p, collections.abc.Sequence):
         if (any(isinstance(e, (Param, MultiParam)) for e in p) or
-                not any(isinstance(e, str) for e in p)):
+                not any(isinstance(e, str) for e in p)): # allow ['a','1',2] use only a and 1
             raise TypeError("Give a list of allowed strings")
 
         return Option(p)
