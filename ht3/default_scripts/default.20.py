@@ -222,6 +222,12 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
 
     if not ht3.scripts.check_all_compilable():
         return
+    if CHECK.frontend('ht3.hotkey'):
+        ht3.hotkey.disable_all_hotkeys() # let hotkeys and old functions be deleted
+        l = list(ht3.hotkey.HotKey.HOTKEYS.values())
+        ht3.hotkey.HotKey.HOTKEYS.clear() # Remove all hotkeys from the cache
+        assert not any(hk.active for hk in l)
+
     if module:
         if module.lower() == 'env':
             log("\n==================== ENV RELOAD ===================\n")
@@ -238,6 +244,7 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
             m = importlib.import_module(module)
             log("\n===== Reload Module "+module+" =========\n")
             importlib.reload(m)
+
     log("\n===== RELOAD SCRIPTS ====\n")
     ht3.scripts.reload_all()
 
@@ -323,10 +330,11 @@ if CHECK.frontend('ht3.gui'):
 
 if CHECK.frontend('ht3.hotkey'):
     def _complete_hotkey(s):
-        return sorted(hk for _,hk,_,_ in ht3.hotkey._hotkeys.values())
+        return sorted(hk.hotkey for hk in ht3.hotkey.HotKey.HOTKEYS.values())
     @cmd(name="disable_hotkey")
     def _disable_hotkey(hk:_complete_hotkey=None):
         if hk:
-            disable_hotkey(hk)
+            hk = get_hotkey(hk)
+            hk.unregister()
         else:
             disable_all_hotkeys()
