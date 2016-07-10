@@ -44,6 +44,7 @@ fake_types = (
                     r"((?P<mod4>\w+)\+)?"
                     r"(?P<modkey>\w+)"),
     ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
+    ("HKEY",        r"(?P<hkud>\+|-|)0x(?P<hkey>[0-9a-fA-F]{2})"),
     ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
     ("STRING1",     r"'([^']*)'"),
     ("STRING2",     r'"([^"]*)"'),
@@ -122,6 +123,16 @@ def fake(string, interval=10, restore_mouse_pos=False):
                 ud = m.group('kud')
                 key= m.group('key')
                 key= impl.KEY_CODES[key.upper()]
+                if ud != '-':
+                    a(impl.key_down, key)
+                    log("KeyDown vk=%d", key)
+                if ud != '+':
+                    a(impl.key_up, key)
+                    log("KeyUp vk=%d", key)
+            elif m.group("HKEY"):
+                ud = m.group('hkud')
+                key= m.group('hkey')
+                key= int(key,16)
                 if ud != '-':
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)

@@ -1,7 +1,7 @@
 import unittest
 from unittest.mock import patch
 
-from . import fake, KEY_CODES, fake_re
+from .fake_input import fake, KEY_CODES, fake_re
 
 class Test_fake(unittest.TestCase):
 
@@ -15,11 +15,19 @@ class Test_fake(unittest.TestCase):
         assert m.group('mod2') == 'SHIFT'
         assert m.group('modkey') == 'A'
 
+    def test_re_hexcode(self):
+        s = "+0xEF"
+        l = list(fake_re.finditer(s))
+        assert len(l) == 1
+        m = l[0]
+        assert m.group('hkud') == '+'
+        assert m.group('hkey') == 'EF'
+
     def runSequence(self, string, interval):
         s = []
         with patch("time.sleep") as mockSleep:
             mockSleep.side_effect=lambda t: s.append(['s', t])
-            with patch(__package__ + ".impl") as fake_in:
+            with patch(__package__ + ".fake_input.impl") as fake_in:
                 fake_in.mouse_move =    lambda x,y  : s.append(["ma", x, y])
                 fake_in.mouse_down =    lambda b    : s.append(["md", b])
                 fake_in.mouse_up =      lambda b    : s.append(["mu", b])
@@ -43,6 +51,7 @@ class Test_fake(unittest.TestCase):
             01/250
             M1
             CTRL+A
+            -0xDC
             """,0)
         exp = [
             ['kd',k['SHIFT']],
@@ -60,5 +69,6 @@ class Test_fake(unittest.TestCase):
             ['kd',k['A']],
             ['ku',k['A']],
             ['ku',k['CTRL']],
+            ['ku', 0xDC],
         ]
         self.assertListEqual(s, exp)
