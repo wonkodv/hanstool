@@ -20,6 +20,7 @@ from ht3.command import run_command
 from ht3.lib import evaluate_py_expression
 from ht3.lib import execute_py_expression
 from ht3.lib import start_thread
+from ht3.lib import threaded
 
 from time import sleep
 from os.path import expanduser

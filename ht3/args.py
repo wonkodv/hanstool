@@ -26,7 +26,7 @@ class Param:
                     self.complete = lambda s: complete
                 else:
                     raise TypeError("Complete should be callable", convert)
-             else:
+            else:
                 self.complete = complete
 
         if doc is not _DEFAULT:

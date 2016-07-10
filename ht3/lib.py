@@ -107,6 +107,15 @@ def evaluate_py_expression(s):
     r = eval(c, Env.dict)
     return r
 
+def threaded(f=None,**kwargs):
+    if f is None:
+        def deco(f):
+            start_thread(f,**kwargs)
+            return f
+        return deco
+    start_thread(f,**kwargs)
+    return f
+
 
 def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_finish=None):
     """

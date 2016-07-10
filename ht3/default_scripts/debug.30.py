@@ -41,7 +41,7 @@ def debug_last_err():
     line = t.tb_lineno
     s += "{0}:{1:d}:1:{2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
     if isinstance(e, SyntaxError):
-        s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}:{0.message}".format(e)
+        s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.message}".format(e)
     show(s)
     import tempfile
     with tempfile.NamedTemporaryFile('wt', delete=False) as f:
@@ -58,5 +58,6 @@ def debug_last_err():
                 '-c', ':cfile ' + f.name)
 
 @cmd(name='import')
-def _import(m:args.Option(sys.modules)):
-    Env[m] = sys.modules[m]
+def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
+    import importlib
+    importlib.import_module(m)
