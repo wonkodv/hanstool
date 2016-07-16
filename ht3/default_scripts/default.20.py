@@ -150,7 +150,18 @@ def edit_command(c:args.Union(args.Command, args.Python)):
     else:
         o = evaluate_py_expression(c)
         import inspect
-        f = inspect.getsourcefile(o)
+        l = 0
+        f = None
+        try:
+            f = inspect.getsourcefile(o)
+        except TypeError:
+            # for classes defined in scripts, use location of a method
+            d = getattr(o,'__dict__',{})
+            for k in d:
+                if not k.startswith('_'):
+                    if inspect.isfunction(d[k]):
+                        o = d[k]
+                        f = inspect.getsourcefile(o)
         try:
             _, l = inspect.getsourcelines(o)
         except TypeError:

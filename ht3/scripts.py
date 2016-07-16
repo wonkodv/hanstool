@@ -37,7 +37,7 @@ def load_scripts(path):
         exec (c, Env.dict)
         SCRIPTS.append(path)
     else:
-        raise Exception("neither file nor dir in load_Scripts", path)
+        raise Exception("not file or dir", path)
 
 
 def reload_all():

@@ -52,7 +52,12 @@ def execute_auto(*args, **kwargs):
     return p
 
 class ProcIOException(Exception):
-    pass
+    def __init__(self, returncode, out, err, args):
+        self.returncode = returncode
+        self.out = out
+        self.err = err
+        self.args = args
+        super().__init__(returncode, out, err, args)
 
 def procio(*args, input=None, timeout=None, **kwargs):
     """Get ouput from a program."""

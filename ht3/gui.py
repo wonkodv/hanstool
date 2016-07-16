@@ -37,6 +37,7 @@ class UserInterface():
         self.log_win = self.MessageWindow(self)
         self.cmd_win = self.CommandWindow(self)
         self.root.after(100, self.cmd_win.to_front)
+        self.root.after(400, self.cmd_win.to_front)
 
     def loop(self):
         self.closed_evt = threading.Event()
