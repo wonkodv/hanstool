@@ -60,4 +60,7 @@ def debug_last_err():
 @cmd(name='import')
 def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
     import importlib
+    import sys
     importlib.import_module(m)
+    root, _, _ = m.partition('.')
+    Env[root] = sys.modules[m]

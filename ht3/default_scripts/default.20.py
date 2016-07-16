@@ -222,6 +222,7 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
 
     if not ht3.scripts.check_all_compilable():
         return
+
     if CHECK.frontend('ht3.hotkey'):
         ht3.hotkey.disable_all_hotkeys() # let hotkeys and old functions be deleted
         l = list(ht3.hotkey.HotKey.HOTKEYS.values())

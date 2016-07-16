@@ -388,7 +388,49 @@ class ShellArgParser(BaseArgParser):
             return "\n".join(s)
 
 
+class GetOptArgParser(BaseArgParser):
+    """Takes "getopt" arguments"""
+    def __init__(self, opts):
+        self.opts = opts
+
+    def complete(self, string):
+        if not string or string[-1] == ' ':
+            for o in self.opts:
+                if o != ':':
+                    yield string+'-'+o
+        if string[-1] == '-' and (len(string) == 1 or string[-2] == ' '):
+            for o in self.opts:
+                if o != ':':
+                    yield string + o
+
+    def convert(self, string):
+        args = shlex.split(string)
+        optlist, args = getopt.gnu_getopt(args, self.opts)
+        kwargs = {}
+        for k, v in optlist:
+            k = k[1:]
+            if v == '':
+                # opts a:b, args -a '' -a '' will give a:2 but who would do such a thing
+                if k in kwargs:
+                    v = kwargs[k] + 1
+                else:
+                    v = 1
+            else:
+                if k in kwargs:
+                    raise ValueError("option -%s occured multiple times" % k)
+            kwargs[k] = v
+
+        return args, kwargs
+
+    def describe_params(self):
+        return "GetOpt Args: "+self.opts
+
 def ArgParser(function, typ='auto'):
+
+    if isinstance(typ, str) and typ.startswith(':'):
+        return GetOptArgParser(typ[1:])
+
+
     sig = inspect.signature(function)
     param_info = []
     sig_params = iter(sig.parameters.items())
@@ -435,6 +477,12 @@ def ArgParser(function, typ='auto'):
             typ=_get_param(sig_param.annotation, multiple))
         param_info.append(pi)
 
+
+    if isinstance(typ, BaseArgParser):
+        return typ
+    if isinstance(typ, type):
+        raise NotImplementedError("No convention for passing params yet")
+
     if typ == 'auto':
         if len(param_info) == 1 and not param_info[0].multiple:
             return SingleArgParser(param_info[0])
@@ -457,9 +505,5 @@ def ArgParser(function, typ='auto'):
         if all(i.positional or i.optional for i in param_info):
             return ShellArgParser(param_info)
         raise TypeError("There are required non-positional paramertes", param_info)
-
-    #if all(i.keyword or i.optional for i in param_info):
-    #    return GetOptArgParser()
-    # TODO
 
     raise TypeError("No matching argument parser", param_info)
