@@ -19,3 +19,16 @@ def complete_executable_with_args(s):
     for c in compl:
         yield prefix + c
 
+
+
+
+@COMMAND_NOT_FOUND_HOOK.register
+def _executable_command_h(s):
+    import shutil
+    try:
+        parts = shlex.split(s)
+    except ValueError:
+        pass
+    else:
+        if shutil.which(parts[0]):
+            return _procio, s

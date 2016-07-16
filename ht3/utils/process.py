@@ -12,6 +12,11 @@ from ht3.env import Env
 from .processwatch import watch
 from ht3.check import CHECK
 
+import ht3.hook
+
+SUBPROCESS_SPAWN_HOOK = ht3.hook.Hook()
+SUBPROCESS_FINISH_HOOK = ht3.hook.Hook()
+
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
@@ -25,8 +30,8 @@ def execute(*args, shell=False, is_split=True, **kwargs):
         args = args[0]
     p = subprocess.Popen(args, shell=shell, **kwargs)
     p.shell = shell
-    Env.log_subprocess(p)
-    watch(p, lambda p: Env.log_subprocess_finished(p))
+    SUBPROCESS_SPAWN_HOOK(p)
+    watch(p, SUBPROCESS_FINISH_HOOK)
     return p
 
 def execute_disconnected(*args, **kwargs):

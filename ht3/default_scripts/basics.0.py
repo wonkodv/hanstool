@@ -7,20 +7,11 @@ from ht3.env import Env
 
 import ht3
 
-from  ht3.command import RESULT_HISTORY as __
-
 from ht3.check import CHECK
 
 from ht3 import args
 
-from ht3.command import cmd
-from ht3.command import COMMANDS
-from ht3.command import run_command
 
-from ht3.lib import evaluate_py_expression
-from ht3.lib import execute_py_expression
-from ht3.lib import start_thread
-from ht3.lib import threaded
 
 from time import sleep
 from os.path import expanduser
@@ -28,10 +19,12 @@ from pathlib import Path
 
 from ht3.check import CHECK
 
+from ht3.command import *
+from ht3.lib import *
+
 from ht3.utils.fake_input import *
 from ht3.utils.process import *
 from ht3.utils.helpers import *
-from ht3.utils.log import *
 from ht3.utils.dialog import *
 
 from ht3.complete import *
@@ -40,7 +33,7 @@ if CHECK.os.windows:
     from ht3.utils.windows import *
 
 @run
-def _import():
+def _import_frontent_environ():
     import importlib
     excludes = ['start', 'loop', 'stop']
     for f in ht3.lib.FRONTENDS:
@@ -61,19 +54,30 @@ def _import():
     global PATH
     PATH = [Path(p) for p in os.get_exec_path()]
 
-def error_hook(e):
-    global _LAST_ERROR
-    _LAST_ERROR = e
-    log_error(e)
-
-def command_not_found_hook(s):
-    """ Try to evaluate as expression and return the result,
-        if that fails, execute as statements """
+@COMMAND_NOT_FOUND_HOOK.register
+def _python_command_h(s):
     try:
-        return evaluate_py_expression(s)
+        c = compile(s, '<input>', 'eval')
+        return evaluate_py_expression, s
     except SyntaxError:
         pass
-    execute_py_expression(s)
+    try:
+        c = compile(s, '<input>', 'exec')
+        return execute_py_expression, s
+    except SyntaxError:
+        pass
+
+__=[]
+_=None
+
+@COMMAND_RESULT_HOOK.register
+def _command_results(result, **kwargs):
+    global __
+    global _
+    __.append(result)
+    if result is not None:
+        _ = result
+
 
 def general_completion(string):
     """General completion.

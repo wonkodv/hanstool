@@ -14,8 +14,8 @@ import tkinter as tk
 import traceback
 
 from . import lib
+from . import command
 from .env import Env
-from .command import run_command
 from .check import CHECK
 
 GUI = None
@@ -27,16 +27,6 @@ __all__ = (
     'cmd_win_to_front',
     'gui_do_on_start',
     'help',
-    'log',
-    'log_command',
-    'log_command_finished',
-    'log_error',
-    'log_subprocess',
-    'log_subprocess_finished',
-    'log_thread',
-    'log_thread_finished',
-    'log_win_to_front',
-    'show',
 )
 
 class UserInterface():
@@ -66,10 +56,10 @@ class UserInterface():
         if string:
             self.cmd_win.set_state("Working")
             try:
-                run_command(string)
+                command.run_command(string)
             except Exception as e:
                 self.cmd_win.set_state("Error")
-                Env.error_hook(e)
+                lib.EXCEPTION_HOOK(e)
                 return False
             else:
                 self.cmd_win.set_state("Waiting")
@@ -314,66 +304,67 @@ class UserInterface():
             self.window.withdraw()
             self.ui.cmd_win.to_front()
 
-        def log(self, msg, current_command=None, frontend=None):
-            assert isinstance(msg, str)
+        def log(self, o):
+            if isinstance(o, str):
+                msg = o
+            elif isinstance(o, bool):
+                msg = str(o)
+            elif isinstance(o, int):
+                msg = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
+            elif inspect.isfunction(o):
+                s, l = inspect.getsourcelines(o)
+                msg = "".join(
+                    "{0:>6d} {1}".format(n,s)
+                        for (n,s) in zip(itertools.count(l),s))
+            else:
+                msg = pprint.pformat(o)
+
             self.text.insert('end', msg+'\n')
             self.text.yview('end')
 
 
-        def log_show(self, o, current_command=None, frontend=None):
-            if isinstance(o, str):
-                pass
-            elif isinstance(o, bool):
-                o = str(o)
-            elif isinstance(o, int):
-                o = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
-            elif inspect.isfunction(o):
-                s, l = inspect.getsourcelines(o)
-                o = "".join("{0:>6d} {1}".format(n,s) for (n,s) in zip(itertools.count(l),s))
-            else:
-                o = pprint.pformat(o)
+        def log_show(self, o):
             self.log(o)
             self.to_front()
 
-        def log_command(self, cmd, current_command=None, frontend=None):
-            i, c, p = current_command
-            self.log("Command %d from %s: %s" % (i, frontend, cmd))
+        def log_command(self, string, **k):
+            self.log("Command: "+ string)
 
-        def log_command_finished(self, result, current_command=None, frontend=None):
+        def log_command_finished(self, result, **k):
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
-            i, c, p = current_command
-            self.log("Result %d: %s" % (i, pprint.pformat(result)))
+            self.log("Result: "+ str(result))
 
-        def log_error(self, e, current_command=None, frontend=None):
+        def log_error(self, exception, **k):
+            e=exception
             t = type(e)
             tb = e.__traceback__
             self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
-        def log_subprocess(self, p, current_command=None, frontend=None):
-            self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
-
-        def log_subprocess_finished(self, p, current_command=None, frontend=None):
-            a = p.args
-            if not isinstance(a, str):
-                a = a[0]
-            a = pathlib.Path(a)
-            a = a.with_suffix('')
-            a = a.name
-            self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
-            if p.returncode > 0:
-                if CHECK.os.win:
-                    return # return codes on windows don't make any sense
-                self.to_front()
-
-        def log_thread(self, t, current_command=None, frontend=None):
-            self.log("Spawned thread %d: %s" % (t.ident, t.name))
-
-        def log_thread_finished(self, result, current_command=None, frontend=None):
-            i, c, p = current_command
-            self.log("ThreadResult %d: %r" % (i, result))
+        #def log_subprocess(self, p, current_command=None, frontend=None):
+        #    self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
+        #
+        #def log_subprocess_finished(self, p, current_command=None, frontend=None):
+        #    a = p.args
+        #    if not isinstance(a, str):
+        #        a = a[0]
+        #    a = pathlib.Path(a)
+        #    a = a.with_suffix('')
+        #    a = a.name
+        #    self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
+        #    if p.returncode > 0:
+        #        if CHECK.os.win:
+        #            return # return codes on windows don't make any sense
+        #        self.to_front()
+        #
+        #def log_thread(self, t, current_command=None, frontend=None):
+        #    self.log("Spawned thread %d: %s" % (t.ident, t.name))
+        #
+        #def log_thread_finished(self, result, current_command=None, frontend=None):
+        #    i, c, p = current_command
+        #    self.log("ThreadResult %d: %r" % (i, result))
 
 
 # Frontend API
@@ -405,57 +396,39 @@ def stop():
         GUI.close_soon()
 
 def _reptor_tk_ex(self, typ, val, tb):
-    Env.error_hook(val)
-
+    lib.EXCEPTION_HOOK(val)
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
 #logging
 
-def _do_log(m, *args):
-    tls = lib.THREAD_LOCAL
-    cc = getattr(tls,'command',None)
-    cf = getattr(tls,'frontend',None)
-    if GUI:
-        l = getattr(GUI.log_win, m)
-        l(*args, current_command=cc, frontend=cf)
-    else:
-        _stored_log.append( [ m, args, { 'current_command': cc, 'frontend': cf } ])
+def _log_proxy(topic):
+    def forward(*args, **kwargs):
+        #tls = lib.THREAD_LOCAL
+        #cc = getattr(tls,'command',None)
+        #cf = getattr(tls,'frontend',None)
+        #kwargs['current_command'] = cc
+        #kwargs['frontend'] = cf
+        if GUI:
+            l = getattr(GUI.log_win, topic)
+            l(*args, **kwargs)
+        else:
+            _stored_log.append( [ topic, args, kwargs ])
+    return forward
 
-def show(o):
-    _do_log('log_show', o)
+lib.ALERT_HOOK.register(_log_proxy('log_show'))
+lib.DEBUG_HOOK.register(_log_proxy('log'))
+lib.EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
-def log_command(cmd):
-    _do_log('log_command', cmd)
+command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))
+command.COMMAND_RESULT_HOOK.register(_log_proxy('log_command_finished'))
+command.COMMAND_EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
-def log_command_finished(result):
-    _do_log('log_command_finished', result)
-
-def log_error(e):
-    _do_log('log_error', e)
-    if  not GUI:
-        from ht3.utils.log import log_error
-        log_error(e)
-
-def log(s):
-    _do_log('log', s)
-
-
-def log_subprocess(p):
-    _do_log('log_subprocess', p)
-
-def log_subprocess_finished(p):
-    _do_log('log_subprocess_finished', p)
-
-def log_thread(t):
-    _do_log('log_thread', t)
-
-def log_thread_finished(result):
-    _do_log('log_thread_finished', result)
+#TODO subprocess Log
+#TODO Thread Log
 
 def help(obj):
     import pydoc
-    show(pydoc.plain(pydoc.render_doc(obj, title='Help on %s')))
-
+    (pydoc.plain(pydoc.render_doc(obj, title='Help on %s')))
 
 # Extended User API
 

@@ -32,8 +32,7 @@ def loop():
             try:
                 run_command(s)
             except Exception as e:
-                Env.error_hook(e)
-                pass
+                lib.EXCEPTION_HOOK(e)
 
 def stop():
     _evt.set()

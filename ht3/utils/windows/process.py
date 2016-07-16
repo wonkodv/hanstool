@@ -36,7 +36,6 @@ def execute(exe, *args, is_split=True, shell=False, **kwargs):
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
             kwargs['startupinfo'] = si
-            Env.log("kwargs %r" % kwargs)
 
     return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
 

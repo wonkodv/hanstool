@@ -52,9 +52,8 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_noarg(self):
-        com, sep, args = get_command("c1")
+        com, args = get_command("c1")
         assert com == self.c1
-        assert sep == ''
         assert args == ''
 
     @patch('ht3.command.COMMANDS', COMMANDS)
@@ -66,7 +65,6 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
-        com, sep, args = get_command("c1 arg")
+        com, args = get_command("c1 arg")
         assert com == self.c1
-        assert sep == ' '
         assert args == 'arg'

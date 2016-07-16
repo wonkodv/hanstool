@@ -54,6 +54,6 @@ def check_all_compilable():
         try:
             compile(c, str(path), "exec")
         except Exception as e:
-            Env.error_hook(e)
+            lib.EXCEPTION_HOOK(e)
             r = False
     return r

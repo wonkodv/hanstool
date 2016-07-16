@@ -1,11 +1,19 @@
-"""Module for loading frontends, scripts and miscelaneous functions"""
+"6F""Module for loading frontends, scripts and miscelaneous functions"""
 
 import sys
 import importlib
 import threading
 
+import ht3.hook
+
 from .env import Env
 from . import check
+
+
+EXCEPTION_HOOK = ht3.hook.Hook()
+DEBUG_HOOK = ht3.hook.Hook()
+ALERT_HOOK = ht3.hook.Hook()
+
 
 FRONTENDS = []
 FRONTEND_MODULES = []
@@ -52,12 +60,12 @@ def run_frontends():
         try:
             fe.loop()
         except Exception as e:
-            Env.error_hook(e)
+            EXCEPTION_HOOK(e)
         check.CHECK.frontends_running = False
         try:
             fe.stop()
         except Exception as e:
-            Env.error_hook(e)
+            EXCEPTION_HOOK(e)
         THREAD_LOCAL.frontend = None
     else:
         threads = []
@@ -71,7 +79,7 @@ def run_frontends():
             try:
                 fe.loop()
             except Exception as e:
-                Env.error_hook(e)
+                EXCEPTION_HOOK(e)
             finally:
                 evt.set()
         for fe in frontends:
@@ -89,7 +97,7 @@ def run_frontends():
                 try:
                     f.stop()
                 except Exception as e:
-                    Env.error_hook(e)
+                    EXCEPTION_HOOK(e)
 
             # wait for all frontends to finish.
             for t, f in threads:
@@ -128,9 +136,9 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if name is None:
         name = func.__name__
     if on_finish is None:
-        on_finish = Env.log_thread_finished
+        pass #on_finish = Env.log_thread_finished #TODO
     if on_exception is None:
-        on_exception = Env.error_hook
+        on_exception = EXCEPTION_HOOK
     if args is None:
         args=tuple()
     if kwargs is None:

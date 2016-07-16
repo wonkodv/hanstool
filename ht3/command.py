@@ -4,16 +4,22 @@ import inspect
 import traceback
 
 import ht3.args
+import ht3.hook
 from .env import Env
 from .lib import THREAD_LOCAL, start_thread
 
 COMMANDS = {}
-RESULT_HISTORY = []
-_DEFAULT = object()
 
+COMMAND_RUN_HOOK = ht3.hook.Hook()
+COMMAND_RESULT_HOOK = ht3.hook.Hook()
+COMMAND_EXCEPTION_HOOK = ht3.hook.Hook()
+COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook()
+
+_DEFAULT = object()
 _COMMAND_RUN_ID = 0
 
-
+class NoCommandError(Exception):
+    pass
 
 def register_command(func, *, origin_stacked, name=_DEFAULT,
                      async=False, args='auto',
@@ -100,52 +106,45 @@ def parse_command(string):
 
 def get_command(string):
     cmd, sep, args = parse_command(string)
-    return COMMANDS[cmd], sep, args
+    return COMMANDS[cmd], args
 
-def run_command_func(c, *args, **kwargs):
+def run_command_func(string, func, args=''):
     global _COMMAND_RUN_ID
     _COMMAND_RUN_ID += 1
-
     parent = THREAD_LOCAL.command
-    THREAD_LOCAL.command = [_COMMAND_RUN_ID, c.name, parent]
-
-    Env.log_command(c.name)
-    r = c(*args, **kwargs);
-    Env.log_command_finished(r)
-
-    _, _, p = THREAD_LOCAL.command
-    THREAD_LOCAL.command = p
-
-    RESULT_HISTORY.append(r)
-    if r is not None:
-        Env['_'] = r
-    return r
+    THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, func, args, parent]
+    COMMAND_RUN_HOOK(
+        id=_COMMAND_RUN_ID,
+        string=string,
+        function=func,
+        args=args)
+    try:
+        result = func(args)
+    except Exception as e:
+        COMMAND_EXCEPTION_HOOK(
+            id=_COMMAND_RUN_ID,
+            string=string,
+            function=func,
+            args=args,
+            exception=e)
+    else:
+        COMMAND_RESULT_HOOK(
+            id=_COMMAND_RUN_ID,
+            string=string,
+            function=func,
+            args=args,
+            result=result)
+        return result
+    finally:
+        THREAD_LOCAL.command = parent
 
 def run_command(string):
-    global _COMMAND_RUN_ID
-    _COMMAND_RUN_ID += 1
-
-    parent = THREAD_LOCAL.command
-    THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, parent]
-
-    Env.log_command(string)
-    cmd, _, arg = parse_command(string)
     try:
-        cmd = COMMANDS[cmd]
+        cmd, args = get_command(string)
     except KeyError:
         try:
-            r = Env.command_not_found_hook(string)
-        except Exception as e:
-            # prevent this exception from being chained to the KeyError
-            raise e from None
-    else:
-        r = cmd(arg)
-    Env.log_command_finished(r)
+            cmd, args = COMMAND_NOT_FOUND_HOOK(string)
+        except ht3.hook.NoResult:
+            raise NoCommandError(string) from None
 
-    _, _, p = THREAD_LOCAL.command
-    THREAD_LOCAL.command = p
-
-    RESULT_HISTORY.append(r)
-    if r is not None:
-        Env['_'] = r
-    return r
+    return run_command_func(string, cmd, args)

@@ -8,7 +8,7 @@ def debug(what:CommandOrExpression):
     """ Debug a Command """
     import pdb, ht3.command, inspect
     try:
-        cmd, _, args = ht3.command.get_command(what)
+        cmd, args = ht3.command.get_command(what)
         pdb.set_trace()
         return cmd(args)
     except KeyError:
@@ -20,6 +20,14 @@ def py():
     """ start a python repl """
     import sys
     return execute_auto(sys.executable)
+
+
+@EXCEPTION_HOOK.register
+@COMMAND_EXCEPTION_HOOK.register
+def _last_exception_h(exception, **kwargs):
+    global _LAST_ERROR
+    _LAST_ERROR = exception
+
 
 @cmd
 def debug_last_err():

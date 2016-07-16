@@ -12,10 +12,6 @@ def test(silent:args.Bool=False):
     if not silent:
         print ("Test OK")
 
-    @cmd
-    def test(*a):
-        raise NotImplementedError("Don't run test twice")
-
     return "Integration Tests ran"
 
 #### Assertions
@@ -53,7 +49,7 @@ def decorator_args_dummy():
     pass
 
 def test_decorator():
-    # decorator decorates correctly
+    # decorative decorator decorated correctly
     assert COMMANDS['decorator_noargs_dummy'].function is decorator_noargs_dummy
     assert COMMANDS['decorator_args_dummy'].function is decorator_args_dummy
 
@@ -62,24 +58,41 @@ def test_decorator():
 
 ARG_TEST = []
 @cmd
-def argtest(*args):
+def shellargtest(*args):
     ARG_TEST.append(args)
 
+@cmd
+def autoargtest(i:int, b:bool, *arr:args.Union(int,float,bool,str)):
+    ARG_TEST.append(i)
+    ARG_TEST.append(b)
+    ARG_TEST.append(arr)
+
 def test_argument_parsing():
-    run_command("""argtest 1 "2" '3'""")
-    run_command("""argtest""")
-    run_command("""argtest "a b c d" """)
+    ARG_TEST.clear()
+    run_command("""shellargtest 1 "2" '3'""")
+    run_command("""shellargtest""")
+    run_command("""shellargtest "a b c d" """)
     assert ARG_TEST == [('1','2','3'), (), ('a b c d',)]
+    ARG_TEST.clear()
+    run_command("""autoargtest 1 Yes 0 1.1 Yes No Yes Hans 1""")
+    assert ARG_TEST[0] == 1
+    assert ARG_TEST[1] is True
+    assert ARG_TEST[2] == (0, 1.1, True, False, True, 'Hans', 1)
+
+
 
 
 #### Name
 
-NAME_TEST=False
 @cmd(name='$IsValid!')
 def name_test():
     global NAME_TEST
     NAME_TEST=True
 
 def test_names():
+    global NAME_TEST
+    NAME_TEST=False
     run_command('$IsValid!')
     assert NAME_TEST
+
+
