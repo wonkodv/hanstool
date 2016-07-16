@@ -12,6 +12,8 @@ import shlex
 
 _DEFAULT = object()
 
+class ArgError(Exception):
+    pass
 
 class Param:
     def __init__(self, convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
