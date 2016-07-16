@@ -39,9 +39,6 @@ def vb(box:_complete_virtualbox=None):
     if not box:
         execute_disconnected("virtualbox")
     else:
-        import difflib
-        boxes = _vb_get_vms()
-        box = difflib.get_close_matches(box, boxes, 1, 0.1)[0]
         execute_disconnected("vboxmanage", "startvm", box)
 
 @cmd

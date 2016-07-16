@@ -11,15 +11,15 @@ def complete_executable_with_args(s):
 
     exe = parts[0]
 
+    if len(parts) == 1:
+        return complete_executable(last)
+
     if exe in []:
         pass # TODO: complete for exe
     else:
         compl = complete_path(last)
 
-    for c in compl:
-        yield prefix + c
-
-
+    return (prefix + c for c in compl)
 
 
 @COMMAND_NOT_FOUND_HOOK.register

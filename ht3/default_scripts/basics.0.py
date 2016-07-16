@@ -80,32 +80,13 @@ def _command_results(result, **kwargs):
 
 
 def general_completion(string):
-    """General completion.
-
-    Complete command-strings that the user enters, including stuff that the
-    command_not_found_hook will get. Specifically, complete commands but if
-    none matched complete python."""
-
     p_space = string.find(' ')
-    p_paren = string.find('(')
 
     if p_space == -1:
-        if p_paren == -1:
             #ABC
-            return ht3.complete.complete_commands(string)
-        else:
-            #AB(C
-            return ht3.complete.complete_py(string)
+        return ht3.complete.complete_commands(string)
     else:
-        if p_paren == -1:
-            #AB C
-            return ht3.complete.complete_command_args(string)
-        else:
-            if p_paren < p_space:
-                #ab( c)
-                return ht3.complete.complete_py(string)
-            else:
-                #a b(c)
-                return ht3.complete.complete_command_args(string)
+        #a b(c)
+        return ht3.complete.complete_command_args(string)
 
 CommandOrExpression = args.Param(complete=general_completion, doc="CommandOrExpression")

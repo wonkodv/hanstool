@@ -4,7 +4,7 @@ def list_env():
     Env.show("\n".join(sorted(Env.dict.keys(), key=lambda k:k.lower())))
 
 @cmd
-def debug(what:CommandOrExpression):
+def debug(what:args.Union(args.Command, args.Python)):
     """ Debug a Command """
     import pdb, ht3.command, inspect
     try:

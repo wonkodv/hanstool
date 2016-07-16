@@ -27,7 +27,7 @@ def execute(*args, shell=False, is_split=True, **kwargs):
     if not is_split:
         if len(args) != 1:
             raise TypeError("Pass only 1 argument if not is_split", args)
-        args = args[0]
+        args = shlex.split(args[0])
     p = subprocess.Popen(args, shell=shell, **kwargs)
     p.shell = shell
     SUBPROCESS_SPAWN_HOOK(p)
