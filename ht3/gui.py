@@ -41,16 +41,19 @@ class UserInterface():
         self.root.after(100, self.cmd_win.to_front)
         self.root.after(400, self.cmd_win.to_front)
 
+    def schedule(self, time, cb):
+        self.root.after(time, cb)
+
     def loop(self):
         self.closed_evt = threading.Event()
-        self.root.after(100, self.check_closed)
+        self.root.after(500, self.check_closed)
         self.root.mainloop()
 
     def check_closed(self):
         if self.closed_evt.is_set():
             self.root.quit()
         else:
-            self.root.after(100, self.check_closed)
+            self.root.after(500, self.check_closed)
 
     def close_soon(self):
         self.closed_evt.set()
@@ -348,7 +351,7 @@ class UserInterface():
 
         def log_subprocess(self, p):
             self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
-        
+
         def log_subprocess_finished(self, p):
             a = p.args
             if not isinstance(a, str):
@@ -382,15 +385,19 @@ def loop():
     try:
         GUI = UserInterface()
 
-        for m, a, k in _stored_log:
-            l = getattr(GUI.log_win, m)
-            l(*a, **k)
-        _stored_log.clear()
+        def do_after_startup():
+            for m, a, k in _stored_log:
+                l = getattr(GUI.log_win, m)
+                l(*a, **k)
+            _stored_log.clear()
 
-        for c in _do_on_start:
-            c()
+            for c in _do_on_start:
+                c()
+        GUI.schedule(300, do_after_startup)
 
         GUI.loop()
+
+
     finally:
         GUI = None
 
@@ -406,11 +413,6 @@ tk.Tk.report_callback_exception = _reptor_tk_ex
 
 def _log_proxy(topic):
     def forward(*args, **kwargs):
-        #tls = lib.THREAD_LOCAL
-        #cc = getattr(tls,'command',None)
-        #cf = getattr(tls,'frontend',None)
-        #kwargs['current_command'] = cc
-        #kwargs['frontend'] = cf
         if GUI:
             l = getattr(GUI.log_win, topic)
             l(*args, **kwargs)

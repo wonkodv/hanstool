@@ -50,13 +50,17 @@ if CHECK.os.win:
     if CHECK.frontend('ht3.gui'):
         import ht3.gui
         @ht3.gui.do_on_start
-        def _place_cmd_win_over_taskbar_toolbar():
+        @Env
+        @cmd
+        def PlaceOverTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             h = GetTaskBarHandle()
             if h:
                 r = GetWindowRect(h)
                 ht3.gui.cmd_win_set_rect(*r)
+                Env.log("Set window Rect" + repr(r))
 
+        @Env
         @cmd
         def DockInTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""

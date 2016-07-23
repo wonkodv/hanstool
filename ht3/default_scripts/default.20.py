@@ -276,6 +276,7 @@ if CHECK.frontend('ht3.gui'):
             """ Show the input and, if executed twice within short time, show log win """
             global HT_TO_FRONT_TIME
             if time.monotonic() - HT_TO_FRONT_TIME > 0.25:
+                Env.PlaceOverTaskbar()
                 ht3.gui.cmd_win_to_front()
                 HT_TO_FRONT_TIME = time.monotonic()
             else:
