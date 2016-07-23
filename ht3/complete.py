@@ -1,12 +1,14 @@
 """Completion od commands and python expressions."""
+
+from .env import Env
 from collections import ChainMap
+import collections.abc
 import ht3.command
-import re
-import pathlib
+import inspect
 import os
 import os.path
-import collections.abc
-from .env import Env
+import pathlib
+import re
 
 __all__ = (
     'filter_completions_i',
@@ -80,22 +82,40 @@ def complete_command_with_args(string):
     else:
         return complete_command_args(string)
 
-def _get_attributes_rec(obj, privates):
+def _get_attributes_rec(obj):
     values = set()
-    for v in sorted(dir(obj)):
-        if privates or v[0] != '_':
-            values.add(v)
-            yield v
 
-    if hasattr(obj, '__class__'):
-        c = obj.__class__
-        while c != object:
-            c = c.__base__
-            for v in sorted(dir(c)):
-                if v not in values:
-                    if privates or v[0] != '_':
-                        values.add(v)
-                        yield v
+    try:
+        for a in sorted(obj.__all__):
+            if a not in values:
+                yield a
+                values.add(a)
+    except AttributeError:
+        pass
+
+    try:
+        for a in sorted(obj.__dict__):
+            if a not in values:
+                yield a
+                values.add(a)
+    except AttributeError:
+        pass
+
+    try:
+        if not isinstance(obj, type):
+            for c in type(obj).__mro__:
+                for a in _get_attributes_rec(c):
+                    if a not in values:
+                        yield a
+                        values.add(a)
+    except AttributeError:
+        pass
+
+    for v in sorted(dir(obj), key=lambda s: (1 if s and s[0]!='_' else 2, s)):
+        if a not in values:
+            yield a
+            values.add(a)
+
 
 _COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
 
@@ -105,7 +125,7 @@ def complete_py(string):
 
     if len(parts) == 1:
         pl = parts[0]
-        values = list(SCOPE)
+        values = sorted(SCOPE)
     else:
         p0 = parts[0]
         pl = parts[-1]
@@ -117,12 +137,12 @@ def complete_py(string):
         except (KeyError, AttributeError):
             return [] # when the string contains illegal keys/attributes
 
-        values = _get_attributes_rec(val, pl.find('_') == 0)
-
+        values = _get_attributes_rec(val)
 
     prefix = string[:len(string)-len(pl)]
+
     values = filter_completions(pl, values)
-    values = sorted(values)
+    values = sorted(values, key=lambda s:s and s[0] == '_')
     values = (prefix + x for x in values)
 
     return values

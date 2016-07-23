@@ -1,1 +1,3 @@
-OVERWRITE = [0]
+import Env
+
+Env.SCRIPT_ORDER.append('a')

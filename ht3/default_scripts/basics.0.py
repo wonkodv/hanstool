@@ -1,23 +1,21 @@
-"""Populate Env.
+"""Useful bindings that are imported by other scripts
 
-This script puts some useful functions into the Env.
+head other scripts with: from Env import *
 """
 
-from ht3.env import Env
 
 import ht3
+
+# import b real path in case it was not included before (can not happen ?)
+from ht3.env import Env
 
 from ht3.check import CHECK
 
 from ht3 import args
 
-
-
 from time import sleep
 from os.path import expanduser
 from pathlib import Path
-
-from ht3.check import CHECK
 
 from ht3.command import *
 from ht3.lib import *
@@ -32,61 +30,5 @@ from ht3.complete import *
 if CHECK.os.windows:
     from ht3.utils.windows import *
 
-@run
-def _import_frontent_environ():
-    import importlib
-    excludes = ['start', 'loop', 'stop']
-    for f in ht3.lib.FRONTENDS:
-        m = importlib.import_module(f)
-        if hasattr(m, '__all__'):
-            for k in m.__all__:
-                Env[k] = getattr(m, k)
-        else:
-            for k in set(dir(m)):
-                if k[0] != '_' and k not in excludes:
-                    Env[k] = getattr(m, k)
-
-    import os
-    for k, v in os.environ.items():
-        if k[:4] == 'HT3_':
-            Env[k[4:]] = v
-
-    global PATH
-    PATH = [Path(p) for p in os.get_exec_path()]
-
-@COMMAND_NOT_FOUND_HOOK.register
-def _python_command_h(s):
-    try:
-        c = compile(s, '<input>', 'eval')
-        return evaluate_py_expression, s
-    except SyntaxError:
-        pass
-    try:
-        c = compile(s, '<input>', 'exec')
-        return execute_py_expression, s
-    except SyntaxError:
-        pass
-
-__=[]
-_=None
-
-@COMMAND_RESULT_HOOK.register
-def _command_results(result, **kwargs):
-    global __
-    global _
-    __.append(result)
-    if result is not None:
-        _ = result
-
-
-def general_completion(string):
-    p_space = string.find(' ')
-
-    if p_space == -1:
-            #ABC
-        return ht3.complete.complete_commands(string)
-    else:
-        #a b(c)
-        return ht3.complete.complete_command_args(string)
-
-CommandOrExpression = args.Param(complete=general_completion, doc="CommandOrExpression")
+# Put all above bindings into Env
+Env.dict.update(vars())

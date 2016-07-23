@@ -7,6 +7,7 @@ import threading
 
 from .env import Env
 from .command import run_command
+from .complete import complete_command_with_args
 
 import ht3.lib
 
@@ -80,7 +81,7 @@ def _setup_readline():
             try:
                 # rl consumes entire list, so no lazy evaluation possible
                 completion_cache.clear()
-                completion_cache.extend(Env.general_completion(text))
+                completion_cache.extend(complete_command_with_args(text))
             except Exception as e:
                 ht3.lib.EXCEPTION_HOOK(e) # readline ignores all exceptions
         return completion_cache[n]
@@ -89,11 +90,5 @@ def _setup_readline():
     readline.parse_and_bind('tab: complete')
 
 _do_on_start=[]
-def cli_do_on_start(f):
+def do_on_start(f):
     _do_on_start.append(f)
-
-
-help = help
-CLI_PROMPT = 'ht3> '
-
-__all__ = ('help', 'CLI_PROMPT', 'cli_do_on_start')

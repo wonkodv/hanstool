@@ -1,8 +1,14 @@
 """Soome example commands and configuration."""
 
+from Env import *
+
+import subprocess
+
+
 if CHECK.frontend('ht3.cli'):
-    @cli_do_on_start
-    def _():
+    import ht3.cli
+    @ht3.cli.do_on_start
+    def import_readline():
         try:
             import readline
             readline.parse_and_bind('set editing-mode vi')
@@ -20,34 +26,20 @@ def timer(t:float=3, event:str="Done"):
     option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
 
-def _complete_virtualbox(s=None):
+def complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
-    import subprocess
-    p = subprocess.Popen(
-        ["vboxmanage", "list", "vms"],
-        universal_newlines=True,
-        stdout=subprocess.PIPE)
-    output, _ = p.communicate()
-    for s in sorted(output.split('\n')):
-        x = s.split()
+    vms = procio("vboxmanage list vms", shell=False, is_split=False)
+
+    # "debian" {fbc948a5-7b8b-489c-88b0-7f5eaceb150e}
+    for s in sorted(vms.split('\n')):
+        x = s.split('"')
         if x:
-            yield x[0][1:-1]
+            yield x[1]
 
 @cmd
-def vb(box:_complete_virtualbox=None):
+def vb(box:complete_virtualbox=None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
         execute_disconnected("virtualbox")
     else:
         execute_disconnected("vboxmanage", "startvm", box)
-
-@cmd
-def history_stats(n:int=10):
-    with open(GUI_HISTORY) as f:
-        show(
-            sorted((b,a) for a,b in
-                collections.Counter(
-                    ht3.command.parse_command(s.strip())[0] for s in f
-                ).items()
-            )[-n:]
-        )

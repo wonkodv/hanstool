@@ -1,3 +1,15 @@
+from Env import *
+
+import ht3.command
+import importlib
+import inspect
+import inspect
+import os.path
+import pdb
+import sys
+import sys
+import tempfile
+
 @cmd
 def list_env():
     """ List all commands """
@@ -6,34 +18,24 @@ def list_env():
 @cmd
 def debug(what:args.Union(args.Command, args.Python)):
     """ Debug a Command """
-    import pdb, ht3.command, inspect
-    try:
-        cmd, args = ht3.command.get_command(what)
-        pdb.set_trace()
-        return cmd(args)
-    except KeyError:
-        x = pdb.runeval(what, Env.dict)
-        return x
+    pdb.runcall(ht3.command.run_command_func, what)
 
 @cmd
 def py():
     """ start a python repl """
-    import sys
     return execute_auto(sys.executable)
 
 
+EXCEPTIONS = []
+
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
-def _last_exception_h(exception, **kwargs):
-    global _LAST_ERROR
-    _LAST_ERROR = exception
-
+def add_exception(exception, **kwargs):
+    EXCEPTIONS.append(exception)
 
 @cmd
-def debug_last_err():
-    import inspect
-    import os.path
-    e = _LAST_ERROR
+def debug_err(i:int=-1):
+    e = EXCEPTIONS[-1]
     t = e.__traceback__
     s = ""
     while(t.tb_next):
@@ -51,7 +53,6 @@ def debug_last_err():
     if isinstance(e, SyntaxError):
         s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.message}".format(e)
     show(s)
-    import tempfile
     with tempfile.NamedTemporaryFile('wt', delete=False) as f:
         f.write(s)
         f.flush()
@@ -67,8 +68,5 @@ def debug_last_err():
 
 @cmd(name='import')
 def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
-    import importlib
-    import sys
-    importlib.import_module(m)
     root, _, _ = m.partition('.')
     Env[root] = sys.modules[m]

@@ -106,7 +106,10 @@ def parse_command(string):
 
 def get_command(string):
     cmd, sep, args = parse_command(string)
-    return COMMANDS[cmd], args
+    try:
+        return COMMANDS[cmd], args
+    except KeyError:
+        raise NoCommandError(string) from None
 
 def run_command_func(string, func, args=''):
     global _COMMAND_RUN_ID
@@ -141,7 +144,7 @@ def run_command_func(string, func, args=''):
 def run_command(string):
     try:
         cmd, args = get_command(string)
-    except KeyError:
+    except NoCommandError:
         try:
             cmd, args = COMMAND_NOT_FOUND_HOOK(string)
         except ht3.hook.NoResult:

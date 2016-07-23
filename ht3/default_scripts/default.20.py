@@ -1,5 +1,25 @@
 """The default commands that make the HT3 usable."""
 
+from Env import *
+
+from ht3.scripts import SCRIPTS
+
+import ht3.scripts
+
+import difflib
+import importlib
+import inspect
+import os
+import os.path
+import pathlib
+import re
+import shlex
+import shutil
+import sys
+import time
+
+
+
 @cmd(name='l')
 def list_commands():
     """ List all commands """
@@ -21,13 +41,7 @@ def _help(what:args.Union(args.Command, args.Python)):
         obj = evaluate_py_expression(what)
     help(obj)
 
-# Some Eval Python functions
-@cmd(name=';')
-def _execute_py_expression(s:args.Python):
-    execute_py_expression(s.lstrip())
-
 def _complete_fake(string):
-    import re
     parts = re.split('[^A-Za-z0-9]+', string)
     if len(parts) > 0:
         p = parts[-1]
@@ -52,6 +66,7 @@ def repeat_fake():
     global FAKE_TEXT
     fake(FAKE_TEXT)
 
+# Some Eval Python functions
 @cmd(name='=')
 def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
@@ -61,68 +76,60 @@ def _show_eval(s:args.Python=""):
     show(r)
     return None
 
+@cmd(name=';')
+def _execute_py_expression(s:args.Python):
+    execute_py_expression(s.lstrip())
+
+
+@COMMAND_NOT_FOUND_HOOK.register
+def _python_command_h(s):
+    try:
+        c = compile(s, '<input>', 'eval')
+        return (lambda s: exec(c, Env.dict)), s
+    except SyntaxError:
+        pass
+    try:
+        c = compile(s, '<input>', 'exec')
+        return (lambda s: exec(c, Env.dict)), s
+    except SyntaxError:
+        pass
+
+
 @cmd
 def exit():
-    import sys
     sys.exit(0)
 
 
-@cmd(name="$")
-def _procio(cmd:args.ExecutableWithArgs):
-    """Get Programm output."""
-    show(procio(cmd, shell=True, is_split=False))
+if 'EDITOR' in os.environ:
+    e = shlex.split(os.environ['EDITOR'])
+elif CHECK.os.win:
+    editors = [
+        "gvim",
+        r"C:\Program Files (x86)\Notepad++\notepad++.exe",
+        r"C:\Program Files\Notepad++\notepad++.exe",
+        "notepad"
+    ]
 
-@cmd(name="!")
-def _execute(cmd:args.ExecutableWithArgs):
-    """Execute a Program and wait for completion."""
-    p = execute(cmd, is_split=False)
-    p.wait()
-    return p
-
-@cmd(name="&")
-def _execute_bg(cmd:args.ExecutableWithArgs):
-    """Execute a Program and let it run in background."""
-    p = execute_disconnected(cmd, is_split=False)
-    return p
-
-
-def _get_the_editor():
-    import os
-    import os.path
-    import shutil
-
-    if 'EDITOR' in os.environ:
-        import shlex
-        e = shlex.split(os.environ['EDITOR'])
-    elif CHECK.os.win:
-        editors = [
-            "gvim",
-            r"C:\Program Files (x86)\Notepad++\notepad++.exe",
-            r"C:\Program Files\Notepad++\notepad++.exe"
-        ]
-
-        for e in editors:
-            if os.path.exists(e) or shutil.which(e):
-                e = [e]
-                break
-        else:
-            e = ['notepad.exe']
+    for e in editors:
+        if os.path.exists(e) or shutil.which(e):
+            e = [e]
+            break
     else:
-        if CHECK.frontend('ht3.cli'):
-            editors =['vim', 'nano', 'emacs']
-        else:
-            editors =['gvim']
-        for s in editors:
-            s = shutil.which(s)
-            if s:
-                e = [s]
-                break
-        else:
-            e = ['ed'] # haha
-    global EDITOR
-    EDITOR = tuple(e) # make unmodifiable
-_get_the_editor()
-del _get_the_editor
+        e = ['notepad.exe']
+else:
+    if CHECK.frontend('ht3.cli'):
+        editors =['vim', 'nano', 'emacs']
+    else:
+        editors =['gvim', 'gedit']
+    for s in editors:
+        s = shutil.which(s)
+        if s:
+            e = [s]
+            break
+    else:
+        e = ['ed'] # haha
+
+Env['EDITOR'] = tuple(e) # make unmodifiable
 
 @cmd
 def edit_file(file_name:Path, line:int=0):
@@ -149,7 +156,6 @@ def edit_command(c:args.Union(args.Command, args.Python)):
         f, l = COMMANDS[c].origin
     else:
         o = evaluate_py_expression(c)
-        import inspect
         l = 0
         f = None
         try:
@@ -169,7 +175,6 @@ def edit_command(c:args.Union(args.Command, args.Python)):
     p = edit_file(f, l)
 
 def _complete_script_names(s):
-    from ht3.scripts import SCRIPTS
     return reversed(list(filter_completions(s, (p.name for p in SCRIPTS))))
 
 @cmd(name="++")
@@ -185,10 +190,6 @@ def add_command(script:_complete_script_names, name=None, text=None):
         5. you should restart for the new command to be activated.
 
     """
-    from ht3.scripts import SCRIPTS
-    import pathlib
-    import difflib
-
     name_path = dict((p.name, p) for p in SCRIPTS)
 
     s = difflib.get_close_matches(script, name_path, 1, 0.5)
@@ -222,15 +223,9 @@ def add_command(script:_complete_script_names, name=None, text=None):
     p = edit_file(s, l)
     p.wait()
 
-import sys
 
 @cmd
 def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"])=None):
-    import ht3.env
-    import ht3.scripts
-    import importlib
-    import sys
-
     if not ht3.scripts.check_all_compilable():
         return
 
@@ -272,9 +267,6 @@ def restart(*more_args):
         programm using sys.executable, "-m ht3" and args, where args is all
         -f, -s and -r args, NOT -x.
     """
-    import os, sys
-    import ht3.scripts
-
     if not ht3.scripts.check_all_compilable():
         return
 
@@ -324,29 +316,32 @@ def restart(*more_args):
     os.execv(sys.executable, args)
 
 if CHECK.frontend('ht3.gui'):
-    _httofront_time=0
-    @cmd(attrs=dict(HotKey="F8"))
-    def httofront():
-        """ Show the input and, if executed twice within short time, show log win """
-        global _httofront_time
-        import time
-        if time.monotonic() - _httofront_time > 0.25:
-            ht3.gui.cmd_win_to_front()
-            _httofront_time = time.monotonic()
-        else:
-            ht3.gui.log_win_to_front()
+    import ht3.gui
+    ht3.gui.do_on_start(ht3.gui.cmd_win_stay_on_top)
 
-    @gui_do_on_start
-    def _():
-        ht3.gui.cmd_win_stay_on_top()
+    if CHECK.frontend('ht3.hotkey'):
+        HT_TO_FRONT_TIME=0
+        @cmd(attrs=dict(HotKey="F8"))
+        def httofront():
+            """ Show the input and, if executed twice within short time, show log win """
+            global HT_TO_FRONT_TIME
+            if time.monotonic() - HT_TO_FRONT_TIME > 0.25:
+                ht3.gui.cmd_win_to_front()
+                HT_TO_FRONT_TIME = time.monotonic()
+            else:
+                ht3.gui.log_win_to_front()
+
 
 if CHECK.frontend('ht3.hotkey'):
-    def _complete_hotkey(s):
+    import ht3.hotkey
+
+    def complete_hotkey(s):
         return sorted(hk.hotkey for hk in ht3.hotkey.HotKey.HOTKEYS.values())
-    @cmd(name="disable_hotkey")
-    def _disable_hotkey(hk:_complete_hotkey=None):
+
+    @cmd
+    def disable_hotkey(hk:complete_hotkey=None):
         if hk:
-            hk = get_hotkey(hk)
+            hk = ht3.hotkey.get_hotkey(hk)
             hk.unregister()
         else:
-            disable_all_hotkeys()
+            ht3.hotkey.disable_all_hotkeys()

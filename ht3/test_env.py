@@ -1,6 +1,6 @@
 import unittest
 
-from ht3.env import _Env_class
+from ht3.env import _Env_class, Env
 
 class EnvTest(unittest.TestCase):
     def test_is_empty(self):
@@ -56,3 +56,17 @@ class EnvTest(unittest.TestCase):
 
         assert 'key' not in e
         assert e['pkey'] == 2
+
+
+    def test_env_module(self):
+        Env['X'] = 42
+        Env['Y'] = 36
+
+        def _():
+            import Env
+            from Env import X
+            return X
+
+        assert _() == 42
+
+

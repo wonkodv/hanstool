@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, Mock
-from ht3.command import cmd, get_command
+from ht3.command import cmd, get_command, NoCommandError
 
 class TestCmd(unittest.TestCase):
     COMMANDS = {}
@@ -58,9 +58,9 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_empty_cmd(self):
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoCommandError):
             get_command("")
-        with self.assertRaises(KeyError):
+        with self.assertRaises(NoCommandError):
             get_command(" a")
 
     @patch('ht3.command.COMMANDS', COMMANDS)

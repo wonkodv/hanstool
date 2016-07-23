@@ -1,7 +1,10 @@
 """Various helper functions"""
+
 import textwrap
 import functools
 import shlex
+import inspect
+
 from ht3.lib import evaluate_py_expression
 from ht3.env import Env
 from ht3.command import register_command, COMMANDS
@@ -18,9 +21,11 @@ def cmd_func(name, func, *args, **kwargs):
         name=name,
         doc='executes\n'+" ".join(shlex.quote(x) for x in args),
         origin_stacked=3)
-    Env[name] = cmdf
+
+    # be careful, black magic ahead!
+    stack = inspect.stack()
+    g = stack[1][0].f_globals
+    g[name] = cmdf
 
 
-def run(f):
-    f()
-
+__all__  = 'cmd_func',

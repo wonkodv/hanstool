@@ -15,6 +15,8 @@ import traceback
 
 from . import lib
 from . import command
+import ht3.complete
+import ht3.utils.process
 from .env import Env
 from .check import CHECK
 
@@ -25,7 +27,7 @@ __all__ = (
     'cmd_win_set_rect',
     'cmd_win_stay_on_top',
     'cmd_win_to_front',
-    'gui_do_on_start',
+    'do_on_start',
     'help',
 )
 
@@ -180,7 +182,7 @@ class UserInterface():
             if self._completion_cache is None:
                 s = self.cmd.get()
                 self._completion_cache = []
-                c = Env.general_completion(s)
+                c = ht3.complete.complete_command_with_args(s)
                 self._completion_iter = iter(c)
                 self._completion_index = i
                 self._uncompleted_string = s
@@ -344,21 +346,21 @@ class UserInterface():
             self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
-        #def log_subprocess(self, p, current_command=None, frontend=None):
-        #    self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
-        #
-        #def log_subprocess_finished(self, p, current_command=None, frontend=None):
-        #    a = p.args
-        #    if not isinstance(a, str):
-        #        a = a[0]
-        #    a = pathlib.Path(a)
-        #    a = a.with_suffix('')
-        #    a = a.name
-        #    self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
-        #    if p.returncode > 0:
-        #        if CHECK.os.win:
-        #            return # return codes on windows don't make any sense
-        #        self.to_front()
+        def log_subprocess(self, p):
+            self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
+        
+        def log_subprocess_finished(self, p):
+            a = p.args
+            if not isinstance(a, str):
+                a = a[0]
+            a = pathlib.Path(a)
+            a = a.with_suffix('')
+            a = a.name
+            self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
+            if p.returncode > 0:
+                if CHECK.os.win:
+                    return # return codes on windows don't make any sense
+                self.to_front()
         #
         #def log_thread(self, t, current_command=None, frontend=None):
         #    self.log("Spawned thread %d: %s" % (t.ident, t.name))
@@ -424,7 +426,8 @@ command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))
 command.COMMAND_RESULT_HOOK.register(_log_proxy('log_command_finished'))
 command.COMMAND_EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
-#TODO subprocess Log
+ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(_log_proxy('log_subprocess_finished'))
+ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy('log_subprocess'))
 #TODO Thread Log
 
 def help(obj):
@@ -434,7 +437,7 @@ def help(obj):
 # Extended User API
 
 _do_on_start = []
-def gui_do_on_start(f):
+def do_on_start(f):
     assert callable(f)
     _do_on_start.append(f)
     return f

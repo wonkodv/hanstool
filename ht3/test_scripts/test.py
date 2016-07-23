@@ -1,5 +1,7 @@
 """A set of commands that test if scripts and commands work as expected."""
 
+from Env import *
+
 @cmd
 def test(silent:args.Bool=False):
 
@@ -28,14 +30,16 @@ def test_assertions_enabled():
 
 def test_script_order():
     # The scripts were ordered.
-    # high index after low index after no index alphabetical
-    #   overwritea.py
-    #   overwriteb.10.py
-    #   overwritec.py
+    # no index alphabetical after high index after low index
+    #   init.0.py
     #   overwrited.5.py
+    #   overwriteb.10.py
+    #   overwritea.py
+    #   overwritec.py
     #   test.py
     # And scripts run in the same namespace
-    assert Env['OVERWRITE'] == [0, 1, 2, 3]
+
+    assert Env['SCRIPT_ORDER'] == ['init', 'd', 'b', 'a', 'c']
 
 
 #### @cmd

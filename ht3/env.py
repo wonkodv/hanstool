@@ -2,22 +2,42 @@
 
 _DEFAULT = object()
 
-class _Env_class:
-    """ Class to record all variables and functions of
-    all scripts and command invocations in one namespace """
+import types
+import sys
+import inspect
+
+class _Env_class(types.ModuleType):
+    """Common Env to be used by scripts
+
+    import Env
+    from Env.mainscript import *
+    """
 
     def __init__(self):
-        object.__setattr__(self, 'dict', dict())
-        object.__setattr__(self, 'persistent_dict', dict())
+        object.__setattr__(self, '_finalized', False)
+
+        self.dict = dict()
+        self.persistent_dict = dict()
+        self.__package__ = "Env"
+        self.__name__ = "Env"
+        self.__path__ = []
+        self.__file__ = __file__
+        super().__init__("Env",_Env_class.__doc__) # init as Module
+        self._finalized = True # stop attribute setting
+
+    @property
+    def __all__(self):
+        return tuple(k for k in self.dict if k[0] != '_')
 
     def _reload(self):
-        object.__setattr__(self, 'dict', dict())
+        self.dict.clear()
         self.dict.update(self.persistent_dict)
 
-    def put_persistent(self, k, v):
+    def put_persistent(self, key, val):
         """Put values into the dict that survives reload."""
-        self.persistent_dict[k] = v
-        self.dict[k] = v
+        assert key != 'windows'
+        self.persistent_dict[key] = val
+        self.dict[key] = val
 
     def put(self, key, val):
         self.dict[key] = val
@@ -25,7 +45,12 @@ class _Env_class:
     __setitem__ = put
 
     def __setattr__(self, key, val):
-        raise AttributeError("Dont set Attributes on Env")
+        if not getattr(self,'_finalized'):
+            self.__dict__[key] = val
+        elif inspect.ismodule(val):
+            self.put(key, val) # importing a sub module
+        else:
+            raise AttributeError("Dont set Attributes on Env")
 
     def get(self, key, default=_DEFAULT):
         v = self.dict.get(key, default)
@@ -33,13 +58,17 @@ class _Env_class:
             raise KeyError(key)
         return v
 
-    __getitem__ = get
+    def __getitem__(self, key):
+        return self.dict[key]
 
-    def __getattr__(self, key, default=_DEFAULT):
+    def __getattr__(self, key):
         try:
-            return self.get(key)
+            return self.dict[key]
         except KeyError:
             raise AttributeError(key) from None
+
+    def update(self, *args):
+        self.dict.update(*args)
 
     def __iter__(self):
         return iter(self.dict)
@@ -55,4 +84,7 @@ class _Env_class:
     def __repr__(self):
         return str(self.dict)
 
+
 Env = _Env_class()
+
+sys.modules['Env'] = Env

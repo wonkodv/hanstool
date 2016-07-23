@@ -29,6 +29,7 @@ def execute(*args, shell=False, is_split=True, **kwargs):
             raise TypeError("Pass only 1 argument if not is_split", args)
         args = shlex.split(args[0])
     p = subprocess.Popen(args, shell=shell, **kwargs)
+    p.name = pathlib.Path(args[0]).name
     p.shell = shell
     SUBPROCESS_SPAWN_HOOK(p)
     watch(p, SUBPROCESS_FINISH_HOOK)
@@ -74,7 +75,7 @@ def procio(*args, input=None, timeout=None, **kwargs):
         raise ProcIOException("Non-zero return code", args, p.returncode, out, err)
     return out
 
-def complete_executable(s):
+def complete_executables(s):
     s = shlex.split(s)
     if len(s) != 1:
         return

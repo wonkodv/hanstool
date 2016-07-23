@@ -1,20 +1,24 @@
 """Some default commands on Windows."""
+
+from Env import *
+
+from pathlib import Path
+import functools
+
 if CHECK.os.win:
+    from ctypes import windll
 
     # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
     # lots of useful tools there.
 
-    @run
-    def _add_sysnative():
-        _ = Path(r"C:\Windows\Sysnative")
-        if _.exists():
-            PATH.append(_)
+    npp = Path(r"C:\Windows\Sysnative")
+    if npp.exists():
+        Env['PATH'].append(npp)
 
-
+    @Env
     @cmd(name='o')
     def shellexecute(s):
         """Shell Execute, windows's all purpose opening function for files and programms."""
-        from ctypes import windll
         r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
         if r > 32:
             return None
@@ -24,8 +28,6 @@ if CHECK.os.win:
     @cmd(name="#")
     def explore_command(cmd:args.Command):
         """Show the directory or file used in the target commands source in explorer."""
-        from pathlib import Path
-        import functools
 
         w = COMMANDS[cmd].function
 
@@ -46,7 +48,8 @@ if CHECK.os.win:
                 return
 
     if CHECK.frontend('ht3.gui'):
-        @gui_do_on_start
+        import ht3.gui
+        @ht3.gui.do_on_start
         def _place_cmd_win_over_taskbar_toolbar():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             h = GetTaskBarHandle()
@@ -74,7 +77,6 @@ if CHECK.os.win:
             ht3.gui.GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
 
             SetParent(c, h)
-
 
     @cmd
     def analyze_windows():

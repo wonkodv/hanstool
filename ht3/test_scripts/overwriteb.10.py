@@ -1,1 +1,3 @@
-OVERWRITE.append(3)
+import Env
+
+Env.SCRIPT_ORDER.append('b')

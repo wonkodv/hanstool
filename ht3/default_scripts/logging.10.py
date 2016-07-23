@@ -1,30 +1,34 @@
+from Env import *
+
 import pprint
+import shlex
 
-
+@Env
 def show(o):
     ALERT_HOOK(o)
 
+@Env
 def log(o):
     DEBUG_HOOK(o)
 
 
 @SUBPROCESS_SPAWN_HOOK.register
-def _log_subprocess(p):
+def log_subprocess(p):
     if Env.get('DEBUG', False):
-        print("spawned process: %d, %r" % (p.pid, p.args))
+        print("Process spawned {}{}:{}".format(p.pid, ' shell' if p.shell else '', p.args))
 
 @SUBPROCESS_FINISH_HOOK.register
-def _log_subprocess_finished(p):
+def log_subprocess_finished(p):
     if p.returncode > 0 or Env.get('DEBUG', False):
-        print("process finished: %d with %d" % (p.pid, p.returncode))
+        print("Process finished {} ({}):{}".format(p.pid, p.name, p.returncode))
 
 @DEBUG_HOOK.register
-def _log_debug(o):
+def log_debug(o):
     if Env.get('DEBUG',0):
-        _log_alert(o)
+        log_alert(o)
 
 @ALERT_HOOK.register
-def _log_debug(o):
+def log_debug(o):
     if isinstance(o, str):
         pass
     elif isinstance(o, bool):
@@ -41,7 +45,7 @@ def _log_debug(o):
 
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
-def _last_exception_h(exception, **kwargs):
+def last_exception_h(exception, **kwargs):
     t = type(exception)
     tb = exception.__traceback__
     for s in traceback.format_exception(t, exception, tb):
@@ -49,7 +53,7 @@ def _last_exception_h(exception, **kwargs):
 
 
 @COMMAND_RESULT_HOOK.register
-def _log_command_finished(result,**kwa):
+def log_command_finished(result,**kwa):
     if result is None:
         if not Env.get('DEBUG', False):
             return

@@ -29,7 +29,7 @@ check.CHECK.frontends_running = False
 
 
 def load_frontend(name):
-    """Load a the frontend with wualified name: ``name``"""
+    """Load a the frontend with qualified name: ``name``"""
     mod = importlib.import_module(name)
     assert callable(mod.start)
     assert callable(mod.loop)
