@@ -1,7 +1,7 @@
 """Control VLC via its web interface"""
 
 
-from Env import cmd, log
+from Env import cmd, log, show
 
 import http.client
 import pprint
