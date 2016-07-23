@@ -74,9 +74,15 @@ class _Env_class(types.ModuleType):
         return iter(self.dict)
 
     def __call__(self, func):
-        """ decorator to put functions in Env """
-        self.dict[func.__name__] = func
-        return func
+        """decorator to put functions in env that can be updated with @Env"""
+        name = func.__name__
+        def wrapper(*args, **kwargs):
+            wrapper = self.get(name)
+            func = wrapper.__function__
+            return func(*args, **kwargs)
+        wrapper.__function__ = func
+        self.put(name, wrapper)
+        return wrapper
 
     def __str__(self):
         return "Env: " + ", ".join(self.dict)

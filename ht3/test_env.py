@@ -70,3 +70,27 @@ class EnvTest(unittest.TestCase):
         assert _() == 42
 
 
+    def test_decorator(self):
+        e = _Env_class()
+
+        @e
+        def a():
+            return 1
+
+        # this is not a but a wrapper that does e['a']() (without the recursion)
+        ref1 = e['a']
+
+        assert a is ref1
+        assert ref1() == 1
+
+        @e
+        def a():
+            return 2
+
+
+        ref2 = e['a']
+
+        assert ref1() == 2 # looks up the newest func from e
+        assert ref2() == 2 # looks up the newest func from e
+        assert a() == 2
+        assert ref1 is not ref2 # different wrappers with the same effect
