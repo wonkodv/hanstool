@@ -94,6 +94,14 @@ def _get_attributes_rec(obj):
         pass
 
     try:
+        for a in sorted(obj.__slots__):
+            if a not in values:
+                yield a
+                values.add(a)
+    except AttributeError:
+        pass
+
+    try:
         for a in sorted(obj.__dict__):
             if a not in values:
                 yield a
