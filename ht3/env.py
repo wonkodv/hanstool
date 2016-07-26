@@ -5,6 +5,7 @@ _DEFAULT = object()
 import types
 import sys
 import inspect
+import functools
 
 class _Env_class(types.ModuleType):
     """Common Env to be used by scripts
@@ -74,13 +75,16 @@ class _Env_class(types.ModuleType):
         return iter(self.dict)
 
     def __call__(self, func):
-        """decorator to put functions in env that can be updated with @Env"""
+        """for updateable functions in Env
+
+        Places a wrapper in env which looks up the function in Env directly before invocation
+        """
         name = func.__name__
+        @functools.wraps(func)
         def wrapper(*args, **kwargs):
             wrapper = self.get(name)
-            func = wrapper.__function__
+            func = wrapper.__wrapped__
             return func(*args, **kwargs)
-        wrapper.__function__ = func
         self.put(name, wrapper)
         return wrapper
 
