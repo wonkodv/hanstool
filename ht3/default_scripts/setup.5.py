@@ -15,13 +15,11 @@ for k, v in os.environ.items():
 Env['PATH'] = [Path(p) for p in os.get_exec_path()]
 
 
-__=[]
-_=None
+Env['__'] = []
+Env['_'] = None
 
 @COMMAND_RESULT_HOOK.register
 def _command_results(result, **kwargs):
-    global __
-    global _
-    __.append(result)
+    Env['__'].append(result)
     if result is not None:
-        _ = result
+        Env['_'] = result

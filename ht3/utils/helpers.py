@@ -27,5 +27,6 @@ def cmd_func(name, func, *args, **kwargs):
     g = stack[1][0].f_globals
     g[name] = cmdf
 
+    return cmdf
 
 __all__  = 'cmd_func',

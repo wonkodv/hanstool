@@ -94,8 +94,8 @@ if CHECK.os.win:
             clas = GetClassName(w)
             title = GetWindowText(w)
             rect = GetWindowRect(w)
-
-            arr.append("{0:X}\t{1:20s}\t'{2}'\n\t{3: 4} {4: 4} {5: 4} {6: 4})".format(w, clas, title, *rect))
+            arr.append("{0:6X}\t{1:20s}\t'{2:20s}'\t{3: 4} {4: 4} {5: 4} {6: 4}".format(w, clas, title, *rect))
+            arr.append("    hwnd=FindWindow(cls={}, title={})\n    SetWindowPos(hwnd, left={}, top={}, width={}, height={})".format(repr(clas), repr(title), *rect))
 
             w = GetParent(w)
         show(str(p) + "\n" + "\n".join(arr))
