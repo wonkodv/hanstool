@@ -25,7 +25,7 @@ def execute(exe, *args, is_split=True, shell=False, **kwargs):
             args = args[1:]
             is_split=True
         try:
-            exe = next(_get_exe_path(exe, True))
+            exe = next(_get_exe_path(exe, True, False))
         except StopIteration:
             raise FileNotFoundError(exe) from None
 
@@ -44,31 +44,35 @@ _paths = [pathlib.Path(p) for p in os.get_exec_path()]
 
 
 
-def _get_exe_path_ext(p, full_path):
+def _get_exe_path_ext(p, full_path, glob):
+    if glob:
+        glob = '*'
+    else:
+        glob = ''
     if p.suffix:
-        for c in p.parent.glob(p.name+'*'):
+        for c in p.parent.glob(p.name+glob):
             if full_path:
                 yield str(c)
             else:
                 yield str(c), ''
     else:
         for ext in _extensions:
-            for c in p.parent.glob(p.name+'*'+ext):
+            for c in p.parent.glob(p.name+glob+ext):
                 if full_path:
                     yield str(c)
                 else:
                     yield c.name, ext
 
-def _get_exe_path(s, full_path):
+def _get_exe_path(s, full_path, glob):
     p = pathlib.Path(s)
     parts = p.parts
     if len(parts) > 1:
-        for c in _get_exe_path_ext(p, full_path):
+        for c in _get_exe_path_ext(p, full_path, glob):
             yield c
     else:
         for c in Env.get('PATH',_paths):
             f = c / s
-            for x in _get_exe_path_ext(f, full_path):
+            for x in _get_exe_path_ext(f, full_path, glob):
                 yield x
 
 def complete_executable(s):
@@ -82,7 +86,7 @@ def complete_executable(s):
     s = s[0]
 
     values = {}
-    for exe, ext in _get_exe_path(s, False):
+    for exe, ext in _get_exe_path(s, False, True):
         short = exe[:-len(ext)]
         if short in values:
             values[short].add(exe)

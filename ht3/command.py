@@ -5,7 +5,6 @@ import traceback
 
 import ht3.args
 import ht3.hook
-from .env import Env
 from .lib import THREAD_LOCAL, start_thread
 
 COMMANDS = {}

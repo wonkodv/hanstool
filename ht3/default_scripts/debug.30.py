@@ -18,7 +18,7 @@ def list_env():
 @cmd
 def debug(what:args.Union(args.Command, args.Python)):
     """ Debug a Command """
-    pdb.runcall(ht3.command.run_command_func, what)
+    pdb.runcall(ht3.command.run_command, what)
 
 @cmd
 def py():
