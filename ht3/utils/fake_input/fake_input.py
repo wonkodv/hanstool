@@ -37,7 +37,7 @@ class Error(Exception):
 
 fake_types = (
     ("WHITESPACE",  r"\s+"),
-    ("MOVEABS",     r"([\d]+)[x/:,]([\d]+)"),
+    ("MOVEABS",     r"(-?[\d]+)[x/:,](-?[\d]+)"),
     ("COMBO",       r"((?P<mod1>\w+)\+)"
                     r"((?P<mod2>\w+)\+)?"
                     r"((?P<mod3>\w+)\+)?"

@@ -49,6 +49,7 @@ class Test_fake(unittest.TestCase):
             "GH'I"
             1000x2000
             01/250
+            -2555/-356
             M1
             CTRL+A
             -0xDC
@@ -63,6 +64,7 @@ class Test_fake(unittest.TestCase):
             ['t', "GH'I", 0],
             ['ma', 1000, 2000],
             ['ma', 1, 250],
+            ['ma', -2555, -356],
             ['md', 1],
             ['mu', 1],
             ['kd',k['CTRL']],
