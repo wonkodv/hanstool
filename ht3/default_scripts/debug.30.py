@@ -68,5 +68,6 @@ def debug_err(i:int=-1):
 
 @cmd(name='import')
 def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
-    root, _, _ = m.partition('.')
-    Env[root] = sys.modules[m]
+    root = m.partition('.')[0]
+    importlib.import_module(m)
+    Env[root] = sys.modules[root]
