@@ -166,6 +166,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
 
 @cmd
 def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"])=None):
+
     if not ht3.scripts.check_all_compilable():
         return
 
@@ -193,10 +194,12 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
             importlib.reload(m)
 
     log("\n===== RELOAD SCRIPTS ====\n")
-    ht3.scripts.reload_all()
 
-    if CHECK.frontend('ht3.hotkey'):
-        ht3.hotkey.reload_hotkeys()
+    try:
+        ht3.scripts.reload_all()
+    finally:
+        if CHECK.frontend('ht3.hotkey'):
+            ht3.hotkey.reload_hotkeys()
 
 
 
