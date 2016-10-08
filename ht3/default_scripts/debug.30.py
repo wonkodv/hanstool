@@ -71,3 +71,15 @@ def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
     root = m.partition('.')[0]
     importlib.import_module(m)
     Env[root] = sys.modules[root]
+
+
+@cmd
+def update_check():
+    p = str(Path(__file__).parent)
+    procio('git','-C',p,'fetch')
+    status = procio('git','-C',p,'status','-sb')
+    if '[' in status:
+        status = status.partition('[')[2].partition(']')[0]
+        show("Git status: "+status)
+    else:
+        show("Git up to date")
