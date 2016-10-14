@@ -327,8 +327,8 @@ class UserInterface():
             self.log(o)
             self.to_front()
 
-        def log_command(self, string, **k):
-            self.log("Command: "+ string)
+        def log_command(self, id, string, **k):
+            self.log("Command {0:d}: {1} ".format(id, string))
 
         def log_command_finished(self, result, **k):
             if result is None:

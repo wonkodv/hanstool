@@ -136,7 +136,7 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if name is None:
         name = func.__name__
     if on_finish is None:
-        pass #on_finish = Env.log_thread_finished #TODO
+        on_finish = lambda *a:None #Env.log_thread_finished #TODO
     if on_exception is None:
         on_exception = EXCEPTION_HOOK
     if args is None:

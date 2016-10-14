@@ -2,6 +2,7 @@
 
 import pathlib
 from .env import Env
+from . import lib
 
 SCRIPTS = []
 
