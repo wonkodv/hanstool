@@ -1,7 +1,6 @@
 """The Command Line Frontend. Like a shell."""
 import traceback
 import os
-import atexit
 import os.path
 import threading
 
@@ -10,11 +9,15 @@ from .command import run_command
 from .complete import complete_command_with_args
 
 import ht3.lib
+import ht3.history
 
 try:
     import readline
 except ImportError:
     readline = None
+
+#TODO: resgister with ht3.history.APPEND_HOOK to add to history if not self
+
 
 _evt = threading.Event()
 
@@ -56,23 +59,8 @@ def _setup_readline():
     if not readline:
         return False
 
-    history = Env.get('CLI_HISTORY', "~/.config/ht3/rlhistory")
-    if history:
-        history = os.path.expanduser(history)
-        try:
-            readline.read_history_file(history)
-        except FileNotFoundError:
-            open(history, 'wb').close()
-        hlen = readline.get_history_length()
-
-        def save():
-            newhlen = readline.get_current_history_length()
-            l = newhlen - hlen
-            if hasattr(readline, 'append_history_file'):
-                readline.append_history_file(l, history)
-            else:
-                readline.write_history_file(history)
-        atexit.register(save)
+    for l in ht3.history.get_history():
+        readline.add_history(l)
 
     completion_cache=[]
 

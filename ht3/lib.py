@@ -1,4 +1,4 @@
-"6F""Module for loading frontends, scripts and miscelaneous functions"""
+"""Module for loading frontends and miscelaneous functions"""
 
 import sys
 import importlib

@@ -8,7 +8,7 @@ def _procio(cmd:args.ExecutableWithArgs):
     """Get Programm output."""
     show(procio(cmd, shell=True, is_split=False))
 
-@cmd(name="!")
+@cmd(name="#")
 def _execute(cmd:args.ExecutableWithArgs):
     """Execute a Program and wait for completion."""
     p = execute(cmd, is_split=False)

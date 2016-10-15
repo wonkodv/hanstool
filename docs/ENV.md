@@ -43,8 +43,8 @@ Elements that are used by ht3 core code:
 *   `SCRIPTS`
 *   `DEBUG`
 *   `CLI_PROMPT`
-*   `CLI_HISTORY`
-*   `GUI_HISTORY`
+*   `HISTORY`
+*   `HISTORY_LIMIT`
 *   `SOCKET`
 
 Elements that are set by core code:

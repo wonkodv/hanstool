@@ -13,12 +13,13 @@ import threading
 import tkinter as tk
 import traceback
 
-from . import lib
 from . import command
-import ht3.complete
-import ht3.utils.process
-from .env import Env
+from . import lib
 from .check import CHECK
+from .env import Env
+import ht3.complete
+import ht3.history
+import ht3.utils.process
 
 GUI = None
 
@@ -218,15 +219,7 @@ class UserInterface():
             self._completion_update = False
 
         def _load_history(self):
-            h = pathlib.Path(os.path.expanduser(Env.get('GUI_HISTORY', '~/.config/ht3/guihistory')))
-            self._history_file = h
-            if h.exists():
-                with h.open('rt') as f:
-                    self._history = [s.strip() for s in f]
-            elif h.parent.is_dir():
-                self._history = []
-            else:
-                raise FileNotFoundError("Folder for gui history does not exist.",h)
+            self._history = list(ht3.history.get_history())
             self._history_index = -1
 
         def _set_history(self, i):
@@ -271,9 +264,6 @@ class UserInterface():
                 self._set_text('')
             self._history.append(s)
             self._history_index = -1
-            with self._history_file.open('at') as f:
-                f.write(s+"\n")
-
 
     class MessageWindow():
         def __init__(self, ui):

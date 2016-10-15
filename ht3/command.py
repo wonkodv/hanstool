@@ -3,9 +3,10 @@ import functools
 import inspect
 import traceback
 
-import ht3.args
-import ht3.hook
 from .lib import THREAD_LOCAL, start_thread
+import ht3.args
+import ht3.history
+import ht3.hook
 
 COMMANDS = {}
 
@@ -141,6 +142,8 @@ def run_command_func(string, func, args=''):
         THREAD_LOCAL.command = parent
 
 def run_command(string):
+    if THREAD_LOCAL.command is None:
+        ht3.history.append_history(string)
     try:
         cmd, args = get_command(string)
     except NoCommandError:

@@ -1,9 +1,14 @@
-import unittest
 import pkg_resources
+import ht3.history
+import pathlib
 
-class TestIntegration(unittest.TestCase):
+
+def test_integration(monkeypatch, tmpdir):
     from ht3.scripts import load_scripts
     from ht3.command import run_command
+
+    f = str(tmpdir.join('history'))
+    monkeypatch.setattr(ht3.history,'get_history_file',lambda:pathlib.Path(f))
 
     load_scripts(pkg_resources.resource_filename(__name__,'test_scripts'))
     result = run_command('test Yes')
