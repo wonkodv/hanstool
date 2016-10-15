@@ -9,7 +9,7 @@ import pathlib
 import os
 
 from ht3.env import Env
-from .processwatch import watch
+from . import processwatch
 from ht3.check import CHECK
 
 import ht3.hook
@@ -32,7 +32,11 @@ def execute(*args, shell=False, is_split=True, **kwargs):
     p.name = pathlib.Path(args[0]).name
     p.shell = shell
     SUBPROCESS_SPAWN_HOOK(p)
-    watch(p, SUBPROCESS_FINISH_HOOK)
+    def onreturn(cb):
+        processwatch.watch(p, cb)
+        return cb
+    p.onreturn = onreturn
+    p.onreturn(SUBPROCESS_FINISH_HOOK)
     return p
 
 def execute_disconnected(*args, **kwargs):
@@ -53,12 +57,13 @@ def execute_auto(*args, **kwargs):
     return p
 
 class ProcIOException(Exception):
-    def __init__(self, returncode, out, err, args):
+    def __init__(self, msg, returncode, out, err, args):
         self.returncode = returncode
         self.out = out
         self.err = err
         self.args = args
-        super().__init__(returncode, out, err, args)
+        self.msg  = msg
+        super().__init__(msg, returncode, out, err, args)
 
 def procio(*args, input=None, timeout=None, **kwargs):
     """Get ouput from a program."""

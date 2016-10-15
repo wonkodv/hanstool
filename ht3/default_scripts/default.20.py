@@ -16,6 +16,7 @@ import re
 import shlex
 import shutil
 import sys
+import textwrap
 import time
 
 
@@ -71,10 +72,8 @@ def repeat_fake():
 def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
-    global _
-    _ = r
     show(r)
-    return None
+    return r
 
 @cmd(name=';')
 def _execute_py_expression(s:args.Python):
@@ -85,7 +84,7 @@ def _execute_py_expression(s:args.Python):
 def _python_command_h(s):
     try:
         c = compile(s, '<input>', 'eval')
-        return (lambda s: exec(c, Env.dict)), s
+        return (lambda s: eval(c, Env.dict)), s
     except SyntaxError:
         pass
     try:

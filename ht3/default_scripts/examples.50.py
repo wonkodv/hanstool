@@ -2,6 +2,7 @@
 
 from Env import *
 
+import random
 import subprocess
 
 
@@ -43,3 +44,9 @@ def vb(box:complete_virtualbox=None):
         execute_disconnected("virtualbox")
     else:
         execute_disconnected("vboxmanage", "startvm", box)
+
+@cmd
+def rand(low:int=0, high:int=0xFFFFFFFF):
+    r = random.randint(low,high)
+    set_clipboard("0x{:8X}".format(r))
+    show(r)

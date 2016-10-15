@@ -35,7 +35,7 @@ def add_exception(exception, **kwargs):
 
 @cmd
 def debug_err(i:int=-1):
-    e = EXCEPTIONS[-1]
+    e = EXCEPTIONS[i]
     t = e.__traceback__
     s = ""
     while(t.tb_next):
