@@ -98,6 +98,8 @@ def _python_command_h(s):
 def exit():
     sys.exit(0)
 
+cmd(exit, name='quit')
+
 @cmd(name="+")
 def edit_command(c:args.Union(args.Command, args.Python)):
     """ Edit the location where a command or function was defined """
