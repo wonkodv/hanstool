@@ -40,6 +40,7 @@ def debug_err(i:int=-1):
     s = ""
     while(t.tb_next):
         file = t.tb_frame.f_code.co_filename
+        file = os.path.abspath(file)
         line = t.tb_lineno
         name = t.tb_next.tb_frame.f_code.co_name
         args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
@@ -48,6 +49,7 @@ def debug_err(i:int=-1):
         t = t.tb_next
 
     file = t.tb_frame.f_code.co_filename
+    file = os.path.abspath(file)
     line = t.tb_lineno
     s += "{0}:{1:d}:1:{2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
     if isinstance(e, SyntaxError):
