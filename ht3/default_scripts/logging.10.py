@@ -2,6 +2,7 @@ from Env import *
 
 import pprint
 import shlex
+import itertools
 
 @Env
 def show(o):
@@ -28,7 +29,7 @@ def log_debug(o):
         log_alert(o)
 
 @ALERT_HOOK.register
-def log_debug(o):
+def log_alert(o):
     if isinstance(o, str):
         pass
     elif isinstance(o, bool):
