@@ -18,8 +18,8 @@ import shutil
 import sys
 import textwrap
 import time
-
-
+import contextlib
+import io
 
 @cmd(name='l')
 def list_commands():
@@ -40,7 +40,12 @@ def _help(what:args.Union(args.Command, args.Python)):
         obj = COMMANDS[what]
     else:
         obj = evaluate_py_expression(what)
-    help(obj)
+
+    f = io.StringIO()
+    with contextlib.redirect_stdout(f):
+        help(obj)
+    s = f.getvalue()
+    show(s)
 
 def _complete_fake(string):
     parts = re.split('[^A-Za-z0-9]+', string)

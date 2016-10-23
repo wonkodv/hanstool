@@ -45,13 +45,14 @@ class Param:
     complete = _no_completion
     convert = _no_conversion
 
+
+
     def __repr__(self):
         if hasattr(self,'doc'):
             return self.doc
-        if self.__doc__ is None:
-            return str(type(self))
-
-        return self.__doc__
+        if self.__doc__ is not None:
+            return self.__doc__
+        return "Some kind of param: %s" %(type(self))
 
 class MultiParam:
     def __init__(self, param):
@@ -63,7 +64,8 @@ class MultiParam:
     def convert(self, strings):
         return [self.param.convert(s) for s in strings]
 
-    __str__ = lambda self: str(self.param)
+    def __repr__(self):
+        return repr(self.param)
 
 class Sequence(MultiParam):
     def __init__(self, *params):
@@ -79,7 +81,8 @@ class Sequence(MultiParam):
             raise ArgError("More arguments than specified types")
         return [p.convert(s) for p,s in zip(self.params, strings)]
 
-    __str__ = lambda self: "Sequence of parameters with the Values: "+str(self.params)
+    def __repr__(self):
+        return "Sequence of parameters with the Values: "+repr(self.params)
 
 class Union(Param):
     def __init__(self, *params):
@@ -99,7 +102,8 @@ class Union(Param):
         else:
             raise ValueError("No Conversion succeeded", s)
 
-    __str__ = lambda self: "Parameter that has one of the types: "+str(self.params)
+    def __repr__(self):
+        return "Parameter that has one of the types: "+repr(self.params)
 
 Str = Param(convert=str, doc="str")
 Int = Param(convert=lambda s:int(s,0), complete=['0x', '0b', '0o', '1', '2', '42'], doc="int")
@@ -134,8 +138,8 @@ def _complete_bool(s):
 Bool = Param(convert=_convert_bool, complete=_complete_bool, doc="bool")
 
 class Range(Param):
-    def __init__(self, range):
-        self.range = range
+    def __init__(self, *r):
+        self.range = range(*r)
 
     def complete(self, s):
         return (str(i) for i in self.range)
@@ -145,6 +149,9 @@ class Range(Param):
         if i in self.range:
             return i
         raise ValueError("Out of range", i, self.range)
+
+    def __repr__(self):
+        return "Parameter in the range: "+repr(self.range)
 
 class Option(Param):
     def __init__(self, options, ignore_case=False, sort=False, allow_others=False):
@@ -179,7 +186,8 @@ class Option(Param):
             return s
         raise ValueError(s)
 
-    __str__ = lambda self: "Option of "+str([o for opts in self.options for o in opts])
+    def __repr__(self):
+        return "Option of "+repr([o for o in self.options])
 
 def _get_param(p, var_arg):
     if var_arg:
