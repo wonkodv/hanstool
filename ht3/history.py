@@ -20,9 +20,12 @@ def get_history_file():
     return p
 
 def get_history():
-    with get_history_file().open("rt") as f:
-        for l in f:
-            yield l.strip()
+    try:
+        with get_history_file().open("rt") as f:
+            for l in f:
+                yield l.strip()
+    except FileNotFoundError:
+        pass
 
 def append_history(*cmd):
     for c in cmd:
