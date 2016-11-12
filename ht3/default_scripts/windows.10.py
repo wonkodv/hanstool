@@ -84,11 +84,8 @@ if CHECK.os.win:
 
     @cmd
     def analyze_windows():
-
         arr = []
-
-        p = get_mouse_pos()
-        w = WindowFromPoint(p)
+        w = get_window_under_cursor()
 
         while(w):
             clas = GetClassName(w)
@@ -99,3 +96,13 @@ if CHECK.os.win:
 
             w = GetParent(w)
         show(str(p) + "\n" + "\n".join(arr))
+
+    def get_window_under_cursor(main=False):
+        p = get_mouse_pos()
+        handle = WindowFromPoint(p)
+        if main:
+            p = handle
+            while p:
+                handle = p
+                p = GetParent(p)
+        return handle

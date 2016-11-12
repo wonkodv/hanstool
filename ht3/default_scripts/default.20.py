@@ -98,10 +98,9 @@ def _python_command_h(s):
     except SyntaxError:
         pass
 
-
 @cmd
-def exit():
-    sys.exit(0)
+def exit(returncode:int=0):
+    sys.exit(returncode)
 
 cmd(exit, name='quit')
 

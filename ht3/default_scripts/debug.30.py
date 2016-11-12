@@ -53,7 +53,7 @@ def debug_err(i:int=-1):
     line = t.tb_lineno
     s += "{0}:{1:d}:1:{2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
     if isinstance(e, SyntaxError):
-        s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.message}".format(e)
+        s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
     show(s)
     with tempfile.NamedTemporaryFile('wt', delete=False) as f:
         f.write(s)
