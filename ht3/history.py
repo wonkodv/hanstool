@@ -9,6 +9,7 @@ HISTORY_FILE_DEFAULT = '~/.config/ht3/history'
 
 APPEND_HOOK = ht3.hook.Hook()
 
+HISTORY = None
 
 def get_history_file():
     p = Env.get('HISTORY', HISTORY_FILE_DEFAULT)
@@ -20,30 +21,35 @@ def get_history_file():
     return p
 
 def get_history():
-    try:
-        with get_history_file().open("rt") as f:
-            for l in f:
-                yield l.strip()
-    except FileNotFoundError:
-        pass
+    global HISTORY
+    if HISTORY is None:
+        try:
+            load_history()
+        except FileNotFoundError:
+            HISTORY = []
+    return HISTORY
+
+
+def load_history():
+    """Load the history from file, enforce Limit."""
+    global HISTORY
+    limit = Env.get('HISTORY_LIMIT',1000)
+    with get_history_file().open("rt") as f:
+        if limit is not None:
+            HISTORY = list(collections.deque((l.strip() for l in f), limit))
+        else:
+            h = [l.strip() for l in f]
+    if limit is not None:
+        with get_history_file().open("wt") as f:
+            for l in HISTORY:
+                f.write(l + "\n")
 
 def append_history(*cmd):
+    get_history().extend(cmd)
     for c in cmd:
         APPEND_HOOK(c)
-    limit = Env.get('HISTORY_LIMIT',1000)
-    if limit is not None:
-        try:
-            with get_history_file().open("rt") as f:
-                q = collections.deque((l.strip() for l in f), limit)
-        except FileNotFoundError:
-            q = []
-        q.extend(cmd)
-        with get_history_file().open("wt") as f:
-            for l in q:
-                f.write(l + "\n")
-    else:
-        with get_history_file().open("at") as f:
-            f.write("\n".join(cmd) + "\n")
+    with get_history_file().open("at") as f:
+        f.write("\n".join(cmd) + "\n")
 
 
 
