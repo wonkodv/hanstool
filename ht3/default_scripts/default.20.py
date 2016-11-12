@@ -89,12 +89,12 @@ def _execute_py_expression(s:args.Python):
 def _python_command_h(s):
     try:
         c = compile(s, '<input>', 'eval')
-        return (lambda s: eval(c, Env.dict)), s
+        return _show_eval.command, s
     except SyntaxError:
         pass
     try:
         c = compile(s, '<input>', 'exec')
-        return (lambda s: exec(c, Env.dict)), s
+        return _execute_py_expression, s
     except SyntaxError:
         pass
 

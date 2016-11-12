@@ -20,7 +20,7 @@ FRONTEND_MODULES = []
 
 THREAD_LOCAL = threading.local()
 THREAD_LOCAL.command = None
-THREAD_LOCAL.frontend = None
+THREAD_LOCAL.frontend = 'ht3.main'
 
 
 check.CHECK.frontend = check.Group(FRONTENDS)

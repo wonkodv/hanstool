@@ -300,7 +300,11 @@ class UserInterface():
             self.window.withdraw()
             self.ui.cmd_win.to_front()
 
-        def log(self, o):
+        def log(self, msg):
+            self.text.insert('end', msg+'\n')
+            self.text.yview('end')
+
+        def log_debug(self, frontend, o):
             if isinstance(o, str):
                 msg = o
             elif isinstance(o, bool):
@@ -314,35 +318,34 @@ class UserInterface():
                         for (n,s) in zip(itertools.count(l),s))
             else:
                 msg = pprint.pformat(o)
-
-            self.text.insert('end', msg+'\n')
-            self.text.yview('end')
+            self.log(msg)
 
 
-        def log_show(self, o):
-            self.log(o)
+
+        def log_show(self, frontend, o):
+            self.log_debug(frontend, o)
             self.to_front()
 
-        def log_command(self, id, string, **k):
-            self.log("Command {0:d}: {1} ".format(id, string))
+        def log_command(self, frontend, id, string, function, args):
+            self.log("Command {0:d} [{1}:{2}] '{3}' ".format(id, frontend, function.name, string))
 
-        def log_command_finished(self, result, **k):
+        def log_command_finished(self, frontend, result, **k):
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
             self.log("Result: "+ str(result))
 
-        def log_error(self, exception, **k):
+        def log_error(self, frontend, exception, **k):
             e=exception
             t = type(e)
             tb = e.__traceback__
             self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
-        def log_subprocess(self, p):
+        def log_subprocess(self, frontend, p):
             self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
 
-        def log_subprocess_finished(self, p):
+        def log_subprocess_finished(self, frontend, p):
             a = p.args
             if not isinstance(a, str):
                 a = a[0]
@@ -376,9 +379,9 @@ def loop():
         GUI = UserInterface()
 
         def do_after_startup():
-            for m, a, k in _stored_log:
+            for m, f, a, k in _stored_log:
                 l = getattr(GUI.log_win, m)
-                l(*a, **k)
+                l(f, *a, **k)
             _stored_log.clear()
 
             for c in _do_on_start:
@@ -403,15 +406,16 @@ tk.Tk.report_callback_exception = _reptor_tk_ex
 
 def _log_proxy(topic):
     def forward(*args, **kwargs):
+        f = lib.THREAD_LOCAL.frontend
         if GUI:
             l = getattr(GUI.log_win, topic)
-            l(*args, **kwargs)
+            l(f, *args, **kwargs)
         else:
-            _stored_log.append( [ topic, args, kwargs ])
+            _stored_log.append( [ topic, f , args, kwargs ])
     return forward
 
 lib.ALERT_HOOK.register(_log_proxy('log_show'))
-lib.DEBUG_HOOK.register(_log_proxy('log'))
+lib.DEBUG_HOOK.register(_log_proxy('log_debug'))
 lib.EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
 command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))

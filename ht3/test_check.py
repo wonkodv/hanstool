@@ -48,7 +48,7 @@ class Test_check(unittest.TestCase):
 
     def test_currnet_frontend(self):
         with patch('ht3.lib.THREAD_LOCAL') as fl:
-            fl.frontend='testfe'
+            fl.frontend = 'testfe'
             assert CHECK.current_frontend('testfe')
 
     def test_py(self):

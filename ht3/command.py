@@ -81,7 +81,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
 
     COMMANDS[name] = Command
 
-    func.__command__ = Command
+    func.command = Command
 
 def cmd(func=None, **kwargs):
     """Decorate a function to become a command
