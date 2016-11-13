@@ -90,8 +90,7 @@ class Union(Param):
 
     def complete(self, s):
         for p in self.params:
-            for c in p.complete(s):
-                yield c
+            yield from p.complete(s)
 
     def convert(self, s):
         for p in self.params:

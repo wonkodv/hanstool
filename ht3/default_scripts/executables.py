@@ -71,6 +71,5 @@ def complete_ls(parts):
     if parts[-1] == '-':
         for f in 'lrst10':
             yield '-' + f
-    for c in complete_path(parts[0]):
-        yield c
+    yield from complete_path(parts[0])
 

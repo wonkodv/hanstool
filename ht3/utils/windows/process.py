@@ -67,13 +67,11 @@ def _get_exe_path(s, full_path, glob):
     p = pathlib.Path(s)
     parts = p.parts
     if len(parts) > 1:
-        for c in _get_exe_path_ext(p, full_path, glob):
-            yield c
+        yield from _get_exe_path_ext(p, full_path, glob)
     else:
         for c in Env.get('PATH',_paths):
             f = c / s
-            for x in _get_exe_path_ext(f, full_path, glob):
-                yield x
+            yield from _get_exe_path_ext(f, full_path, glob)
 
 def complete_executable(s):
     """Find all possible executables in PATH, optionally appending PATHEXT.
@@ -98,8 +96,7 @@ def complete_executable(s):
             if len(longs) == 1:
                 yield short
             else:
-                for l in longs:
-                    yield l
+                yield from longs
     return filter_completions_i(s, gen())
 
 
