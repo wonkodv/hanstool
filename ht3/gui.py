@@ -406,7 +406,10 @@ tk.Tk.report_callback_exception = _reptor_tk_ex
 
 def _log_proxy(topic):
     def forward(*args, **kwargs):
-        f = lib.THREAD_LOCAL.frontend
+        try:
+            f = lib.THREAD_LOCAL.frontend
+        except AttributeError:
+            f = "" # e.g. process watch
         if GUI:
             l = getattr(GUI.log_win, topic)
             l(f, *args, **kwargs)
