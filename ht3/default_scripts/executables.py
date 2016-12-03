@@ -30,6 +30,7 @@ def exe_completer(name):
         return f
     return deco
 
+@Env
 def complete_executable_with_args(s):
     parts = shlex.split(s+"|")
     #TODO join with ShellArgs Code

@@ -6,7 +6,6 @@ head other scripts with: from Env import *
 
 import ht3
 
-# import b real path in case it was not included before (can not happen ?)
 from ht3.env import Env
 
 from ht3.check import CHECK
@@ -29,6 +28,20 @@ from ht3.complete import *
 
 if CHECK.os.windows:
     from ht3.utils.windows import *
+
+
+
+args.Python = args.Param(complete=lambda s:Env.complete_py(s),
+                doc="PythonCode")
+args.Path = args.Param(convert=pathlib.Path,
+             complete=lambda s:Env.complete_path(s),
+             doc="Path")
+args.Executable = args.Param(complete=lambda s:Env.complete_executable(s), doc="Executable")
+args.ExecutableWithArgs = args.Param(complete=lambda s:Env.complete_executable_with_args(s), doc="ExecutableWithArgs")
+args.Command = args.Param(complete=lambda s:Env.complete_commands(s), doc="Command")
+args.CommandWithArgs = args.Param(complete=lambda s:Env.complete_command_with_args(s),
+                        doc="CommandWithArgs")
+
 
 # Put all above bindings into Env
 Env.dict.update(vars())

@@ -3,12 +3,11 @@
 import collections
 import collections.abc
 import getopt
-import ht3.complete
-import ht3.env
 import inspect
 import pathlib
 import shlex
-
+import functools
+import ht3.complete
 
 _DEFAULT = object()
 
@@ -45,7 +44,8 @@ class Param:
     complete = _no_completion
     convert = _no_conversion
 
-
+    def __call__(self, s):
+        return self.convert(s)
 
     def __repr__(self):
         if hasattr(self,'doc'):
@@ -107,16 +107,6 @@ class Union(Param):
 Str = Param(convert=str, doc="str")
 Int = Param(convert=lambda s:int(s,0), complete=['0x', '0b', '0o', '1', '2', '42'], doc="int")
 Float = Param(convert=float,complete=[], doc="float")
-Python = Param(complete=lambda s:ht3.env.Env.complete_py(s),
-                doc="PythonCode")
-Path = Param(convert=pathlib.Path,
-             complete=lambda s:ht3.env.Env.complete_path(s),
-             doc="Path")
-Executable = Param(complete=lambda s:ht3.env.Env.complete_executable(s), doc="Executable")
-ExecutableWithArgs = Param(complete=lambda s:ht3.env.Env.complete_executable_with_args(s), doc="ExecutableWithArgs")
-Command = Param(complete=lambda s:ht3.env.Env.complete_commands(s), doc="Command")
-CommandWithArgs = Param(complete=lambda s:ht3.env.Env.complete_command_with_args(s),
-                        doc="CommandWithArgs")
 
 def _convert_bool(s):
     s = s.lower()
