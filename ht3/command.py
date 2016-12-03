@@ -23,6 +23,7 @@ class NoCommandError(Exception):
 
 def register_command(func, *, origin_stacked, name=_DEFAULT,
                      threaded=False, args='auto',
+                     apply_default_param_anotations=False,
                      doc=_DEFAULT, attrs=None):
     """ Register a function as Command """
 
@@ -44,7 +45,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
 
     Command.function = func
 
-    arg_parser = ht3.args.ArgParser(func, args)
+    arg_parser = ht3.args.ArgParser(func, args, apply_default_param_anotations)
 
     if attrs is None:
         attrs = dict()

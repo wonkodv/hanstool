@@ -2,12 +2,13 @@
 
 import collections
 import collections.abc
+import functools
 import getopt
+import ht3.complete
 import inspect
 import pathlib
 import shlex
-import functools
-import ht3.complete
+import sys
 
 _DEFAULT = object()
 
@@ -243,8 +244,6 @@ def _get_param(p, var_arg):
 
     raise TypeError("Can not Guess Parameter type", p)
 
-_param_info = collections.namedtuple('param_info',['name', 'multiple', 'positional', 'keyword', 'optional', 'typ'])
-
 
 class BaseArgParser:
     def __init__(self):
@@ -255,8 +254,8 @@ class BaseArgParser:
 
 
 class NoArgParser(BaseArgParser):
-    def __init__(self, param_info):
-        self.param_info = param_info
+    def __init__(self):
+        pass
 
     def convert(self, s):
         if s.strip():
@@ -270,14 +269,12 @@ class NoArgParser(BaseArgParser):
         return "No Arguments"
 
 class SingleArgParser(BaseArgParser):
-    def __init__(self, param_info):
-        self.param_info = param_info
+    def __init__(self, helper):
+        self.helper = helper
+        self.param_info = list(helper.param_info.values())[0]
 
     def convert(self, s):
-        if self.param_info.optional:
-            if not s.strip():
-                return [], {}
-        return [self.param_info.typ.convert(s)], {}
+        return self.helper.apply_args([s],{})
 
     def complete(self, s):
         return self.param_info.typ.complete(s)
@@ -289,31 +286,17 @@ class SingleArgParser(BaseArgParser):
                             self.param_info.typ))
 
 class ShellArgParser(BaseArgParser):
-    def __init__(self, param_info):
-        self.param_info = [pi for pi in param_info if pi.positional]
+    def __init__(self, helper):
+        self.helper = helper
+        self.param_info = [pi for pi in helper.param_info.values() if pi.positional]
 
     def convert(self, string):
-        string = string.strip()
-        arg_iter = iter(shlex.split(string))
-        args = []
-        param_info = iter(self.param_info)
-        for param in param_info:
-            if param.multiple:
-                args.extend(param.typ.convert(list(arg_iter)))
-            else:
-                try:
-                    v = next(arg_iter)
-                except StopIteration:
-                    break
-                args.append(param.typ.convert(v))
-        l = list(arg_iter)
-        if l:
-            raise ArgError("Too Many Parameters", l)
-
-        return args, {}
+        args = shlex.split(string.strip())
+        return self.helper.apply_args(args,{})
 
     def complete(self, string):
-        if len(self.param_info) == 0:
+        param_info = self.param_info
+        if len(param_info) == 0:
             return []
 
         for quote in ['', '"', "'"]:
@@ -335,13 +318,13 @@ class ShellArgParser(BaseArgParser):
         prefix = string[:len(string)-len(current)]
 
 
-        if len(values)+1 <= len(self.param_info):
-            pi = self.param_info[len(values)]
+        if len(values)+1 <= len(param_info):
+            pi = param_info[len(values)]
         else:
-            pi = self.param_info[-1]
+            pi = param_info[-1]
             if not pi.multiple:
                 raise ArgError("Too many arguments",i,len(self.params))
-            values = values[len(self.param_info):] + [current]
+            values = values[len(param_info):] + [current]
 
 
         if pi.multiple:
@@ -389,8 +372,9 @@ class ShellArgParser(BaseArgParser):
 
 class GetOptArgParser(BaseArgParser):
     """Takes "getopt" arguments"""
-    def __init__(self, opts):
+    def __init__(self, opts, helper):
         self.opts = opts
+        self.helper = helper
 
     def complete(self, string):
         if not string or string[-1] == ' ':
@@ -403,8 +387,7 @@ class GetOptArgParser(BaseArgParser):
                     yield string + o
 
     def convert(self, string):
-        args = shlex.split(string)
-        optlist, args = getopt.gnu_getopt(args, self.opts)
+        optlist, args = getopt.gnu_getopt(shlex.split(string.strip()), self.opts)
         kwargs = {}
         for k, v in optlist:
             k = k[1:]
@@ -419,75 +402,34 @@ class GetOptArgParser(BaseArgParser):
                     raise ValueError("option -%s occured multiple times" % k)
             kwargs[k] = v
 
-        return args, kwargs
+        return self.helper.apply_args(args, kwargs)
 
     def describe_params(self):
         return "GetOpt Args: "+self.opts
 
-def ArgParser(function, typ='auto'):
-
-    if isinstance(typ, str) and typ.startswith(':'):
-        return GetOptArgParser(typ[1:])
-
-
-    sig = inspect.signature(function)
-    param_info = []
-    sig_params = iter(sig.parameters.items())
-    for name, sig_param in sig_params:
-        if sig_param.kind == sig_param.POSITIONAL_ONLY:
-            # some builtin functions. shouldnt happen often!
-            multiple=False
-            positional=True
-            keyword=False
-            optional=(sig_param.default != sig_param.empty)
-        elif sig_param.kind == sig_param.POSITIONAL_OR_KEYWORD:
-            # X=1
-            multiple=False
-            positional=True
-            keyword=True
-            optional=(sig_param.default != sig_param.empty)
-        elif sig_param.kind == sig_param.KEYWORD_ONLY:
-            # *, X=1
-            multiple = False
-            positional = False
-            keyword = True
-            optional=(sig_param.default != sig_param.empty)
-        elif sig_param.kind == sig_param.VAR_POSITIONAL:
-            # *args
-            multiple = True
-            positional = True
-            keyword = True
-            optional = True
-        elif sig_param.kind == sig_param.VAR_KEYWORD:
-            # **kwargs
-            multiple = True
-            positional = False
-            keyword = True
-            optional = True
-        else:
-            assert False
-
-        pi = _param_info(
-            multiple=multiple,
-            positional=positional,
-            keyword=keyword,
-            optional=optional,
-            name=name,
-            typ=_get_param(sig_param.annotation, multiple))
-        param_info.append(pi)
-
-
+def ArgParser(function, typ, apply_defaults):
     if isinstance(typ, BaseArgParser):
         return typ
     if isinstance(typ, type):
-        raise NotImplementedError("No convention for passing params yet")
+        raise NotImplementedError("No convention for passing classes as arg parsers")
+
+
+    helper = ParamHelper(function, apply_defaults)
+
+    param_info = list(helper.param_info.values())
+
+    if isinstance(typ, str) and typ.startswith(':'):
+        return GetOptArgParser(typ[1:], helper)
 
     if typ == 'auto':
+        if len(param_info) == 0:
+            return NoArgParser()
+
         if len(param_info) == 1 and not param_info[0].multiple:
-            return SingleArgParser(param_info[0])
+            return SingleArgParser(helper)
 
         if all(i.positional or i.optional for i in param_info):
-            return ShellArgParser(param_info)
+            return ShellArgParser(helper)
 
         #if all(i.keyword or i.optional for i in param_info):
         #    return GetOptArgParser()
@@ -502,7 +444,85 @@ def ArgParser(function, typ='auto'):
 
     if typ in ['shell']:
         if all(i.positional or i.optional for i in param_info):
-            return ShellArgParser(param_info)
+            return ShellArgParser(helper)
         raise TypeError("There are required non-positional paramertes", param_info)
 
     raise TypeError("No matching argument parser", param_info)
+
+
+
+class ParamHelper():
+    _param_info = collections.namedtuple('param_info',['name', 'multiple', 'positional', 'keyword', 'optional', 'typ'])
+
+    def __init__(self, f, apply_defaults):
+        self.sig = inspect.signature(f)
+        self.function = f
+        self.apply_defaults = apply_defaults
+
+        self.param_info = collections.OrderedDict()
+
+        for name, sig_param in self.sig.parameters.items():
+            if sig_param.kind == sig_param.POSITIONAL_ONLY:
+                # some builtin functions. shouldnt happen often!
+                multiple=False
+                positional=True
+                keyword=False
+                optional=(sig_param.default != sig_param.empty)
+            elif sig_param.kind == sig_param.POSITIONAL_OR_KEYWORD:
+                # X=1
+                multiple=False
+                positional=True
+                keyword=True
+                optional=(sig_param.default != sig_param.empty)
+            elif sig_param.kind == sig_param.KEYWORD_ONLY:
+                # *, X=1
+                multiple = False
+                positional = False
+                keyword = True
+                optional=(sig_param.default != sig_param.empty)
+            elif sig_param.kind == sig_param.VAR_POSITIONAL:
+                # *args
+                multiple = True
+                positional = True
+                keyword = True
+                optional = True
+            elif sig_param.kind == sig_param.VAR_KEYWORD:
+                # **kwargs
+                multiple = True
+                positional = False
+                keyword = True
+                optional = True
+            else:
+                assert False
+
+            pi = self._param_info(
+                multiple=multiple,
+                positional=positional,
+                keyword=keyword,
+                optional=optional,
+                name=name,
+                typ=_get_param(sig_param.annotation, multiple))
+            self.param_info[name] = pi
+
+    def apply_args(self, args, kwargs):
+        ba = self.sig.bind(*args, **kwargs)
+        if self.apply_defaults:
+            ba.apply_defaults()
+        for name in ba.arguments:
+            pi = self.param_info[name]
+            ba.arguments[name] = pi.typ.convert(ba.arguments[name])
+        return ba.args, ba.kwargs
+
+def enforce_args(_f=None, *, apply_defaults=False):
+    def deco(f):
+        h = ParamHelper(f, apply_defaults)
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            args, kwargs = h.apply_args(args,kwargs)
+            return f(*args, **kwargs)
+        return wrapper
+    if _f is None:
+        return deco
+    else:
+        return deco(_f)
+
