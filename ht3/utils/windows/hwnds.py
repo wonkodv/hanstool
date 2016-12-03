@@ -1,16 +1,34 @@
 """Functions that deal with Windows Windows."""
 import ctypes
-from ctypes.wintypes import RECT, POINT
-from ctypes import c_wchar
+from ctypes.wintypes import RECT, POINT, HWND, LPARAM
+from ctypes import c_wchar, c_bool
+
+def EnumWindows(cb):
+    exc = None
+
+    @ctypes.WINFUNCTYPE(c_bool, HWND, LPARAM)
+    def _cb(handle,_):
+        try:
+            return cb(handle)
+        except Exception as e:
+            nonlocal exc
+            exc = e
+            return False
+    r = ctypes.windll.user32.EnumWindows(_cb, 0)
+    if exc:
+        raise exc
+    return r
 
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
     if spec is ...:
         return ctypes.windll.user32.FindWindowExW(parent, after, cls, title)
     if parent or after or cls or title:
-        raise ValueError()
+        raise TypeError()
     w = ctypes.windll.user32.FindWindowW(spec, None)
     if not w:
         w = ctypes.windll.user32.FindWindowW(None, spec)
+    if not w:
+        raise KeyError("No Window with title or class", spec)
     return w
 
 def GetClassName(wnd):
@@ -54,6 +72,8 @@ def GetWindowText(wnd):
     ctypes.windll.user32.GetWindowTextW(wnd, name, 100)
     return name.value
 
+def IsWindowVisible(wnd):
+    return bool(ctypes.windll.user32.IsWindowVisible(wnd))
 
 def SetForegroundWindow(wnd):
     return ctypes.windll.user32.SetForegroundWindow(wnd)

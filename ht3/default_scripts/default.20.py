@@ -135,15 +135,14 @@ def add_command(script:_complete_script_names, name=None, text=None):
         5. you should restart for the new command to be activated.
 
     """
-    name_path = dict((p.name, p) for p in SCRIPTS)
+    name_path = {p.name: p for p in SCRIPTS}
 
-    s = difflib.get_close_matches(script, name_path, 1, 0.5)
-    if s:
-        s = name_path[s[0]]
-    else:
+    try:
+        s = name_path[script]
+    except KeyError:
         if not script.endswith('.py'):
-            raise ValueError('The first arg must either match a loaded script'
-                ' or be a valid name of a new one (foo.10.py)')
+            raise ValueError('The script must be the name of a loaded script or'
+                ' a valid name for a new one')
         s = SCRIPTS[-1].parent
         if s.name == 'default_scripts':
             s = expanduser('~/.config/ht3')
@@ -155,7 +154,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
         assert not s.exists() # s should have matched above.
         show("New Script "+str(s))
         with s.open('wt') as f:
-            f.write('"""" A new Script """')
+            f.write('"""" A new Script """\n\nfrom Env import * \n\n')
 
     if name:
         with s.open("ta") as f:
@@ -167,7 +166,6 @@ def add_command(script:_complete_script_names, name=None, text=None):
         l = len(list(f))
     p = edit_file(s, l)
     p.wait()
-
 
 @cmd
 def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"])=None):

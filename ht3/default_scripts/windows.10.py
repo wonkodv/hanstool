@@ -11,9 +11,45 @@ if CHECK.os.win:
     # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
     # lots of useful tools there.
 
-    npp = Path(r"C:\Windows\Sysnative")
-    if npp.exists():
-        Env['PATH'].append(npp)
+    sysnative = Path(r"C:\Windows\Sysnative")
+    if sysnative.exists():
+        Env['PATH'].append(sysnative)
+
+    def _complete_windowhandle(s):
+        @cache_for(5)
+        def all_windows():
+            l = []
+            def cb(handle):
+                if IsWindowVisible(handle):
+                    l.append(GetClassName(handle))
+                    l.append(GetWindowText(handle))
+                return True
+            EnumWindows(cb)
+            yield from iter(sorted(l, key=lambda s:s.lower()))
+        return filter_completions_i(s, ("_MOUSE_POS", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
+
+    def _convert_windowhandle(s):
+        if s == "_MOUSE_POS":
+            handle = windows.get_window_under_cursor(main=True)
+        elif s == '_FOREGROUND':
+            handle = GetForegroundWindow()
+        elif s == '_WAIT_FOREGROUND':
+            handle = org = GetForegroundWindow()
+            while handle == org:
+                sleep(0.1)
+                handle = GetForegroundWindow()
+        else:
+            handle = FindWindow(s)
+
+        if handle:
+            return handle
+        raise ValueError("No window",s)
+
+    Env['WindowHandle'] = WindowHandle = args.Param(
+        convert=_convert_windowhandle,
+        complete=_complete_windowhandle,
+        doc="Window Handle"
+    )
 
     @Env
     @cmd(name='o')
@@ -25,7 +61,7 @@ if CHECK.os.win:
         else:
             raise OSError("ShellExecute returned an error: %d" % r)
 
-    @cmd(name="#")
+    @cmd(name="%")
     def explore_command(cmd:args.Command):
         """Show the directory or file used in the target commands source in explorer."""
 
@@ -83,10 +119,8 @@ if CHECK.os.win:
             SetParent(c, h)
 
     @cmd
-    def analyze_windows():
+    def analyze_windows(w:WindowHandle):
         arr = []
-        w = get_window_under_cursor()
-
         while(w):
             clas = GetClassName(w)
             title = GetWindowText(w)
@@ -95,7 +129,7 @@ if CHECK.os.win:
             arr.append("    hwnd=FindWindow(cls={}, title={})\n    SetWindowPos(hwnd, left={}, top={}, width={}, height={})".format(repr(clas), repr(title), *rect))
 
             w = GetParent(w)
-        show(str(p) + "\n" + "\n".join(arr))
+        show("\n".join(arr))
 
     def get_window_under_cursor(main=False):
         p = get_mouse_pos()
