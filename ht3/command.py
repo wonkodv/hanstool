@@ -22,7 +22,7 @@ class NoCommandError(Exception):
     pass
 
 def register_command(func, *, origin_stacked, name=_DEFAULT,
-                     async=False, args='auto',
+                     threaded=False, args='auto',
                      doc=_DEFAULT, attrs=None):
     """ Register a function as Command """
 
@@ -30,7 +30,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
     origin = origin[-origin_stacked]
     origin = origin[0:2]
 
-    if async:
+    if threaded:
         def Command(arg_string=""):
             """ The function that will be executed """
             args, kwargs = arg_parser.convert(arg_string)
@@ -63,7 +63,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
     long_doc = "".join(["Command '%s'" % name, "\n",
         ("Calls %s\n" % func_name ) if func_name != name else "",
         arg_parser.describe_params(), "\n",
-        "Executed in a seperate Thread\n" if async else "",
+        "Executed in a seperate Thread\n" if threaded else "",
         "\n",
         doc + "\n" if doc else '',
         "\n",
@@ -74,7 +74,7 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
     Command.doc = doc
     Command.__name__ = func_name
     Command.name = name
-    Command.async = async
+    Command.threaded = threaded
     Command.origin = origin
     Command.attrs = attrs
     Command.arg_parser = arg_parser

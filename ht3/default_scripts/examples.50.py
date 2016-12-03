@@ -20,7 +20,7 @@ if CHECK.frontend('ht3.cli'):
 def txt():
     edit_file(expanduser("~/txt"))
 
-@cmd(async=True)
+@cmd(threaded=True)
 def timer(t:float=3, event:str="Done"):
     """ timer timer """
     sleep(t*60)
