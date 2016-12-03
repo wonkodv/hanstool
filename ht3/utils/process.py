@@ -20,16 +20,37 @@ SUBPROCESS_FINISH_HOOK = ht3.hook.Hook()
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
-def execute(*args, shell=False, is_split=True, **kwargs):
+def execute(*args, shell=False, is_split=..., **kwargs):
     """Execute a program."""
     if not all(isinstance(a, str) for a in args):
         raise TypeError("Expecting strings")
-    if not is_split:
+
+
+    if shell:
+        if is_split is ...:
+            pass
+        elif is_split:
+            raise TypeError("Don't pass `is_split` and `shell`")
         if len(args) != 1:
-            raise TypeError("Pass only 1 argument if not is_split", args)
-        args = shlex.split(args[0])
-    p = subprocess.Popen(args, shell=shell, **kwargs)
-    p.name = pathlib.Path(args[0]).name
+            raise TypeError("Pass only 1 argument with `shell`", args)
+        args = args[0]
+        name = pathlib.Path(shlex.split(args)[0]).name
+    else:
+        if is_split is ...:
+            is_split = True
+
+        if not is_split:
+            if len(args) != 1:
+                raise TypeError("Pass only 1 argument if not `is_split`", args)
+            args = shlex.split(args[0])
+        name = pathlib.Path(args[0]).name
+
+    try:
+        p = subprocess.Popen(args, shell=shell, **kwargs)
+    except OSError as e:
+        e.args = e.args + (args,shell)
+        raise e
+    p.name = name
     p.shell = shell
     SUBPROCESS_SPAWN_HOOK(p)
     def onreturn(cb):

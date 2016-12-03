@@ -9,7 +9,7 @@ from ht3.utils import process
 from ht3.env import Env
 from ht3.complete import filter_completions_i
 
-def execute(exe, *args, is_split=True, shell=False, **kwargs):
+def execute(exe, *args, is_split=..., shell=False, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
     if not isinstance(exe,str):
         raise TypeError("Expecting a string as exe", exe, type(exe))
@@ -30,7 +30,7 @@ def execute(exe, *args, is_split=True, shell=False, **kwargs):
             raise FileNotFoundError(exe) from None
 
     # Ugly flag stuff so windows does not create ConsoleWindows for processes which have the io streams set.
-    if all(x in kwargs and kwargs[x] is subprocess.PIPE for x in ('stdin','stdout','stderr')):
+    if all(x in kwargs and kwargs[x] == subprocess.PIPE for x in ('stdin','stdout','stderr')):
         if not 'startupinfo' in kwargs:
             si = subprocess.STARTUPINFO()
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
