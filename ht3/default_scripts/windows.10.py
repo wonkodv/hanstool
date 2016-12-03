@@ -45,7 +45,7 @@ if CHECK.os.win:
             return handle
         raise ValueError("No window",s)
 
-    Env['WindowHandle'] = WindowHandle = args.Param(
+    WindowHandle = Env['WindowHandle'] = args.Param(
         convert=_convert_windowhandle,
         complete=_complete_windowhandle,
         doc="Window Handle"

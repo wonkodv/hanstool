@@ -26,7 +26,7 @@ def py():
     return execute_auto(sys.executable)
 
 
-EXCEPTIONS = []
+EXCEPTIONS = Env['EXCEPTIONS'] = []
 
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
