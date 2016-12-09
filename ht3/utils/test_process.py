@@ -31,7 +31,7 @@ def test_excecute_shell():
         pytest.skip("Meh") # TODO: make this test windows safe
     p = helper(shellescape(sys.executable) + " -c \"print('$TEST')\"", shell=True)
     t, e = p.communicate()
-    assert t.strip() == '123'
+    assert t.strip() == 'hans'
 
 def test_excecute_nosplit_err():
     with pytest.raises(TypeError):
