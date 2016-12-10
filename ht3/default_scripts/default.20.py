@@ -111,7 +111,7 @@ def edit_command(c:args.Union(args.Command, args.Python)):
         f, l = COMMANDS[c].origin
     else:
         o = evaluate_py_expression(c)
-        o = inspect.unwrap(o) # unwrap @Env functions
+        o = inspect.unwrap(o) # unwrap @Env.updateable functions
         f = inspect.getsourcefile(o)
         try:
             _, l = inspect.getsourcelines(o)
@@ -168,7 +168,11 @@ def add_command(script:_complete_script_names, name=None, text=None):
     p.wait()
 
 @cmd
-def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"])=None):
+def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True))=None):
+    # Things we don't want to loose by Env._reload
+    from ht3.command import COMMANDS
+    from ht3.scripts import reload_all
+    from Env import CHECK
 
     if not ht3.scripts.check_all_compilable():
         return
@@ -183,28 +187,26 @@ def reload(module:args.Union(args.Option(sys.modules, sort=True), ["ENV", "ALL"]
         if module.lower() == 'env':
             log("\n==================== ENV RELOAD ===================\n")
             Env._reload()
-            ht3.command.COMMANDS.clear()
+            COMMANDS.clear()
         elif module.lower() == 'all':
             log("\n==================== FULL RELOAD ===================\n")
             for m in sys.modules:
                 importlib.import_module(m)
                 log("reloaded "+m)
             Env._reload()
-            ht3.command.COMMANDS.clear()
+            COMMANDS.clear()
         else:
             m = importlib.import_module(module)
             log("\n===== Reload Module "+module+" =========\n")
             importlib.reload(m)
-
-    log("\n===== RELOAD SCRIPTS ====\n")
+    else:
+        log("\n===== RELOAD SCRIPTS ====\n")
 
     try:
-        ht3.scripts.reload_all()
+        reload_all()
     finally:
         if CHECK.frontend('ht3.hotkey'):
             ht3.hotkey.reload_hotkeys()
-
-
 
 
 @cmd

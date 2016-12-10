@@ -35,7 +35,7 @@ else:
 
 EDITOR = Env['EDITOR'] = tuple(e) # make unmodifiable
 
-@Env
+@Env.updateable
 @cmd
 def edit_file(file_name:Path, line:int=0):
     """Edit a file using EDITOR."""

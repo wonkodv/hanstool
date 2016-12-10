@@ -4,11 +4,11 @@ import pprint
 import shlex
 import itertools
 
-@Env
+@Env.updateable
 def show(o):
     ALERT_HOOK(o)
 
-@Env
+@Env.updateable
 def log(o):
     DEBUG_HOOK(o)
 

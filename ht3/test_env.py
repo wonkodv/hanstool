@@ -77,16 +77,24 @@ class EnvTest(unittest.TestCase):
         def a():
             return 1
 
+        assert e['a']() == 1
+
+    def test_updateable(self):
+        e = _Env_class()
+
+        @e.updateable
+        def a():
+            return 1
+
         # this is not a but a wrapper that does e['a']() (without the recursion)
         ref1 = e['a']
 
         assert a is ref1
         assert ref1() == 1
 
-        @e
+        @e.updateable
         def a():
             return 2
-
 
         ref2 = e['a']
 

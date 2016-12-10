@@ -75,18 +75,33 @@ class _Env_class(types.ModuleType):
         return iter(self.dict)
 
     def __call__(self, func):
-        """for updateable functions in Env
+        """Decorator to put functions in Env
+        """
+        self.put(func.__name__, func)
+        return func
 
-        Places a wrapper in env which looks up the function in Env directly before invocation
+    def updateable(self, func):
+        """Put an updateable wrapper of a function in Env
+
+            @Env
+            def a(): return 1
+            x = Env.a
+            @Env
+            def a(): return 2
+
+            assert a() == 2
+            assert a != x
+            assert x() == 2
         """
         name = func.__name__
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            wrapper = self.get(name)
-            func = wrapper.__wrapped__
-            return func(*args, **kwargs)
+            w = self.get(name)
+            f = inspect.unwrap(w)
+            return f(*args, **kwargs)
         self.put(name, wrapper)
         return wrapper
+
 
     def __str__(self):
         return "Env: " + ", ".join(self.dict)
