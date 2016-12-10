@@ -274,7 +274,15 @@ class SingleArgParser(BaseArgParser):
         self.param_info = list(helper.param_info.values())[0]
 
     def convert(self, s):
-        return self.helper.apply_args([s],{})
+        if not s.strip():
+            if self.param_info.optional:
+                args = []
+            else:
+                raise ArgError("Expected 1 argument")
+        else:
+            args= [s]
+
+        return self.helper.apply_args(args,{})
 
     def complete(self, s):
         return self.param_info.typ.complete(s)
