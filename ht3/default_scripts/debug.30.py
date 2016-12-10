@@ -11,11 +11,6 @@ import sys
 import tempfile
 
 @cmd
-def list_env():
-    """ List all commands """
-    Env.show("\n".join(sorted(Env.dict.keys(), key=lambda k:k.lower())))
-
-@cmd
 def debug(what:args.Union(args.Command, args.Python)):
     """ Debug a Command """
     pdb.runcall(ht3.command.run_command, what)
@@ -34,7 +29,9 @@ def add_exception(exception, **kwargs):
     EXCEPTIONS.append(exception)
 
 @cmd
-def debug_err(i:int=-1):
+def exception_trace(i:int=-1):
+    """Open the traceback of the latest exception in gvim with :cload."""
+
     e = EXCEPTIONS[i]
     t = e.__traceback__
     s = ""
@@ -70,13 +67,14 @@ def debug_err(i:int=-1):
 
 @cmd(name='import')
 def _import(m:args.Option(sys.modules, allow_others=True, sort=True)):
+    """Import a module into Env."""
     root = m.partition('.')[0]
     importlib.import_module(m)
     Env[root] = sys.modules[root]
 
-
 @cmd
 def update_check():
+    """Check for updates in git."""
     p = str(Path(__file__).parent)
     procio('git','-C',p,'fetch')
     status = procio('git','-C',p,'status','-sb')

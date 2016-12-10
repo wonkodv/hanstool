@@ -18,6 +18,7 @@ if CHECK.frontend('ht3.cli'):
 
 @cmd
 def txt():
+    """Edit ~/txt."""
     edit_file(expanduser("~/txt"))
 
 @cmd(threaded=True)
@@ -47,6 +48,7 @@ def vb(box:complete_virtualbox=None):
 
 @cmd
 def rand(low:int=0, high:int=0xFFFFFFFF):
+    """Copy a random number to the Clipboard."""
     r = random.randint(low,high)
     set_clipboard("0x{:8X}".format(r))
     show(r)

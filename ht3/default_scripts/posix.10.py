@@ -13,6 +13,9 @@ if CHECK.os.posix:
 
     @cmd
     def mount(device:complete_mount_device):
+        """Mount a dvice by its label, partlabel or name.
+
+        Creates a folder in /media for the name/label and mounts to it."""
         import os
         for d in ('/dev/', '/dev/disk/by-label', '/dev/disk/by-partlabel'):
             dev = Path(d) / device
@@ -42,5 +45,6 @@ if CHECK.os.posix:
         procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
     @cmd(name='o')
-    def xdg_open(s):
+    def xdg_open(s:Path):
+        """Open something with xdg-open."""
         return execute_disconnected('xdg-open', s)

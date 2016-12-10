@@ -5,7 +5,7 @@ import shutil
 
 @cmd(name="$")
 def _procio(cmd:args.ExecutableWithArgs):
-    """Get Programm output."""
+    """Show output of a shell command."""
     show(procio(cmd, shell=True, is_split=False))
 
 @cmd(name="#")
@@ -61,9 +61,6 @@ def _executable_command_h(s):
     else:
         if shutil.which(parts[0]):
             return _procio, s
-
-
-
 
 @exe_completer('ls')
 def complete_ls(parts):

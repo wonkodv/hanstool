@@ -23,11 +23,11 @@ import io
 
 @cmd(name='l')
 def list_commands():
-    """ List all commands """
+    """ List all commands."""
     text = ""
     for n in sorted(COMMANDS):
         c = COMMANDS[n]
-        d = c.doc
+        d = c.doc.partition('\n\n')[0]
         doc = textwrap.shorten(d,60)
         doc = "%- 20s %s\n" % (n, doc)
         text += doc
@@ -62,6 +62,7 @@ def _complete_fake(string):
 
 @cmd(name=':')
 def test_fake(s:_complete_fake):
+    """Test a fake-sequence after 500 ms."""
     sleep(0.5)
     fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
@@ -69,6 +70,7 @@ def test_fake(s:_complete_fake):
 
 @cmd(attrs=dict(HotKey='F10'))
 def repeat_fake():
+    """Repeat the fake-sequence last tested."""
     global FAKE_TEXT
     fake(FAKE_TEXT)
 
@@ -82,11 +84,13 @@ def _show_eval(s:args.Python=""):
 
 @cmd(name=';')
 def _execute_py_expression(s:args.Python):
+    """Execute a python statement."""
     execute_py_expression(s.lstrip())
 
 
 @COMMAND_NOT_FOUND_HOOK.register
 def _python_command_h(s):
+    """Evaluate or executed as python."""
     try:
         c = compile(s, '<input>', 'eval')
         return _show_eval.command, s
@@ -100,13 +104,14 @@ def _python_command_h(s):
 
 @cmd
 def exit(returncode:int=0):
+    """Quit with return code or 0."""
     sys.exit(returncode)
 
 cmd(exit, name='quit')
 
 @cmd(name="+")
 def edit_command(c:args.Union(args.Command, args.Python)):
-    """ Edit the location where a command or function was defined """
+    """Edit the location where a command or function was defined."""
     if c in COMMANDS:
         f, l = COMMANDS[c].origin
     else:
@@ -124,7 +129,8 @@ def _complete_script_names(s):
 
 @cmd(name="++")
 def add_command(script:_complete_script_names, name=None, text=None):
-    """ define a command in a script.
+    """Define a command in a script.
+
         1.  If `script` matches a loaded one, it is edited, otherwise
             a new script with the name
             (it must end in .py) is created in the directory of
@@ -169,6 +175,11 @@ def add_command(script:_complete_script_names, name=None, text=None):
 
 @cmd
 def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True))=None):
+    """Reload none, one or all Modules and all scripts.
+
+    Check if all loaded Scripts can be compiled, then reload the specified module
+    and reload all scripts.
+    Can be used after editing a script."""
     # Things we don't want to loose by Env._reload
     from ht3.command import COMMANDS
     from ht3.scripts import reload_all
@@ -211,7 +222,9 @@ def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True)
 
 @cmd
 def restart(*more_args):
-    """ Check if all loaded Scripts can be compiled and then restart the python
+    """Restart ht.
+    
+        Check if all loaded Scripts can be compiled and then restart the python
         programm using sys.executable, "-m ht3" and args, where args is all
         -f, -s and -r args, NOT -x.
     """
@@ -271,7 +284,7 @@ if CHECK.frontend('ht3.gui'):
         HT_TO_FRONT_TIME=0
         @cmd(attrs=dict(HotKey="F8"))
         def httofront():
-            """ Show the input and, if executed twice within short time, show log win """
+            """Show the input and, if executed twice within short time, show log win."""
             global HT_TO_FRONT_TIME
             if time.monotonic() - HT_TO_FRONT_TIME > 0.25:
                 Env.PlaceOverTaskbar()
@@ -289,6 +302,7 @@ if CHECK.frontend('ht3.hotkey'):
 
     @cmd
     def disable_hotkey(hk:complete_hotkey=None):
+        """Disable a hotkey."""
         if hk:
             hk = ht3.hotkey.get_hotkey(hk)
             hk.unregister()

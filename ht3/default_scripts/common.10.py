@@ -36,20 +36,19 @@ else:
 EDITOR = Env['EDITOR'] = tuple(e) # make unmodifiable
 
 @Env.updateable
+@args.enforce_args
 @cmd
 def edit_file(file_name:Path, line:int=0):
     """Edit a file using EDITOR."""
-    f = str(file_name) # allow pathlib.Path
-    l = int(line)
     e = Env.EDITOR[0].lower()
 
     args = list(EDITOR)
-    args.append(f)
+    args.append(str(file_name))
     if line:
         if 'vim' in e:
-            args.append('+%d'%l )
+            args.append('+%d' % line)
         elif 'notepad++' in e:
-            args.append('-n%d'%l)
+            args.append('-n%d' % line)
     p = execute_auto(*args)
     return p
 

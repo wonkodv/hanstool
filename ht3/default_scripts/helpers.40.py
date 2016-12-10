@@ -23,7 +23,7 @@ def history(*search):
 
 @cmd(name='!')
 def rerun(x:args.Union(args.Int,args.Str)):
-    """Redo a command from the history by its number."""
+    """Redo a command from the history by its number or starting text."""
     if isinstance(x,int):
         l = list(ht3.history.get_history())
         c = l[x]
