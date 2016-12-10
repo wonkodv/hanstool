@@ -445,7 +445,15 @@ def ArgParser(function, typ, apply_defaults):
 
         raise TypeError("No matching argument parser", param_info)
 
-    if typ in [None, 0]:
+    if typ in [1, '1']:
+        if len(param_info) > 1:
+            if not param_info[0].multiple:
+                if all(i.optional for i in param_info[1:]):
+                    return SingleArgParser(helper)
+            raise TypeError("There are more than 1 required paramertes", param_info)
+        raise TypeError("No paramerter expected", param_info)
+
+    if typ in [None, 0, False]:
         if all(i.optional for i in param_info):
             return NoArgParser()
         raise TypeError("There are required paramertes", param_info)
