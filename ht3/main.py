@@ -12,8 +12,9 @@ from .scripts import load_scripts
 
 
 HELP= """call ht with the following arguments:
-    -s SCRIPT   Load a script
-    -s FOLDER   Load several scripts
+    -s SCRIPT   Add a script
+    -s FOLDER   Add several scripts
+    -l          Load all added unloaded scripts or default scripts
     -f FRONTEND Load a frontend (dont start it yet)
     -e VAR VAL  Set a Variable to a string value
     -x COMMAND  execute a command
@@ -25,15 +26,36 @@ def main(args):
         _x = False
         _f = False
         _r = False
-        _s = False
+        _l = False
         arg_iter = iter(args)
+        scripts = []
+
+        def load_default_scripts():
+            s = Env.get('SCRIPTS', False)
+            if s:
+                for p in s.split(':'): #TODO use ; on Win
+                    load_scripts(os.path.expanduser(p))
+            else:
+                import pkg_resources
+                s = pkg_resources.resource_filename(__name__,'default_scripts')
+                load_scripts(s)
+                s = os.path.expanduser('~/.config/ht3')
+                if os.path.exists(s):
+                    load_scripts(s)
 
         for a in arg_iter:
             if a == '-s':
                 s = next(arg_iter)
                 s = os.path.expanduser(s)
-                load_scripts(s)
-                _s = True
+                scripts.append(s)
+                _l = False
+            elif a == '-l':
+                if not scripts:
+                    load_default_scripts()
+                for s in scripts:
+                    load_scripts(s)
+                scripts.clear()
+                _l = True
             elif a == '-e':
                 k = next(arg_iter)
                 v = next(arg_iter)
@@ -61,18 +83,12 @@ def main(args):
             lib.load_frontend('ht3.cli')
             _f = True
 
-        if not _s:
-            s = Env.get('SCRIPTS', False)
-            if s:
-                for p in s.split(':'): #TODO use ; on Win
-                    load_scripts(os.path.expanduser(p))
-            else:
-                import pkg_resources
-                s = pkg_resources.resource_filename(__name__,'default_scripts')
-                load_scripts(s)
-                s = os.path.expanduser('~/.config/ht3')
-                if os.path.exists(s):
+        if not _l:
+                if not scripts:
+                    load_scripts()
+                for s in scripts:
                     load_scripts(s)
+
         if not _r and _f:
             lib.run_frontends()
         return 0
