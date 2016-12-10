@@ -7,7 +7,7 @@ TL;DR
     vim
         @cmd(name="web")
         def web():
-            execute("/usr/bin/firefox")
+            execute("/usr/bin/firefox","http://example.com")
     ht> web
     ht>
 
@@ -29,7 +29,7 @@ Components:
     Looks very shell like. If there is no such command, you can choose what to do,
     for example evaluate it as python expression and show the result.
 *   Script loader, which executes python scripts in which you define commands.
-*   One global Namespace in which the scripts and commands are exected in, for less typing
+*   One global Namespace in which scripts can share common functions, variables, ...
 *   Completion for Commands, their arguments, and simple python expressions or statements
 *   Frontends: They ask the user for input, offer completion, show messages and
     can be controlled by commands.
@@ -45,13 +45,13 @@ Command
 -----
 
 Commands are the concept of python functions, executed by a short name.
-for clarification:
+For clarification:
 *   command-string: The text (including Arguments) you type to execute a command
 *   command-name: The text before any arguments you type to execute a command
-*   command-arguments: The argumetn part of the command-string  you type to execute
+*   command-arguments: The argument part of the command-string  you type to execute
     a command
-*   command-function: The command function the python function in which things happen
-*   command-wrapper: The wrapper arround the command-function. This wrapper
+*   command-function: The python function in which things happen
+*   command-wrapper: The wrapper around the command-function. This wrapper
     takes command-arguments, parses them and then calls the command-function with
     the parsed arguments.
 *   command-attribute:  Attributes of the command (name, hotkey, ...). These are
@@ -61,98 +61,90 @@ for clarification:
 Command Strings
 ------
 
-The String you type to get things done as EBNF:
+Anything before the first space of a command string is the command name, anything after the first
+space is a command argument.
 
-    COMMAND:    NAME
-    COMMAND:    NAME WS+ ARGUMENT
-    COMMAND:    Python Expression
-    COMMAND:    (Python Statement)+
-    NAME:       (~(WS RETURN))+
-    WS:         SPACE | TAB
-    ARGUMENT:   (~RETURN)+
+Examples of command names:
 
-and as plain text:
+*   `web`
+*   `doStuff`
+*   `#`
 
-    all (printable) characters that are not whitespaces make the command name, the rest
-    of the line is the argument to the command
+Examples of commands, with and without arguments:
 
-and as some examples:
-
-    web
-    web example.com
-    ? web
-    foo
-    foo bar
-    foo         bar baz!
-    foo -bar --baz=42
-    : +SHIFT A -SHIFT
-    |
-    $ cat ~/txt | /dev/null
-    < some/file.ht
+*   `web example.com`
+*   `doStuff`
+*   `# vim -c /Hans`
+*   `& firefox http://example.com"
 
 Command-Functions
 ---
 
 Commands are python functions with some additional attributes. A python
-function becomes a command-function by passing it to `cmd(kwargs)(the
-function)` or `cmd(the function)` usually in the form of a decorator.
+function becomes a command-function by passing it to `cmd` or `cmd(kwargs)` usually in the form of a decorator.
 
-    @cmd(name='!', args='shell', **MoreKWArgs)
-    def execute_things(program, *arguments)
-        log("Executing Program %s with arguments %s",program, arguments)
-        subprocess.execute(list(programm,*arguments))
+    @cmd(name="e")
+    def edit_file(file_name:Path, line:int=0):
+        pass # invoke an editor for file_name at line
 
-The `@cmd` decorator has more or less the following effect:
-
-    def execute_things(programm, *arguments):
-        log("Executing Program %s with arguments %s",program, arguments)
-        subprocess.execute(list(programm,*arguments))
-
-    def wrapper(string)
-        args = Parse_Shell_Args(string)
-        execute_things(*args)
-
-    wrapper.name='!'
-    wrapper.__doc__ = "Invoke as '!', takes Shell Arguments" + execute_things.__doc__ + "Defined in some/file.py:line"
-    wrapper.attr = MoreKWArgs
-    COMMANDS['!'] = wrapper
-    del wrapper
-
-Note that, the function is stored itself under its own name in the namespace,
+Note that, the function is stored itself under its own name in the script where it is defined,
 not the wrapper.  The wrapper is stored under the command-name in the
 `COMMANDS` dictionary. The wrapper does not appear anywhere else.
 The command has the following properties:
 
-*   Name is `!`. This would often be the function name, but can be different.
+*   Name is `e`. This would often be the function name, but can be different.
     Any sequence of printable, non-whitespace characters works.
-*   Arguments to `!` should be parsed with the `shell` strategy. The complete text
-    after `!` is parsed into a list of strings in the way unix shells parse
-    argument strings. (see doc of `shlex.split()` for details.)
-*   Function: The `execute_things` function will be called when the user runs the `!`
-    command. The command-argument is parsed and passed to the function as
-    positional arguments. For example the following commands are equal to the python calls:
-    *   `! a b "c"` =>  `execute_things('a', 'b', 'c')`
-    *   `! ` =>  `execute_things()`
-    *   `! rm -rf /` =>  `execute_things('rm', '-rf', '/')`
+*   Arguments to `e` are 1 Path and an int. The argument string will be parsed with
+    `shlex.split()` to seperate the two arguments, converted to `pathlib.Path` and `int` and
+    passes to the `edit_file` function.
+
+Typing `e ~/todo 10` is equivalent to the python expression
+`edit_file(pathlib.Path("~/todo").expanduser(), 10)`
 
 Argument Parsing Methods
 -------------------------
 
-There are multiple argument parsing strategies implemented.
-The default one does shell like parsing and passes the strings as positional
-arguments to your function. If the parameters are annotated, that annotation
-should be a callable that converts a string into your expected type (like `int` or `float`).
+There are multiple argument parsing strategies implemented, they can be chosen with `@cmd(args=...)` the default, `auto`, choses 
+automatically, based on the function's signature:
+
+*   if there is no parameter, no command-argument is allowed
+*   if there is only parameter, the complete argument-string is passed as the single parameter
+*   if there are multiple positional parameters, the argument-string is parsed with
+    `shlex.split()`.
+
+These can be specified explicitly using `0`,`1` or `'shell'`.
+
+If `args` starts with `:`, the argument-string is parsed by `getopt`, and passed to the function as
+`**kwargs`.
 
 More in [Argument Parsing](./docs/ARGUMENTS.md)
 
 The one unified Namespace `Env`
 -------------------------------
 
-Namespaces are very pythonic and you should always have more of those.  But
-this tool is not about clean and readable code, it's about getting things done
-(without dolores -.-) therefore there is only one great namespace in which
-scripts and commands are executed. From outside that namespace (the core code
-and platform modules) the environment is available in `ht3.env.Env`.
+Namespaces are very pythonic and you should always have more of those.  But putting many things in
+the same namespace saves a lot of typing and allows to overwrite behavior in other places.
+Env should be used by scripts to define, use
+and overwrite functions and variables and share these among each other.  For example `edit_file` is
+implemented in `common.10` to use the `EDITOR` variable, but can be overwritten in any script that
+is loaded later`to use an explicit editor.
+
+`ht3.env.Env` is registered as its own module `Env`. It can be used to import its elements,
+as a dcorator to put functions in Env, has an `updateable` decorator with which functions (like
+`edit_file`) can be declared, referenced and later updated, with references beeing updated as well.
+
+    @Env
+    def some_func(): pass
+    Env['PATH'] = foo
+
+    Env.update(vars())
+
+    @Env.updateable
+    def foo(): return 1
+    from Env import foo as f
+    @Env.updateable
+    def foo(): return 2
+    assert f() == 2 # foo is updateable. you only hold wrappers that look up the newest fucntion in Env
 
 
 More in [Env](./docs/ENV.md)
@@ -160,7 +152,7 @@ More in [Env](./docs/ENV.md)
 Scripts
 -----------
 
-Scripts are python scripts that are all executed in the same namespace.
+Scripts are python scripts that are imported as submodules of `Env`.
 You can define functions variables and most important, commands there.
 The way you load scripts:
 1.  Specify one or more scripts or directories with scripts on the command line
@@ -192,41 +184,47 @@ script directory and pass it explicitly.
 Be sure to load a script that initializes your Env before any other.
 This can be `basic.0.py` or something else.
 
-If one of your scripts imports `ht3.check.CHECK`, you can make your scripts flexible
-for running on different plattforms and with different frontends.
-See [CHECK](./docs/CHECK.md).
+A script can do `from Env import *` to have most functionality it needs already imported.
+
+Scripts are imported as submodules of `Env`. `a.10.py` will be accessible as `Env.a`, (and of
+course as Env['a']).
 
 Some Default Commands
 -----------------
 
 The default scripts define some commands:
 
-*   `l` List all commands
-*   `exit` Close the tool
-*   `=` evaluate a python statment and show the result: `= 1+1*1+1`
-*   `;` execute a python statement, e.g. `; for i in 1,2,3,4: show(i**2)`
-*   `?` help on commands or python objects: `? exit` `? sys`
-*   `+` open the editor where a command or other function was defined
-*   `++ s [c]` open the script that matches `s` or a new script named `s`.
-    If given, add template for a new command named `c`
-*   `$` calls the Shell. `$ wc -l ~/txt > ~/txt-len` writes the length of txt to txt-len
-    The `$` command has argumennt parsing `1` because the function wants the entire
-    text after the dolalr sign, open a shell, and let that shell figure out what to
-    do with the string.
-*   `!` executes programms. `! gvim ~/txt` opens txt in gvim.
-    The `!` comand has argument parsing strategy `shell` so the command-function
-    is invoked with 2 arguments, the strings `gvim` and `~/txt`. It
-    executes the first one, an passes the second as argument. `gvim`
-    has to deal with he tilde character. Since vim is awesome, this works. If you
-    used this with notepad.exe, which is not awesome, it would not work.
-    Note that on windows, argument parsing can be rather weird, for example
-    `! explorer "/select,C:\Program Files\Notepad++\Notepad++.exe"` does not work
-    but `$ explorer /select,"C:\Program Files\Notepad++\Notepad++.exe"` works.
-*   `#` open the target command's file in explorer. If you have a command that
-    executes "notepad++", the `# n++` command would open explorer with the
-    notepad++.exe selected.  Works by inspecting the code of a command function
-    and taking the first string constant names an existing file. Only on
-    windows.
+
+    !                    Redo a command from the history by its number or starting text
+    #                    Execute a Program and wait for completion.
+    $                    Show output of a shell command.
+    &                    Execute a Program and let it run in background.
+    +                    Edit the location where a command or function was defined.
+    ++                   Define a command in a script.
+    :                    Test a fake-sequence after 500 ms.
+    ;                    Execute a python statement.
+    =                    Evaluate a python expression and show the result
+    ?                    Show help on a command or evaluated python expression
+    debug                Debug a Command
+    edit_file            Edit a file using EDITOR.
+    exception_trace      Open the traceback of the latest exception in gvim [...]
+    exit                 Quit with return code or 0.
+    history              Search for a command in the history file.
+    import               Import a module into Env.
+    l                    List all commands.
+    mount                Mount a dvice by its label, partlabel or name.
+    o                    Open something with xdg-open.
+    py                   start a python repl
+    quit                 Quit with return code or 0.
+    rand                 Copy a random number to the Clipboard.
+    reload               Reload none, one or all Modules and all scripts.
+    repeat_fake          Repeat the fake-sequence last tested.
+    restart              Restart ht.
+    timer                timer timer
+    txt                  Edit ~/txt.
+    update_check         Check for updates in git.
+    vb                   Open VirtualBox (the manager) or start a box with the name
+
 
 Frontends
 -----------
@@ -234,11 +232,12 @@ Frontends
 Any packet can be a HT-Fronend. The user chooses which one(s) to load on the commandline.
 
 *   CLI: This one is really almost a shell
-*   A little Window
+*   A little Window with a bigger log window
 *   Hotkeys: (Probably runs paralell to anotherone) which has
     systemwide hotkeys for some commands
+    Currently only on windows
 *   a Daemon: listens on a socket for commands. commands can be sent with
-    `python -m ht3.client "command 1" "command 2"`.
+    `python -m ht3.client "command"
     Only on UNIX.
 *   [Awesome WM Client](./docs/AWESOME.md): A piece of lua that runs `ht3.client`
 *   more are easily implemented, see [Frontends](./docs/FRONTENDS.md)
@@ -247,68 +246,71 @@ Any packet can be a HT-Fronend. The user chooses which one(s) to load on the com
 Command Line
 -----------
 
-The HT3 entry point is `ht3.__main__` so you can run it with `python -m ht3`.
-when installing with `pip`, a script named `ht` is added to your `PATH` to do that.
+You can run ht3 with `python -m ht3`. If installed with `pip`, a script named `ht` is
+added to your `PATH` to do that.
 
 You can pass any number of the following arguments:
 *   `--help`        Display this text
 *   `-e KEY VALUE`  add a variable to the environment
-*   `-s FILE`       execute a script
-*   `-s PATH`       execute a folder full of scripts. Scripts are sorted (z.10.py before a.20.py)
+*   `-s FILE`       Add a script
+*   `-s PATH`       Add a folder full of scripts. Scripts are sorted (z.10.py before a.20.py)
+*   `-l`            Load scripts that were added (or the default scripts (see below))
 *   `-f FRONTEND`   load a frontend.
 *   `-x COMMAND`    execute a command
 *   `-r`            (run) Start all frontends loaded so far.
+
 Arguments are processed in the order they are passed. You should propably put
 them in the order they appear above to put things in the environment, then load
 scripts, then load frontends, then execute some commands and finally start the
 frontends. When processing `-r`, all the frontends that were loaded by previous
 `-f` are started.  Once one interface exits, all others are stopped as well and
 the argument after `-r` is processed.  Multiple `-r` will start the frontends
-multiple times.
+multiple times (why would you?).
 
 After processing all passed arguments, the following default actions happen:
 
-*   If no script was loaded with `-s`:
-    *   If there is an `Env.SCRIPTS` the scripts from there are loaded (
+*   If no scripts were added,
+    *   If there is an `Env.SCRIPTS` the scripts from there are added (
         multiple paths are seperated by `:`)
-    *   else, the `default_scripts` are loaded and, if exists, the scripts from
+    *   else, the `default_scripts` are added and, if exists, the scripts from
         `~/.config/ht3`
+*   All added, not yet loaded scripts are loaded
 *   If one or more frontends were loaded with `-f` but not run with `-r`,
     they are run.
 *   If no frontend was loaded with `-f` and no command executed with `-x`, then
     the `ht3.cli` frontend is loaded and run.
 
 It should usually be enough to just call `ht` without arguments, or with `-f`.
+To do a command immediately, you should call `ht -l -x cmd` to load the default scripts before
+executing the cmd
 
 Configure Things
 ---------------
 
-Some Behaviour can be configured by setting things in the `Env`.
-*   `command_not_found_hook(s)` is executed if the command-string does
-    not specify a command. Defaults to evaluating or executing as python code.
+ Behavior of default commands can be configured via settings in `Env`, behavior of the HT-Core can
+be configured via hooks. Hooks are lists of functions that are all called for notifications, or
+that are called until the first function returns a useful result.
+
+*   `COMMAND_NOT_FOUND_HOOK` is checked if there is no command with the name.
 *   `general_completion(s)` should return a list/iterator of completions for
     the general input. The default is, to complete commands if possible, else
-    python code.
+    python code. Default is to try to eval/exec as python or to start the programm.
 *   `CLI_PROMPT`: the text in the CLI Prompt, can be a `str` or a callable
     returning strings. Default: `'ht3> '`
 *   `EDITOR`: a list of strings that should be an editor with parameters.
     It is used by the `edit_file` function in the `default_scripts`.
-*   `RL_HISTORY`: a string that points to a file with the history of the CLI repl.
-*   `GUI_HISTORY`: a string that points at a file for the history of the GUI
-    command window.
-*   `DEBUG`: set to true to do post mortem pdb debugging.
+*   `HISTORY`: a path to a file that contains the latest commands.
+*   `HISTORY_LIMIT`: the number of entries to keep when loading the file
+*   `DEBUG`: set to true to do post mortem pdb debugging. and more logging
 *   `SCRIPTS` If no script is passed on the command line, this variable can specify
      scripts, seperated by `:` that will be loaded.
 
 String variables can be configured via environment, but require a `HT3_` prefix, for
 example in `.bashrc`:
-    export HT3_RL_HISTORY=~/.config/ht3/readline_history
+    export HT3_HISTORY=~/.config/ht3/readline_history
     export HT3_DEBUG=1
     export HT3_SCRIPTS=/opt/imported/scripts:~/__config/ht3
-Other python objects and strings can be configured in scripts. The default
-values are set very early by `ht3.lib`. Scripts are run in the order they appear on
-the command line.
-
+Other python objects and strings can be configured in scripts. or on the commandline with -x.
 
 Tipps
 -----
@@ -318,8 +320,6 @@ The `ht3.cli` uses readline. Configure it as you need.
     readline.parse_and_bind('set editing-mode vi')
 
 Make it more shell like by importing modules like `sh` [^2] or `plumbum` [^3]
-into your Environment and glue them to the `command_not_found_hook`.
-If you have a good setup, tell me about it!
 
 [^2]: https://amoffat.github.io/sh/
 [^3]: https://plumbum.readthedocs.org/en/latest/

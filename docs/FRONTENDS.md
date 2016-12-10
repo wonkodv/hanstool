@@ -1,7 +1,7 @@
 FRONTENDS
 =========
 
-You can easily implement a new Frontend by making a module that has these two functions:
+You can easily implement a new Frontend by making a module that has these functions:
 *   `start()`: This is called from the main thread and should emsure that the frontend
     is ready to run.
 *   `loop()`: This is called from a frontend specific thread and
@@ -22,12 +22,9 @@ registered commands from `ht3.command.COMMANDS`
 Frontends should mainly call the following functions:
 *   `ht3.command.run_command(string)` to do what the user typed.
 *   `ht3.complete.get_completion(string)` to complete what the user started to type.
+*   Register function to the Logging Hooks
 
 
 Some functions may be useful to put into the `Env`:
-*   `show` and all of the `log_*` methods that are initially implemented in 
-    `ht3.env.log`
-*   a function (decorator) so scripts can register functions that should be
-    executed at the start of the frontend's `loop` after some initialization happened,
-    as `ht3.gui.gui_do_on_start` does.
+*   Frontends should have an `__all__` tuple of functions that will be put in `Env`.
 

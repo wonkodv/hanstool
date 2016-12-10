@@ -1,52 +1,33 @@
 The one unified Namespace `Env`
 -------------------------------
 
-All bindings are added by scripts.
-In the default scripts, `basic.0.py` puts various ht3 control functions,
-all of the utility functions, and some useful functions from the python libs
-(`sleep`, `Path`, etc.) into Env, but you don't have to use that file.
+`Env` is intended as a namespace in which scripts share useful stuff.
+It is implemented in `ht3.env.Env` and registered as module `Env`.
 
-Since anything that is defined in module scope of the scipts is put into the
-namespace, it might be useful to wrap code that uses variables or imports
-modules into a function with a name that does not annoy you later, or simply
-deleting it once it was called. From inside, bindings in the Env can still be
-made with the `global` keyword.
+Scripts can:
 
-    def initialize_something_once():
-        import some.module
-        compute = something
-        do_something()
-        global ThisIsImportant
-        ThisIsImportant = 42 # put this in Env
-    initialize_something_once()
-    del initialize_something_once
+*   Set variables in Env:
+        Env['FOO'] = 123
+* Access variables in Env
+        Env.FOO
+        Env['FOO']
 
-The Env can be reloaded, in which case it forgets everything except for a few
-"persistent" bindings. These are made with `Env.put_persistent(key, value)`.
+*   import bindings from Env:
+        from Env import *
+        from Env import execute
 
-Elements in Env that are expected by `ht3` core code:
+*   export all their bindings to `Env` using:
 
-*   `command_not_found_hook(string)`
-*   `general_completion`
-*   `log`
-*   `show`
-*   `help`
-*   `log_error`
-*   `log_command`
-*   `log_command_finished`
-*   `log_thread_finished`
-*   `log_subprocess`
-*   `log_subprocess_finished`
+        Env.dict.update(vars())
 
-Elements that are used by ht3 core code:
+*   add single functions to Env using
 
-*   `SCRIPTS`
-*   `DEBUG`
-*   `CLI_PROMPT`
-*   `HISTORY`
-*   `HISTORY_LIMIT`
-*   `SOCKET`
+        @Env
+        def func
 
-Elements that are set by core code:
 
-*   `_` the result of the previous `run_command` if not `None`
+When commands are executed, the latest result is stored in `Env['_']`, all Results in `Env['__']
+and Exceptions in `Env['EXCEPTIONS']`.
+
+Commands and Env are not dependant on each other. Overwriting in one does not influence in the
+other.
