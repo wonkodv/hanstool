@@ -60,7 +60,7 @@ def _executable_command_h(s):
         pass
     else:
         if shutil.which(parts[0]):
-            return _procio, s
+            return _procio.command, s
 
 @exe_completer('ls')
 def complete_ls(parts):

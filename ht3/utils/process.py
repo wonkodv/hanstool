@@ -98,7 +98,7 @@ def procio(*args, input=None, timeout=None, **kwargs):
 
     out, err = p.communicate(input=input, timeout=timeout)
     if p.returncode != 0:
-        raise ProcIOException("Non-zero return code", args, p.returncode, out, err)
+        raise ProcIOException("Non-zero return code", p.returncode, out, err, args)
     return out
 
 def complete_executables(s):

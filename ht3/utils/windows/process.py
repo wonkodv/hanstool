@@ -37,6 +37,8 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
             si.wShowWindow = subprocess.SW_HIDE
             kwargs['startupinfo'] = si
 
+    # TODO: handle messed up encoding of windows shell processes
+
     return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
 
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)

@@ -337,9 +337,23 @@ class UserInterface():
 
         def log_error(self, frontend, exception, **k):
             e=exception
-            t = type(e)
-            tb = e.__traceback__
-            self.log("".join(traceback.format_exception(t, e, tb)))
+            if isinstance(e, ht3.utils.process.ProcIOException):
+                self.log(
+                    (   "Returncode: {}\n"
+                        "stdout:\n"
+                        "{}\n"
+                        "stderr:\n"
+                        "{}\n"
+                    ).format(
+                        exception.returncode,
+                        textwrap.indent(exception.out.rstrip(),'> ', lambda s:True),
+                        textwrap.indent(exception.err.rstrip(),'> ', lambda s:True),
+                    )
+                )
+            else:
+                t = type(e)
+                tb = e.__traceback__
+                self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
         def log_subprocess(self, frontend, p):

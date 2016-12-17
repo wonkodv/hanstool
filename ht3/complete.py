@@ -160,7 +160,8 @@ def complete_path(s):
         p = pathlib.Path('.')
     else:
         p = pathlib.Path(os.path.expanduser(s))
-    if s[-1] in ['/', os.sep]:
+
+    if not s or s[-1] in ['/', os.sep]:
         stem = s
         mask = '*'
         p = p

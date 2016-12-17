@@ -1,5 +1,6 @@
 from Env import *
 
+import faulthandler
 import ht3.command
 import importlib
 import inspect
@@ -84,5 +85,12 @@ def update_check():
         show("Git status: "+status)
     else:
         show("Git up to date")
+
+try:
+    from Env import _RELOADED
+except ImportError:
+    _RELOADED = 0
+if _RELOADED == 0:
+    faulthandler.enable(open("faultdump","at"))
 
 warnings.simplefilter("error")

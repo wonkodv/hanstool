@@ -98,7 +98,7 @@ def _python_command_h(s):
         pass
     try:
         c = compile(s, '<input>', 'exec')
-        return _execute_py_expression, s
+        return _execute_py_expression.command, s
     except SyntaxError:
         pass
 
@@ -184,6 +184,10 @@ def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True)
     from ht3.command import COMMANDS
     from ht3.scripts import reload_all
     from Env import CHECK
+    try:
+        from Env import _RELOADED
+    except ImportError:
+        _RELOADED = 0
 
     if not ht3.scripts.check_all_compilable():
         return
@@ -212,6 +216,8 @@ def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True)
             importlib.reload(m)
     else:
         log("\n===== RELOAD SCRIPTS ====\n")
+
+    Env['_RELOADED'] = _RELOADED + 1
 
     try:
         reload_all()
@@ -250,11 +256,14 @@ def restart(*more_args):
             if v == '_RESTARTED':
                 v=str(int(v)+1)
             args += [a, k, v]
-        elif a == '-r':
+        elif a in ['-r', '-l']:
             args += [a]
+        elif a == '-x':
+            next(it) # not doing that again
+        elif a == '-c':
+            next(it) # not doing that again
         else:
-            assert a == '-x', "Unknown arg "+a+" in restart"
-            next(it)    # dont execute -x
+            assert False, "Unknown arg "+a+" in restart"
 
     it = iter(more_args)
     for a in it:

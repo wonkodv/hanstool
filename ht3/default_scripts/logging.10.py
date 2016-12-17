@@ -4,6 +4,13 @@ import pprint
 import shlex
 import itertools
 
+
+def _print(s, **kwargs):
+    try:
+        print(s, **kwargs)
+    except UnicodeError:
+        print(s.encode("ASCII","backslashreplace").decode("ASCII"), **kwargs) # This happens on windows sometimes
+
 @Env.updateable
 def show(o):
     ALERT_HOOK(o)
@@ -16,12 +23,12 @@ def log(o):
 @SUBPROCESS_SPAWN_HOOK.register
 def log_subprocess(p):
     if Env.get('DEBUG', False):
-        print("Process spawned {}{}:{}".format(p.pid, ' shell' if p.shell else '', p.args))
+        _print("Process spawned {}{}:{}".format(p.pid, ' shell' if p.shell else '', p.args))
 
 @SUBPROCESS_FINISH_HOOK.register
 def log_subprocess_finished(p):
     if p.returncode > 0 or Env.get('DEBUG', False):
-        print("Process finished {} ({}):{}".format(p.pid, p.name, p.returncode))
+        _print("Process finished {} ({}):{}".format(p.pid, p.name, p.returncode))
 
 @DEBUG_HOOK.register
 def log_debug(o):
@@ -42,15 +49,29 @@ def log_alert(o):
     else:
         o = pprint.pformat(o)
 
-    print(o)
+    _print(o)
 
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
 def last_exception_h(exception, **kwargs):
-    t = type(exception)
-    tb = exception.__traceback__
-    for s in traceback.format_exception(t, exception, tb):
-        print(s, end='')
+    if isinstance(exception, ProcIOException):
+        _print(
+            (   "Returncode: {}\n"
+                "stdout:\n"
+                "{}\n"
+                "stderr:\n"
+                "{}\n"
+            ).format(
+                exception.returncode,
+                textwrap.indent(exception.out.rstrip(),'> ', lambda s:True),
+                textwrap.indent(exception.err.rstrip(),'> ', lambda s:True),
+            )
+        )
+    else:
+        t = type(exception)
+        tb = exception.__traceback__
+        for s in traceback.format_exception(t, exception, tb):
+            _print(s, end='')
 
 
 @COMMAND_RESULT_HOOK.register
@@ -58,4 +79,4 @@ def log_command_finished(result,**kwa):
     if result is None:
         if not Env.get('DEBUG', False):
             return
-    print("Result: {0}".format(result))
+    _print("Result: {0}".format(result))
