@@ -16,9 +16,9 @@ Scripts can:
         from Env import *
         from Env import execute
 
-*   export all their bindings to `Env` using:
+*   export all their bindings to `Env` using `update`:
 
-        Env.dict.update(vars())
+        Env.update((k,v) for k,v in globals().items() if k[0] != '_')
 
 *   add single functions to Env using
 

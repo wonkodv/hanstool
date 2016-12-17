@@ -6,8 +6,9 @@ import types
 import sys
 import inspect
 import functools
+import collections.abc
 
-class _Env_class(types.ModuleType):
+class _Env_class(types.ModuleType, collections.abc.Mapping):
     """Common Env to be used by scripts
 
     import Env
@@ -23,8 +24,12 @@ class _Env_class(types.ModuleType):
         self.__name__ = "Env"
         self.__path__ = []
         self.__file__ = __file__
-        super().__init__("Env",_Env_class.__doc__) # init as Module
+        super().__init__("Env", _Env_class.__doc__) # init as Module
         self._finalized = True # stop attribute setting
+
+        for k in 'file','path','name','package':
+            k = '__{}__'.format(k)
+            self.put_persistent(k, getattr(self,k))
 
     @property
     def __all__(self):
@@ -70,6 +75,12 @@ class _Env_class(types.ModuleType):
 
     def update(self, *args):
         self.dict.update(*args)
+
+    def items(self):
+        return self.dict.items()
+
+    def __len__(self):
+        return len(self.dict)
 
     def __iter__(self):
         return iter(self.dict)

@@ -3,10 +3,6 @@ import unittest
 from ht3.env import _Env_class, Env
 
 class EnvTest(unittest.TestCase):
-    def test_is_empty(self):
-        e = _Env_class()
-        assert dict(e) == {}
-
     def test_asDict(self):
         e = _Env_class()
         e['key'] = 1
@@ -19,13 +15,17 @@ class EnvTest(unittest.TestCase):
         e['Key1'] = 1
         e['Key2'] = 2
 
-        self.assertListEqual(list(sorted(e)), ['Key1', 'Key2'])
+        i = iter(e)
+
+        assert 'Key1' in set(i)
 
     def test_ObjToDict(self):
         e = _Env_class()
         e['Key1'] = 1
         e['Key2'] = 2
-        self.assertDictEqual (e.dict, {'Key1':1, 'Key2':2})
+        d = dict(e)
+        assert d['Key1'] == 1
+        assert d['Key2'] == 2
 
     def test_attribute_not_write(self):
         """The Attributes of Env are not writable"""

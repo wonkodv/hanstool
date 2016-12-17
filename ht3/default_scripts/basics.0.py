@@ -3,7 +3,6 @@
 head other scripts with: from Env import *
 """
 
-
 import ht3
 
 from ht3.env import Env
@@ -43,5 +42,4 @@ args.CommandWithArgs = args.Param(complete=lambda s:Env.complete_command_with_ar
                         doc="CommandWithArgs")
 
 
-# Put all above bindings into Env
-Env.dict.update(vars())
+Env.update((k,v) for k,v in globals().items() if k[0] != '_')

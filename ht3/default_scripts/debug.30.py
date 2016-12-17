@@ -9,6 +9,7 @@ import pdb
 import sys
 import sys
 import tempfile
+import warnings
 
 @cmd
 def debug(what:args.Union(args.Command, args.Python)):
@@ -83,3 +84,5 @@ def update_check():
         show("Git status: "+status)
     else:
         show("Git up to date")
+
+warnings.simplefilter("error")
