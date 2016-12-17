@@ -85,7 +85,7 @@ def main(args):
 
         if not _l:
                 if not scripts:
-                    load_scripts()
+                    load_default_scripts()
                 for s in scripts:
                     load_scripts(s)
 
