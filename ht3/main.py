@@ -16,9 +16,11 @@ HELP= """call ht with the following arguments:
     -s FOLDER   Add several scripts
     -l          Load all added unloaded scripts or default scripts
     -f FRONTEND Load a frontend (dont start it yet)
-    -e VAR VAL  Set a Variable to a string value
+    -r          Run all loaded Frontends
+    -e VAR VAL  Set a Variable to a string value in Env
     -x COMMAND  execute a command
-    -r          Run all loaded Frontends """
+    -c CODE     execute python code in Env
+"""
 
 def main(args):
     """Run the Hans Tool."""
@@ -56,10 +58,6 @@ def main(args):
                     load_scripts(s)
                 scripts.clear()
                 _l = True
-            elif a == '-e':
-                k = next(arg_iter)
-                v = next(arg_iter)
-                Env.put_persistent(k, v)
             elif a == '-f':
                 f = next(arg_iter)
                 lib.load_frontend(f)
@@ -71,6 +69,13 @@ def main(args):
                 s = next(arg_iter)
                 run_command(s)
                 _x = True
+            elif a == '-e':
+                k = next(arg_iter)
+                v = next(arg_iter)
+                Env.put_persistent(k, v)
+            elif a == '-c':
+                c = next(arg_iter)
+                lib.execute_py_expression(c)
             else:
                 if a not in ['-h','--help','/?','/help']:
                     print ("Invalid Option: "+a)
