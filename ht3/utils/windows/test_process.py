@@ -4,7 +4,7 @@ from ht3.utils.windows.process import complete_executable, execute
 import os
 import sys
 
-@unittest.skipUnless(os.name == 'nt', "Not On Windows")
+@unittest.skipUnless(os.name == 'nt', "Windows Test")
 class TestWinExecute(unittest.TestCase):
     def test_complete(self):
         p = list(complete_executable('pytho'))
