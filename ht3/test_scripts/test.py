@@ -4,9 +4,9 @@ from Env import *
 
 @cmd
 def test(silent:args.Bool=False):
-
     test_assertions_enabled()
     test_script_order()
+    test_script_module()
     test_argument_parsing()
     test_decorator()
     test_names()
@@ -15,6 +15,7 @@ def test(silent:args.Bool=False):
         print ("Test OK")
 
     return "Integration Tests ran"
+
 
 #### Assertions
 
@@ -41,6 +42,14 @@ def test_script_order():
 
     assert Env['SCRIPT_ORDER'] == ['init', 'd', 'b', 'a', 'c']
 
+
+def test_script_module():
+    assert __name__ == 'Env.test'
+
+    import importlib
+    mod = importlib.import_module('Env.test')
+    assert mod.test_script_module is test_script_module
+    test_script_module.__module__ == 'Env.test'
 
 #### @cmd
 

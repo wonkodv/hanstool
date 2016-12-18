@@ -182,7 +182,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
     p.wait()
 
 @cmd
-def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True))=None):
+def reload(*modules:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True))):
     """Reload none, one or all Modules and all scripts.
 
     Check if all loaded Scripts can be compiled, then reload the specified module
@@ -197,6 +197,7 @@ def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True)
     except ImportError:
         _RELOADED = 0
 
+    log("\n==================== RELOAD ===================\n")
     if not ht3.scripts.check_all_compilable():
         return
 
@@ -206,24 +207,26 @@ def reload(module:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True)
         ht3.hotkey.HotKey.HOTKEYS.clear() # Remove all hotkeys from the cache
         assert not any(hk.active for hk in l)
 
-    if module:
-        if module.lower() == 'env':
-            log("\n==================== ENV RELOAD ===================\n")
+    for h in ht3.hook.Hook.HOOKS:
+        for c in list(h.callbacks):
+            if c.__module__.startswith("Env."):
+                h.callbacks.remove(c) # remove hooks from scripts
+
+    COMMANDS.clear()
+
+    for module in modules:
+        if module == 'ENV':
+            log("Env")
             Env._reload()
-            COMMANDS.clear()
-        elif module.lower() == 'all':
-            log("\n==================== FULL RELOAD ===================\n")
+        elif module == 'ALL':
             for m in sys.modules:
+                log(m)
                 importlib.import_module(m)
-                log("reloaded "+m)
             Env._reload()
-            COMMANDS.clear()
         else:
+            log(module)
             m = importlib.import_module(module)
-            log("\n===== Reload Module "+module+" =========\n")
             importlib.reload(m)
-    else:
-        log("\n===== RELOAD SCRIPTS ====\n")
 
     Env['_RELOADED'] = _RELOADED + 1
 

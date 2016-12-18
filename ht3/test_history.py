@@ -22,8 +22,9 @@ def test_append_with_limit(monkeypatch, tmpdir):
     f = str(tmpdir.join('history'))
     p = Path(f)
 
-    monkeypatch.setattr(ht3.history,'get_history_file',lambda:p)
-    monkeypatch.setattr(ht3.history,'Env',{'HISTORY_LIMIT':2})
+    monkeypatch.setattr(ht3.history,'HISTORY', None)
+    monkeypatch.setattr(ht3.history,'get_history_file', lambda:p)
+    monkeypatch.setattr(ht3.history,'Env', {'HISTORY_LIMIT':2})
 
     h = ht3.history.get_history()
     assert len(h) == 0

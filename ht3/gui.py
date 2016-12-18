@@ -32,6 +32,8 @@ __all__ = (
     'help',
 )
 
+#TODO GUI var private, Q for interacting with gui thread
+
 class UserInterface():
     def __init__(self):
         self.root = tk.Tk()

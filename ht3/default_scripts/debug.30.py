@@ -74,7 +74,7 @@ def exception_trace(i:int=-1):
         name = "GVIM-HT3" # Names with G are put to foreground on win32
         if name in vimservers:
             execute_auto('gvim', '--servername', name,
-                '--remote-send', '<C-\><C-N>:tab cfile ' + f.name+"<CR>")
+                    '--remote-send', '<C-\><C-N>:tab cfile ' + f.name+"<CR>:clast<CR>")
         else:
             execute_auto('gvim', '--servername', name,
                 '-c', ':cfile ' + f.name)

@@ -69,10 +69,11 @@ def load_scripts(path):
 
 def reload_all():
     for path in SCRIPTS:
-        with path.open("rt") as f:
-            c = f.read()
-        c = compile(c, str(path), "exec")
-        exec (c, Env.dict)
+        name = _script_module(path)
+        ename = 'Env.' + name
+        spec = spec_from_file_location(ename, str(path))
+        mod = spec.loader.load_module()
+        importlib.reload(mod)
 
 def check_all_compilable():
     r = True

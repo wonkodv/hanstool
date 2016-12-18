@@ -30,7 +30,7 @@ if CHECK.os.win:
 
     def _convert_windowhandle(s):
         if s == "_MOUSE_POS":
-            handle = windows.get_window_under_cursor(main=True)
+            handle = get_window_under_cursor(main=True)
         elif s == '_FOREGROUND':
             handle = GetForegroundWindow()
         elif s == '_WAIT_FOREGROUND':

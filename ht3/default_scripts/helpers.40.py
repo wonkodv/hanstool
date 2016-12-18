@@ -19,7 +19,8 @@ def history(*search):
     else:
         for i,l in enumerate(ht3.history.get_history()):
             if strings_in(search,l):
-                show("{0: 4d} {1}".format(i,l.strip()))
+                if not search.startswith("history"):
+                    show("{0: 4d} {1}".format(i,l.strip()))
 
 @cmd(name='!')
 def rerun(x:args.Union(args.Int,args.Str)):
