@@ -27,7 +27,7 @@ def list_commands():
     text = ""
     for n in sorted(COMMANDS):
         c = COMMANDS[n]
-        d = c.doc.partition('\n\n')[0]
+        d = inspect.getdoc(c).partition('\n\n')[0]
         doc = textwrap.shorten(d,60)
         doc = "%- 20s %s\n" % (n, doc)
         text += doc
@@ -88,19 +88,27 @@ def _execute_py_expression(s:args.Python):
     execute_py_expression(s.lstrip())
 
 
-@COMMAND_NOT_FOUND_HOOK.register
-def _python_command_h(s):
-    """Evaluate or executed as python."""
-    try:
-        c = compile(s, '<input>', 'eval')
-        return _show_eval.command, s
-    except SyntaxError:
-        pass
-    try:
+class RunAsPython(ht3.command.Command):
+    def __init__(self, command_string):
+        super().__init__(command_string, command_string)
+        """Evaluate or executed as python."""
+        try:
+            c = compile(s, '<input>', 'eval')
+            s = True
+        except SyntaxError:
+            pass
         c = compile(s, '<input>', 'exec')
-        return _execute_py_expression.command, s
-    except SyntaxError:
-        pass
+
+        def target():
+            return eval(c, Env.dict)
+        self.target = target
+
+    @COMMAND_NOT_FOUND_HOOK.register
+    def _hook(command_string):
+        try:
+            return RunAsPython(command_string)
+        except SyntaxError:
+            pass
 
 @cmd
 def exit(returncode:int=0):

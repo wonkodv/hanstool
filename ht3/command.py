@@ -21,40 +21,97 @@ _COMMAND_RUN_ID = 0
 class NoCommandError(Exception):
     pass
 
-def register_command(func, *, origin_stacked, name=_DEFAULT,
-                     threaded=False, args='auto',
-                     apply_default_param_anotations=False,
-                     doc=_DEFAULT, attrs=None):
+class Command():
+    """Base class of commands.
+
+    each Command will be a derived class. Objects of that class contain
+    args, invocation string, result, possibly the thread.
+    """
+    def __init__(self, invocation):
+        self.invocation = invocation
+        self.target = type(self).target # TODO this is ugly
+
+    def __call__(self):
+        self._setup()
+        try:
+            if self.threaded:
+                result = self.thread = start_thread(self._run())
+            else:
+                result = self._run()
+        except Exception as e:
+            self._exception(e)
+        else:
+            self._result(result)
+            return result
+
+    def _run(self):
+        self.result = self.target(*self.args, **self.kwargs)
+        return self.result
+
+    def _setup(self):
+        global _COMMAND_RUN_ID
+        _COMMAND_RUN_ID += 1
+
+        self.id = _COMMAND_RUN_ID
+        self.parent = THREAD_LOCAL.command
+        THREAD_LOCAL.command = self
+        COMMAND_RUN_HOOK(command=self)
+
+    def _exception(self, e):
+        COMMAND_EXCEPTION_HOOK(command=self, exception=e)
+        THREAD_LOCAL.command = self.parent
+
+    def _result(self, r):
+        COMMAND_RESULT_HOOK(command=self, result=r)
+        THREAD_LOCAL.command = self.parent
+
+    def __repr__(self):
+        name = type(self).__name__
+        return "Command(name={1} id={0.id} invocation={0.invocation})".format(self, name)
+
+    def __str__(self):
+        name = type(self).__name__
+        if self.invocation.startswith(name):
+            return "{0.id}: {0.invocation}".format(self)
+        else:
+            return "{0.id}: {0.invocation} {1}".format(self, name)
+
+
+class CommandWithArgs(Command):
+    """Arguments with name and an argument string."""
+
+    def __init__(self, invocation, arg_string):
+        super().__init__(invocation)
+        self.arg_string = arg_string
+        self.args, self.kwargs = self.parse(arg_string)
+
+    def complete(self, s):
+        return self.arg_parser.complete(s)
+
+    def parse(self, s):
+        return self.arg_parser.convert(s)
+
+def register_command(func, *,
+                origin_stacked, name=_DEFAULT,
+                threaded=False, args='auto',
+                apply_default_param_anotations=False,
+                doc=_DEFAULT, attrs=_DEFAULT):
     """ Register a function as Command """
 
     origin = traceback.extract_stack()
     origin = origin[-origin_stacked]
     origin = origin[0:2]
 
-    if threaded:
-        def Command(arg_string=""):
-            """ The function that will be executed """
-            args, kwargs = arg_parser.convert(arg_string)
-            t = start_thread(func, args=args, kwargs=kwargs)
-            return t
-    else:
-        def Command(arg_string=""):
-            args, kwargs = arg_parser.convert(arg_string)
-            r = func(*args, **kwargs)
-            return r
-
-    Command.function = func
 
     arg_parser = ht3.args.ArgParser(func, args, apply_default_param_anotations)
 
-    if attrs is None:
-        attrs = dict()
+    if attrs is _DEFAULT:
+        attrs = {}
 
-    if isinstance(func,functools.partial):
+    if isinstance(func, functools.partial):
         func_name = func.func.__name__
     else:
         func_name = func.__name__
-
     if name is _DEFAULT:
         name = func_name
 
@@ -71,18 +128,18 @@ def register_command(func, *, origin_stacked, name=_DEFAULT,
         "Defined in:\n\t%s:%d" % origin
     ])
 
-    Command.__doc__ = long_doc
-    Command.doc = doc
-    Command.__name__ = func_name
-    Command.name = name
-    Command.threaded = threaded
-    Command.origin = origin
-    Command.attrs = attrs
-    Command.arg_parser = arg_parser
+    d = dict(
+        target=func,
+        origin=origin,
+        arg_parser=arg_parser,
+        __doc__=long_doc,
+        threaded=threaded,
+        attrs=attrs)
+    cmd = type(name, (CommandWithArgs,), d)
 
-    COMMANDS[name] = Command
+    COMMANDS[name] = cmd
 
-    func.command = Command
+    func.command = cmd
 
 def cmd(func=None, **kwargs):
     """Decorate a function to become a command
@@ -108,49 +165,21 @@ def parse_command(string):
 def get_command(string):
     cmd, sep, args = parse_command(string)
     try:
-        return COMMANDS[cmd], args
+        return COMMANDS[cmd](string, args)
     except KeyError:
-        raise NoCommandError(string) from None
-
-def run_command_func(string, func, args=''):
-    global _COMMAND_RUN_ID
-    _COMMAND_RUN_ID += 1
-    parent = THREAD_LOCAL.command
-    THREAD_LOCAL.command = [_COMMAND_RUN_ID, string, func, args, parent]
-    COMMAND_RUN_HOOK(
-        id=_COMMAND_RUN_ID,
-        string=string,
-        function=func,
-        args=args)
-    try:
-        result = func(args)
-    except Exception as e:
-        COMMAND_EXCEPTION_HOOK(
-            id=_COMMAND_RUN_ID,
-            string=string,
-            function=func,
-            args=args,
-            exception=e)
-    else:
-        COMMAND_RESULT_HOOK(
-            id=_COMMAND_RUN_ID,
-            string=string,
-            function=func,
-            args=args,
-            result=result)
-        return result
-    finally:
-        THREAD_LOCAL.command = parent
+        raise NoCommandError(cmd, sep, args) from None
 
 def run_command(string):
     if THREAD_LOCAL.command is None:
         ht3.history.append_history(string)
     try:
-        cmd, args = get_command(string)
+        cmd = get_command(string)
     except NoCommandError:
         try:
-            cmd, args = COMMAND_NOT_FOUND_HOOK(string)
+            cmd = COMMAND_NOT_FOUND_HOOK(command_string=string)
         except ht3.hook.NoResult:
             raise NoCommandError(string) from None
 
-    return run_command_func(string, cmd, args)
+    assert isinstance(cmd, Command)
+
+    return cmd()

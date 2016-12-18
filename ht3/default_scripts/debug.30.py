@@ -13,9 +13,21 @@ import tempfile
 import warnings
 
 @cmd
-def debug(what:args.Union(args.Command, args.Python)):
+def debug(string:args.Union(args.Command, args.Python)):
     """ Debug a Command """
-    pdb.runcall(ht3.command.run_command, what)
+
+    P = pdb.Pdb
+
+    try:
+        cmd = get_command(string)
+    except NoCommandError:
+        try:
+            cmd = COMMAND_NOT_FOUND_HOOK(command_string=string)
+        except ht3.hook.NoResult:
+            raise NoCommandError(string) from None
+
+    p.do_break("ht3.command.Command._run")
+    pdb.runcall(cmd)
 
 @cmd
 def py():

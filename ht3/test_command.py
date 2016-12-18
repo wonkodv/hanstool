@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, Mock
-from ht3.command import cmd, get_command, NoCommandError
+from unittest.mock import patch, MagicMock
+from ht3.command import cmd, get_command, NoCommandError, run_command
+from ht3.lib import THREAD_LOCAL
+
 
 class TestCmd(unittest.TestCase):
     COMMANDS = {}
@@ -26,10 +28,10 @@ class TestCmd(unittest.TestCase):
             nonlocal x
             x = arg
 
-        self.COMMANDS['someCommand']("1")
+        run_command('someCommand 1')
         assert x==1
-        self.COMMANDS['someCommand']("42")
-        assert x==42
+        run_command('someCommand 2')
+        assert x==2
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_origin(self):
@@ -41,30 +43,64 @@ class TestCmd(unittest.TestCase):
         assert f == __file__
         assert l > 5
 
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_context(self):
+        @cmd
+        def someCommand(s):
+            return THREAD_LOCAL.command
+
+        run_command('someCommand asdfg')
+        assert c.arg_string == "asdfg"
+        assert c.name == "someCommand"
+
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_origin(self):
+        @cmd
+        def someCommand():
+            pass
+
+        f, l = self.COMMANDS['someCommand'].origin
+        assert f == __file__
+        assert l > 5
+
+
+    @patch('ht3.command.COMMANDS', COMMANDS)
+    def test_context(self):
+        @cmd
+        def someCommand():
+            return THREAD_LOCAL.context
+
+
+
 class Test_get_command(unittest.TestCase):
-    c1 = Mock()
-    c1.name='c1'
-
-    c2 = Mock()
-    c2.name = 'c2'
-
-    COMMANDS = {'c1': c1, 'c2': c2}
+    COMMANDS = {}
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_noarg(self):
-        com, args = get_command("c1")
-        assert com == self.c1
-        assert args == ''
+        m =  MagicMock()
+        self.COMMANDS.clear()
+        self.COMMANDS['cmd'] = m
+        c = get_command("cmd")
+        m.assert_called_with("cmd","")
+        assert m() is c
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_empty_cmd(self):
+        m =  MagicMock()
+        self.COMMANDS.clear()
+        self.COMMANDS['cmd'] = m
         with self.assertRaises(NoCommandError):
-            get_command("")
+            get_command("cmd1")
         with self.assertRaises(NoCommandError):
-            get_command(" a")
+            get_command(" cmd")
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
-        com, args = get_command("c1 arg")
-        assert com == self.c1
-        assert args == 'arg'
+        m =  MagicMock()
+        self.COMMANDS.clear()
+        self.COMMANDS['cmd'] = m
+        c = get_command("cmd arg string")
+        m.assert_called_with("cmd arg string", "arg string")
+        assert m() is c

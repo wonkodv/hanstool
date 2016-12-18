@@ -8,7 +8,7 @@ import time
 
 from ht3.lib import evaluate_py_expression
 from ht3.env import Env
-from ht3.command import register_command, COMMANDS
+from ht3.command import register_command
 
 
 def cmd_func(name, func, *args, **kwargs):

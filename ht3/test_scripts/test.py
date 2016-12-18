@@ -54,8 +54,8 @@ def decorator_args_dummy():
 
 def test_decorator():
     # decorative decorator decorated correctly
-    assert COMMANDS['decorator_noargs_dummy'].function is decorator_noargs_dummy
-    assert COMMANDS['decorator_args_dummy'].function is decorator_args_dummy
+    assert COMMANDS['decorator_noargs_dummy'].target is decorator_noargs_dummy
+    assert COMMANDS['decorator_args_dummy'].target is decorator_args_dummy
 
 
 #### Args
