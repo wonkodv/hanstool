@@ -14,8 +14,8 @@ from ht3.check import CHECK
 
 import ht3.hook
 
-SUBPROCESS_SPAWN_HOOK = ht3.hook.Hook()
-SUBPROCESS_FINISH_HOOK = ht3.hook.Hook()
+SUBPROCESS_SPAWN_HOOK = ht3.hook.Hook("process")
+SUBPROCESS_FINISH_HOOK = ht3.hook.Hook("process")
 
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
@@ -52,12 +52,13 @@ def execute(*args, shell=False, is_split=..., **kwargs):
         raise e
     p.name = name
     p.shell = shell
-    SUBPROCESS_SPAWN_HOOK(p)
+    SUBPROCESS_SPAWN_HOOK(process=p)
     def onreturn(cb):
+        "Do cb if process finishes"
         processwatch.watch(p, cb)
         return cb
     p.onreturn = onreturn
-    p.onreturn(SUBPROCESS_FINISH_HOOK)
+    p.onreturn(lambda p: SUBPROCESS_FINISH_HOOK(process=p))
     return p
 
 def execute_disconnected(*args, **kwargs):

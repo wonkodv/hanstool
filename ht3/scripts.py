@@ -82,6 +82,6 @@ def check_all_compilable():
         try:
             compile(c, str(path), "exec")
         except Exception as e:
-            lib.EXCEPTION_HOOK(e)
+            lib.EXCEPTION_HOOK(exception=e)
             r = False
     return r

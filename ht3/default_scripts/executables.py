@@ -53,7 +53,8 @@ def complete_executable_with_args(s):
 
 
 @COMMAND_NOT_FOUND_HOOK.register
-def _executable_command_h(s):
+def _executable_command_h(command_string):
+    s = command_string
     try:
         parts = shlex.split(s)
     except ValueError:

@@ -66,7 +66,7 @@ class UserInterface():
                 command.run_command(string)
             except Exception as e:
                 self.cmd_win.set_state("Error")
-                lib.EXCEPTION_HOOK(e)
+                lib.EXCEPTION_HOOK(exception=e)
                 return False
             else:
                 self.cmd_win.set_state("Waiting")
@@ -300,11 +300,11 @@ class UserInterface():
             self.window.withdraw()
             self.ui.cmd_win.to_front()
 
-        def log(self, msg):
+        def log(self, message):
             self.text.insert('end', msg+'\n')
             self.text.yview('end')
 
-        def log_debug(self, frontend, o):
+        def log_debug(self, frontend, message):
             if isinstance(o, str):
                 msg = o
             elif isinstance(o, bool):
@@ -326,16 +326,16 @@ class UserInterface():
             self.log_debug(frontend, o)
             self.to_front()
 
-        def log_command(self, frontend, id, string, function, args):
-            self.log("Command {0:d} [{1}:{2}] '{3}' ".format(id, frontend, function.name, string))
+        def log_command(self, frontend, command):
+            self.log("Command from {1}: {0}' ".format(cmd, frontend))
 
-        def log_command_finished(self, frontend, result, **k):
+        def log_command_finished(self, frontend, command, result):
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
-            self.log("Result: "+ str(result))
+            self.log("Result {}: {}".format(cmd.id, repr(result)))
 
-        def log_error(self, frontend, exception, **k):
+        def log_error(self, frontend, command, exception):
             e=exception
             if isinstance(e, ht3.utils.process.ProcIOException):
                 self.log(
@@ -356,10 +356,10 @@ class UserInterface():
                 self.log("".join(traceback.format_exception(t, e, tb)))
             self.to_front()
 
-        def log_subprocess(self, frontend, p):
+        def log_subprocess(self, frontend, process):
             self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
 
-        def log_subprocess_finished(self, frontend, p):
+        def log_subprocess_finished(self, frontend, process):
             a = p.args
             if not isinstance(a, str):
                 a = a[0]
@@ -413,13 +413,13 @@ def stop():
         GUI.close_soon()
 
 def _reptor_tk_ex(self, typ, val, tb):
-    lib.EXCEPTION_HOOK(val)
+    lib.EXCEPTION_HOOK(exception=val)
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
 #logging
 
 def _log_proxy(topic):
-    def forward(*args, **kwargs):
+    def forward(**kwargs):
         try:
             f = lib.THREAD_LOCAL.frontend
         except AttributeError:

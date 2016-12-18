@@ -3,6 +3,7 @@ from Env import *
 import pprint
 import shlex
 import itertools
+import textwrap
 
 
 def _print(s, **kwargs):
@@ -13,30 +14,31 @@ def _print(s, **kwargs):
 
 @Env.updateable
 def show(o):
-    ALERT_HOOK(o)
+    ALERT_HOOK(message=o)
 
 @Env.updateable
 def log(o):
-    DEBUG_HOOK(o)
+    DEBUG_HOOK(message=o)
 
 
 @SUBPROCESS_SPAWN_HOOK.register
-def log_subprocess(p):
+def log_subprocess(process):
     if Env.get('DEBUG', False):
-        _print("Process spawned {}{}:{}".format(p.pid, ' shell' if p.shell else '', p.args))
+        _print("Process spawned {}{}:{}".format(process.pid, ' shell' if process.shell else '', process.args))
 
 @SUBPROCESS_FINISH_HOOK.register
-def log_subprocess_finished(p):
-    if p.returncode > 0 or Env.get('DEBUG', False):
-        _print("Process finished {} ({}):{}".format(p.pid, p.name, p.returncode))
+def log_subprocess_finished(process):
+    if process.returncode > 0 or Env.get('DEBUG', False):
+        _print("Process finished {} ({}):{}".format(process.pid, process.name, process.returncode))
 
 @DEBUG_HOOK.register
-def log_debug(o):
+def log_debug(message):
     if Env.get('DEBUG',0):
-        log_alert(o)
+        log_alert(message)
 
 @ALERT_HOOK.register
-def log_alert(o):
+def log_alert(message):
+    o = message
     if isinstance(o, str):
         pass
     elif isinstance(o, bool):
@@ -53,7 +55,7 @@ def log_alert(o):
 
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
-def last_exception_h(exception, **kwargs):
+def last_exception_h(exception, command=None):
     if isinstance(exception, ProcIOException):
         _print(
             (   "Returncode: {}\n"
@@ -75,7 +77,7 @@ def last_exception_h(exception, **kwargs):
 
 
 @COMMAND_RESULT_HOOK.register
-def log_command_finished(result,**kwa):
+def log_command_finished(result, command):
     if result is None:
         if not Env.get('DEBUG', False):
             return

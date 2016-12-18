@@ -10,9 +10,9 @@ from .env import Env
 from . import check
 
 
-EXCEPTION_HOOK = ht3.hook.Hook()
-DEBUG_HOOK = ht3.hook.Hook()
-ALERT_HOOK = ht3.hook.Hook()
+EXCEPTION_HOOK = ht3.hook.Hook("exception")
+DEBUG_HOOK = ht3.hook.Hook("message")
+ALERT_HOOK = ht3.hook.Hook("message")
 
 
 FRONTENDS = []
@@ -60,12 +60,12 @@ def run_frontends():
         try:
             fe.loop()
         except Exception as e:
-            EXCEPTION_HOOK(e)
+            EXCEPTION_HOOK(exception=e)
         check.CHECK.frontends_running = False
         try:
             fe.stop()
         except Exception as e:
-            EXCEPTION_HOOK(e)
+            EXCEPTION_HOOK(exception=e)
         THREAD_LOCAL.frontend = None
     else:
         threads = []
@@ -79,7 +79,7 @@ def run_frontends():
             try:
                 fe.loop()
             except Exception as e:
-                EXCEPTION_HOOK(e)
+                EXCEPTION_HOOK(exception=e)
             finally:
                 evt.set()
         for fe in frontends:
@@ -97,7 +97,7 @@ def run_frontends():
                 try:
                     f.stop()
                 except Exception as e:
-                    EXCEPTION_HOOK(e)
+                    EXCEPTION_HOOK(exception=e)
 
             # wait for all frontends to finish.
             for t, f in threads:
@@ -138,7 +138,7 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if on_finish is None:
         on_finish = lambda *a:None #Env.log_thread_finished #TODO
     if on_exception is None:
-        on_exception = EXCEPTION_HOOK
+        on_exception = lambda e:EXCEPTION_HOOK(exception=e)
     if args is None:
         args=tuple()
     if kwargs is None:

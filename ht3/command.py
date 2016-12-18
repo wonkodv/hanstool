@@ -10,10 +10,10 @@ import ht3.hook
 
 COMMANDS = {}
 
-COMMAND_RUN_HOOK = ht3.hook.Hook()
-COMMAND_RESULT_HOOK = ht3.hook.Hook()
-COMMAND_EXCEPTION_HOOK = ht3.hook.Hook()
-COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook()
+COMMAND_RUN_HOOK = ht3.hook.Hook("command")
+COMMAND_RESULT_HOOK = ht3.hook.Hook("command", "result")
+COMMAND_EXCEPTION_HOOK = ht3.hook.Hook("exception", "command")
+COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook("command_string")
 
 _DEFAULT = object()
 _COMMAND_RUN_ID = 0

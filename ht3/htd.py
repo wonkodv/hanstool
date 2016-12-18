@@ -30,7 +30,7 @@ def handle_socket(sock, addr):
             sock.send(b"EXCEPTION\0")
             sock.send(traceback.format_exc().encode("UTF-8"))
             sock.send(b"\0")
-            lib.EXCEPTION_HOOK(e)
+            lib.EXCEPTION_HOOK(exception=e)
         else:
             sock.send(b"OK\0")
             sock.send(repr(r).encode("UTF-8"))

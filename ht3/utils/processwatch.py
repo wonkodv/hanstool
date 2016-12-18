@@ -18,7 +18,7 @@ def watch(subprocess, callback):
     """
     Add a process to the watchlist
 
-    Add ``subprocess`` to the list. It will be polles repeatedly
+    Add ``subprocess`` to the list. It will be polled repeatedly
     and once it has returned, the ```callback`` function will be
     called with ``subprocess``.
     """

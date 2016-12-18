@@ -10,7 +10,7 @@ from ht3.utils.helpers import cmd_func
 # Raise Errors
 @lib.EXCEPTION_HOOK.register
 @command.COMMAND_EXCEPTION_HOOK.register
-def _raise_error(exception, **k):
+def _raise_error(exception, command=None):
     raise exception
 
 

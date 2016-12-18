@@ -7,7 +7,7 @@ from ht3.env import Env
 
 HISTORY_FILE_DEFAULT = '~/.config/ht3/history'
 
-APPEND_HOOK = ht3.hook.Hook()
+APPEND_HOOK = ht3.hook.Hook("command_string")
 
 HISTORY = None
 
@@ -47,7 +47,7 @@ def load_history():
 def append_history(*cmd):
     get_history().extend(cmd)
     for c in cmd:
-        APPEND_HOOK(c)
+        APPEND_HOOK(command_string=c)
     with get_history_file().open("at") as f:
         f.write("\n".join(cmd) + "\n")
 

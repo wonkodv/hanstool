@@ -1,38 +1,57 @@
 from .hook import *
+import unittest
+import unittest.mock
 
-def test_hook():
-    h = Hook()
+class TestHook(unittest.TestCase):
+    def test_hook(self):
+        h = Hook("x")
+
+        X = []
+        @h.register
+        def callback(x):
+            X.append(x)
+            return x
+
+        h(x=1)
+        assert X == [1]
+
+        h(x=2)
+        assert X == [1,2]
+
+    def test_signature_check(self):
+        h = Hook("a","b")
+
+        with self.assertRaises(TypeError):
+            @h.register
+            def callback(a,b,c): pass
+        with self.assertRaises(TypeError):
+            @h.register
+            def callback(x, y): pass
+        with self.assertRaises(TypeError):
+            @h.register
+            def callback(a): pass
+
+        @h.register
+        def callback(a,b,*c): pass
 
 
-    X = []
+class TestResultHook(unittest.TestCase):
+    def test_result_hook(self):
+        h = ResultHook()
 
-    @h.register
-    def callback(x):
-        X.append(x)
-        return x
+        @h.register
+        def no0():
+            return 0
+        @h.register
+        def no1():
+            return 1
+        @h.register
+        def no2():
+            return None
+        @h.register
+        def no3():
+            return None
 
-    h(1)
-    assert X == [1]
+        assert h() == 1
 
-    h(2)
-    assert X == [1,2]
-
-
-def test_result_hook():
-    h = ResultHook()
-
-    @h.register
-    def no0():
-        return 0
-    @h.register
-    def no1():
-        return 1
-    @h.register
-    def no2():
-        return None
-    @h.register
-    def no3():
-        return None
-
-    assert h() == 1
 

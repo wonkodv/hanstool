@@ -27,7 +27,7 @@ EXCEPTIONS = Env['EXCEPTIONS'] = []
 
 @EXCEPTION_HOOK.register
 @COMMAND_EXCEPTION_HOOK.register
-def add_exception(exception, **kwargs):
+def add_exception(exception, command=None):
     EXCEPTIONS.append(exception)
 
 @cmd
