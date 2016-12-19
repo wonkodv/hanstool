@@ -303,10 +303,11 @@ class UserInterface():
             self.ui.cmd_win.to_front()
 
         def log(self, message):
-            self.text.insert('end', msg+'\n')
+            self.text.insert('end', message + '\n')
             self.text.yview('end')
 
         def log_debug(self, frontend, message):
+            o = message
             if isinstance(o, str):
                 msg = o
             elif isinstance(o, bool):
@@ -329,7 +330,7 @@ class UserInterface():
             self.to_front()
 
         def log_command(self, frontend, command):
-            self.log("Command from {1}: {0}' ".format(cmd, frontend))
+            self.log("Command from {1}: {0}' ".format(command, frontend))
 
         def log_command_finished(self, frontend, command, result):
             if result is None:
@@ -337,7 +338,7 @@ class UserInterface():
                     return
             self.log("Result {}: {}".format(cmd.id, repr(result)))
 
-        def log_error(self, frontend, command, exception):
+        def log_error(self, frontend, exception, command=None):
             e=exception
             if isinstance(e, ht3.utils.process.ProcIOException):
                 self.log(
@@ -359,28 +360,20 @@ class UserInterface():
             self.to_front()
 
         def log_subprocess(self, frontend, process):
-            self.log("Spawned %s %d: %r" % ('Shell' if getattr(p, 'shell', False) else 'Process', p.pid, p.args))
+            self.log("Spawned %s %d: %r" % ('Shell' if getattr(process, 'shell', False) else 'Process', process.pid, process.args))
 
         def log_subprocess_finished(self, frontend, process):
-            a = p.args
+            a = process.args
             if not isinstance(a, str):
                 a = a[0]
             a = pathlib.Path(a)
             a = a.with_suffix('')
             a = a.name
-            self.log("Process finished %d (%s): %r" % (p.pid, a, p.returncode))
-            if p.returncode > 0:
+            self.log("Process finished %d (%s): %r" % (process.pid, a, process.returncode))
+            if process.returncode > 0:
                 if CHECK.os.win:
                     return # return codes on windows don't make any sense
                 self.to_front()
-        #
-        #def log_thread(self, t, current_command=None, frontend=None):
-        #    self.log("Spawned thread %d: %s" % (t.ident, t.name))
-        #
-        #def log_thread_finished(self, result, current_command=None, frontend=None):
-        #    i, c, p = current_command
-        #    self.log("ThreadResult %d: %r" % (i, result))
-
 
 # Frontend API
 
@@ -395,9 +388,9 @@ def loop():
         GUI = UserInterface()
 
         def do_after_startup():
-            for m, f, a, k in _stored_log:
+            for m, f, k in _stored_log:
                 l = getattr(GUI.log_win, m)
-                l(f, *a, **k)
+                l(f, **k)
             _stored_log.clear()
 
             for c in _do_on_start:
@@ -428,9 +421,9 @@ def _log_proxy(topic):
             f = "" # e.g. process watch
         if GUI:
             l = getattr(GUI.log_win, topic)
-            l(f, *args, **kwargs)
+            l(f, **kwargs)
         else:
-            _stored_log.append( [ topic, f , args, kwargs ])
+            _stored_log.append( [ topic, f , kwargs ])
     return forward
 
 lib.ALERT_HOOK.register(_log_proxy('log_show'))

@@ -27,17 +27,19 @@ class Command():
     each Command will be a derived class. Objects of that class contain
     args, invocation string, result, possibly the thread.
     """
+
+    threaded = False
+
     def __init__(self, invocation):
         self.invocation = invocation
-        self.target = type(self).target # TODO this is ugly
 
     def __call__(self):
         self._setup()
         try:
             if self.threaded:
-                result = self.thread = start_thread(self._run())
+                result = self.thread = start_thread(self._run)
             else:
-                result = self._run()
+                result = self.run()
         except Exception as e:
             self._exception(e)
         else:
@@ -45,7 +47,7 @@ class Command():
             return result
 
     def _run(self):
-        self.result = self.target(*self.args, **self.kwargs)
+        self.result = self.run()
         return self.result
 
     def _setup(self):
@@ -76,7 +78,6 @@ class Command():
         else:
             return "{0.id}: {0.invocation} {1}".format(self, name)
 
-
 class CommandWithArgs(Command):
     """Arguments with name and an argument string."""
 
@@ -84,6 +85,9 @@ class CommandWithArgs(Command):
         super().__init__(invocation)
         self.arg_string = arg_string
         self.args, self.kwargs = self.parse(arg_string)
+
+    def run(self):
+        return type(self).target(*self.args, **self.kwargs)
 
     def complete(self, s):
         return self.arg_parser.complete(s)

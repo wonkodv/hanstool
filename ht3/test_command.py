@@ -70,8 +70,10 @@ class TestCmd(unittest.TestCase):
     def test_context(self):
         @cmd
         def someCommand():
-            return THREAD_LOCAL.context
-
+            cmd = THREAD_LOCAL.command
+            return str(cmd), repr(cmd)
+        s,r = run_command('someCommand')
+        assert "someCommand" in r
 
 
 class Test_get_command(unittest.TestCase):

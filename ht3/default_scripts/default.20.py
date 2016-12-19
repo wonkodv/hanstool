@@ -38,9 +38,9 @@ def _help(what:args.Union(args.Command, args.Python)):
     """ Show help on a command or evaluated python expression """
     if what in COMMANDS:
         obj = COMMANDS[what]
-    else:
-        obj = evaluate_py_expression(what)
+        return show(inspect.getdoc(obj))
 
+    obj = evaluate_py_expression(what)
     f = io.StringIO()
     with contextlib.redirect_stdout(f):
         help(obj)
@@ -88,25 +88,27 @@ def _execute_py_expression(s:args.Python):
     execute_py_expression(s.lstrip())
 
 
-class RunAsPython(ht3.command.Command):
+class PythonFallback(ht3.command.Command):
     def __init__(self, command_string):
-        super().__init__(command_string, command_string)
         """Evaluate or executed as python."""
-        try:
-            c = compile(s, '<input>', 'eval')
-            s = True
-        except SyntaxError:
-            pass
-        c = compile(s, '<input>', 'exec')
 
-        def target():
-            return eval(c, Env.dict)
-        self.target = target
+        super().__init__(command_string)
+        try:
+            self.c = compile(command_string, '<input>', 'eval')
+            self.show = True
+        except SyntaxError:
+            self.c = compile(command_string, '<input>', 'exec')
+            self.show = False
+
+    def run(self):
+        r = eval(self.c, Env.dict)
+        if self.show:
+            show(r)
 
     @COMMAND_NOT_FOUND_HOOK.register
     def _hook(command_string):
         try:
-            return RunAsPython(command_string)
+            return PythonFallback(command_string)
         except SyntaxError:
             pass
 
