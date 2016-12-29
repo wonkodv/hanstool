@@ -44,6 +44,33 @@ if CHECK.os.posix:
 
         procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
+    def complete_mounted_devices(s):
+        with open('/proc/mounts') as f:
+            for s in f:
+                dev, mp, *_ = s.split()
+                if Path(dev).is_block_device():
+                    yield dev
+                    yield mp
+                    if mp.startswith('/media/'):
+                        yield mp[7:]
+
+    @cmd
+    def umount(device:complete_mounted_devices):
+        m = False
+        device = Path(device)
+        if not device.is_absolute():
+            device = Path('/media/') / device
+            m = True
+
+        if not device.is_block_device() and not device.is_dir():
+            raise ValueError("not blockdevice or mountpoint", device)
+
+        procio('sudo', 'umount', str(device))
+
+        if m:
+            device.rmdir()
+
+
     @cmd(name='o')
     def xdg_open(s:Path):
         """Open something with xdg-open."""
