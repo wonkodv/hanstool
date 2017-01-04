@@ -16,8 +16,7 @@ import warnings
 def debug(string:args.Union(args.Command, args.Python)):
     """ Debug a Command """
 
-    P = pdb.Pdb
-
+    p = pdb.Pdb()
     try:
         cmd = get_command(string)
     except NoCommandError:
@@ -26,8 +25,9 @@ def debug(string:args.Union(args.Command, args.Python)):
         except ht3.hook.NoResult:
             raise NoCommandError(string) from None
 
-    p.do_break("ht3.command.Command._run")
-    pdb.runcall(cmd)
+    p.rcLines.append("b self.run")
+    p.rcLines.append("c")
+    p.runcall(cmd)
 
 @cmd
 def py():
@@ -97,12 +97,5 @@ def update_check():
         show("Git status: "+status)
     else:
         show("Git up to date")
-
-try:
-    from Env import _RELOADED
-except ImportError:
-    _RELOADED = 0
-if _RELOADED == 0:
-    faulthandler.enable(open("faultdump","at"))
 
 warnings.simplefilter("error")
