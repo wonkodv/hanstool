@@ -9,6 +9,7 @@ import itertools
 import os.path
 import pathlib
 import pprint
+import textwrap
 import threading
 import tkinter as tk
 import traceback
@@ -325,8 +326,8 @@ class UserInterface():
 
 
 
-        def log_show(self, frontend, o):
-            self.log_debug(frontend, o)
+        def log_show(self, frontend, message):
+            self.log_debug(frontend, message)
             self.to_front()
 
         def log_command(self, frontend, command):
@@ -336,7 +337,7 @@ class UserInterface():
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
-            self.log("Result {}: {}".format(cmd.id, repr(result)))
+            self.log("Result {}: {}".format(command.id, repr(result)))
 
         def log_error(self, frontend, exception, command=None):
             e=exception

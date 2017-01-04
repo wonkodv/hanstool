@@ -39,7 +39,7 @@ class Command():
             if self.threaded:
                 result = self.thread = start_thread(self._run)
             else:
-                result = self.run()
+                result = self._run()
         except Exception as e:
             self._exception(e)
         else:

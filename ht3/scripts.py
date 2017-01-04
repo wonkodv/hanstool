@@ -1,9 +1,13 @@
 """Load Scripts, executing them in the global Namespace ``Env``."""
 
+import importlib
+import inspect
 import pathlib
 import re
 import sys
+
 from importlib.util import spec_from_file_location
+
 
 from .env import Env
 from . import lib
@@ -68,12 +72,10 @@ def load_scripts(path):
 
 
 def reload_all():
-    for path in SCRIPTS:
-        name = _script_module(path)
-        ename = 'Env.' + name
-        spec = spec_from_file_location(ename, str(path))
-        mod = spec.loader.load_module()
-        importlib.reload(mod)
+    s = list(SCRIPTS)
+    SCRIPTS.clear()
+    for path in s:
+        load_scripts(path)
 
 def check_all_compilable():
     r = True
