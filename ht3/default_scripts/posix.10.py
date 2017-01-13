@@ -1,15 +1,25 @@
 """Some good Posix Commands."""
 
 from Env import *
+import json
 
 if CHECK.os.posix:
 
     def complete_mount_device(s):
-        for p in ('/dev/', '/dev/disk/by-label', '/dev/disk/by-partlabel'):
-            p = Path(p)
-            for dev in p.glob('*'):
-                if dev.is_block_device():
-                    yield dev.name
+        def walk(d):
+            if d['fstype']:
+                yield d['name']
+                if d['partlabel']:
+                    yield d['partlabel']
+                if d['label']:
+                    yield d['label']
+            if 'children' in d:
+                for c in d['children']:
+                    yield from walk(c)
+        s = procio("lsblk","--json","--output","name,label,partlabel,fstype")
+        d = json.loads(s)
+        for c in d['blockdevices']:
+            yield from walk(c)
 
     @cmd
     def mount(device:complete_mount_device):
@@ -70,6 +80,10 @@ if CHECK.os.posix:
         if m:
             device.rmdir()
 
+    @cmd
+    def bd():
+        show(procio("lsblk", "--output",
+            "name,mountpoint,ro,fstype,size,label,partlabel,model"))
 
     @cmd(name='o')
     def xdg_open(s:Path):
