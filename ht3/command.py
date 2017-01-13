@@ -184,6 +184,6 @@ def run_command(string):
         except ht3.hook.NoResult:
             raise NoCommandError(string) from None
 
-    assert isinstance(cmd, Command)
+    assert isinstance(cmd, Command), "{} should be a Command".format(cmd)
 
     return cmd()
