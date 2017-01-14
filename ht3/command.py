@@ -16,7 +16,6 @@ COMMAND_EXCEPTION_HOOK = ht3.hook.Hook("exception", "command")
 COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook("command_string")
 
 _DEFAULT = object()
-_COMMAND_RUN_ID = 0
 
 class NoCommandError(Exception):
     pass
@@ -32,6 +31,8 @@ class Command():
 
     def __init__(self, invocation):
         self.invocation = invocation
+        self.ran = False
+        self.name = type(self).__name__
 
     def __call__(self):
         self._setup()
@@ -47,14 +48,11 @@ class Command():
             return result
 
     def _run(self):
+        self.ran = True
         self.result = self.run()
         return self.result
 
     def _setup(self):
-        global _COMMAND_RUN_ID
-        _COMMAND_RUN_ID += 1
-
-        self.id = _COMMAND_RUN_ID
         self.parent = THREAD_LOCAL.command
         THREAD_LOCAL.command = self
         COMMAND_RUN_HOOK(command=self)
@@ -68,18 +66,17 @@ class Command():
         THREAD_LOCAL.command = self.parent
 
     def __repr__(self):
-        name = type(self).__name__
-        return "Command(name={1} id={0.id} invocation={0.invocation})".format(self, name)
+        return "Command(name={0.name}, invocation={0.invocation}, ran={0.ran})".format(self)
 
     def __str__(self):
-        name = type(self).__name__
-        if self.invocation.startswith(name):
-            return "{0.id}: {0.invocation}".format(self)
-        else:
-            return "{0.id}: {0.invocation} {1}".format(self, name)
+        if self.invocation.startswith(self.name):
+            return self.invocation
+        return self.invocation + " => " + self.name
 
 class CommandWithArgs(Command):
     """Arguments with name and an argument string."""
+
+    target = None # to be overwritten by subclasses
 
     def __init__(self, invocation, arg_string):
         super().__init__(invocation)
