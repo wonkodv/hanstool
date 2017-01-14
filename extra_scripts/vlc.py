@@ -1,7 +1,7 @@
 """Control VLC via its web interface"""
 
 
-from Env import cmd, log, show, Path, execute_disconnected, PATH
+from Env import cmd, log, show, Path, execute_disconnected, PATH, set_clipboard
 
 import http.client
 import pprint
@@ -57,7 +57,16 @@ def play(search):
             log(name)
         play_id(id)
 
-@cmd(name="status")
+@cmd
+def current_song():
+    b = request("/requests/status.json")
+    s = b.decode("utf-8")
+    o = json.loads(s)
+    s = "{0[artist]} - {0[title]}".format(o['information']['category']['meta'])
+    set_clipboard(s)
+    show(s)
+
+@cmd
 def status():
     b = request("/requests/status.json")
     s = b.decode("utf-8")
@@ -68,5 +77,16 @@ def vlc(*args):
     return execute_disconnected("vlc","--http-host=localhost","--http-port=63215","--http-password=" + PASSWORD, *args)
 
 @cmd
-def music(s:Path=r"G:\list.m3u"):
-    return vlc(s)
+def music(s:Path=None):
+    if not s:
+        for c in 'GHIJKL':
+            try:
+                p = Path(c+':/list.m3u')
+                if p.is_file():
+                    s = p
+                    break
+            except OSError:
+                pass
+        else:
+            raise FileNotFoundError("*:/list.m3u nicht gefunden")
+    return vlc(str(s))
