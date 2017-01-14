@@ -4,36 +4,27 @@ Has a small window where you enter Text
 and a larger one that will be mostly hidden wher log messages appear.
 """
 
+from . import command
+from . import lib
+from .check import CHECK
+from .env import Env
+
+import ht3.complete
+import ht3.history
+import ht3.utils.process
+
+import collections
+import functools
 import inspect
 import itertools
 import os.path
 import pathlib
 import pprint
+import queue
 import textwrap
 import threading
 import tkinter as tk
 import traceback
-
-from . import command
-from . import lib
-from .check import CHECK
-from .env import Env
-import ht3.complete
-import ht3.history
-import ht3.utils.process
-
-GUI = None
-
-
-__all__ = (
-    'cmd_win_set_rect',
-    'cmd_win_stay_on_top',
-    'cmd_win_to_front',
-    'do_on_start',
-    'help',
-)
-
-#TODO GUI var private, Q for interacting with gui thread
 
 class UserInterface():
     def __init__(self):
@@ -337,7 +328,7 @@ class UserInterface():
             if result is None:
                 if not Env.get('DEBUG', False):
                     return
-            self.log("Result {}: {}".format(command.id, repr(result)))
+            self.log("Result {}".format(repr(result)))
 
         def log_error(self, frontend, exception, command=None):
             e=exception
@@ -378,35 +369,77 @@ class UserInterface():
 
 # Frontend API
 
+
+q = queue.Queue()
+tl = threading.local()
+
+Interaction = collections.namedtuple('Interaction','event,function,args,kwargs,result')
+
+def interact(wait):
+    def decorator_wait(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                kwargs['GUI'] = tl.gui
+                return f(*args, **kwargs)
+            except AttributeError:
+                e = threading.Event()
+                r = []
+                i = Interaction(e,f,args,kwargs,r)
+                q.put(i)
+                e.wait()
+                return r[0]
+        return wrapper
+
+    def decorator_nowait(f):
+        @functools.wraps(f)
+        def wrapper(*args, **kwargs):
+            try:
+                kwargs['GUI'] = tl.gui
+                return f(*args, **kwargs)
+            except AttributeError:
+                i = Interaction(None,f,args,kwargs,None)
+                q.put_nowait(i)
+        return wrapper
+    if wait:
+        return decorator_wait
+    return decorator_nowait
+
+
 _stored_log=[]
 
 def start():
     pass
 
 def loop():
-    global GUI
     try:
-        GUI = UserInterface()
+        gui = UserInterface()
 
-        def do_after_startup():
-            for m, f, k in _stored_log:
-                l = getattr(GUI.log_win, m)
-                l(f, **k)
-            _stored_log.clear()
+        tl.gui = gui
 
-            for c in _do_on_start:
-                c()
-        GUI.schedule(300, do_after_startup)
+        def _drain_q():
+            try:
+                while True:
+                    i = q.get_nowait()
+                    r = i.function(*i.args, GUI=gui, **i.kwargs)
+                    if i.result is not None:
+                        i.result.append(r)
+                    if i.event is not None:
+                        i.event.set()
+            except queue.Empty:
+                pass
+            gui.schedule(100, _drain_q)
+        gui.schedule(100, _drain_q)
 
-        GUI.loop()
+        gui.loop()
 
 
     finally:
-        GUI = None
+        gui = None
 
 def stop():
-    if GUI is not None:
-        GUI.close_soon()
+    tl.gui.close_soon()
+    del tl.gui
 
 def _reptor_tk_ex(self, typ, val, tb):
     lib.EXCEPTION_HOOK(exception=val)
@@ -414,17 +447,19 @@ tk.Tk.report_callback_exception = _reptor_tk_ex
 
 #logging
 
+@interact(False)
+def _log_in_gui(topic, frontend, kwargs, GUI):
+    l = getattr(GUI.log_win, topic)
+    l(frontend, **kwargs)
+
+
 def _log_proxy(topic):
     def forward(**kwargs):
         try:
             f = lib.THREAD_LOCAL.frontend
         except AttributeError:
             f = "" # e.g. process watch
-        if GUI:
-            l = getattr(GUI.log_win, topic)
-            l(f, **kwargs)
-        else:
-            _stored_log.append( [ topic, f , kwargs ])
+        _log_in_gui(topic, f, kwargs)
     return forward
 
 lib.ALERT_HOOK.register(_log_proxy('log_show'))
@@ -437,31 +472,30 @@ command.COMMAND_EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
 ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(_log_proxy('log_subprocess_finished'))
 ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy('log_subprocess'))
-#TODO Thread Log
 
-def help(obj):
-    import pydoc
-    (pydoc.plain(pydoc.render_doc(obj, title='Help on %s')))
-
-# Extended User API
-
-_do_on_start = []
 def do_on_start(f):
-    assert callable(f)
-    _do_on_start.append(f)
+    interact(False)(f)()
     return f
 
-def cmd_win_stay_on_top():
+@interact(True)
+def cmd_win_stay_on_top(GUI):
     GUI.cmd_win.stay_on_top()
 
-def cmd_win_to_front():
+@interact(True)
+def cmd_win_to_front(GUI):
     GUI.cmd_win.to_front()
 
-def log_win_to_front():
+@interact(True)
+def log_win_to_front(GUI):
     GUI.log_win.to_front()
 
-def cmd_win_set_rect(left, top, width, height):
+@interact(True)
+def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
 
-if __name__ == '__main__':
-    loop()
+__all__ = (
+    'cmd_win_set_rect',
+    'cmd_win_stay_on_top',
+    'cmd_win_to_front',
+    'get_win_id'
+)

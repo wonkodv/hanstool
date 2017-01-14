@@ -85,38 +85,44 @@ if CHECK.os.win:
 
     if CHECK.frontend('ht3.gui'):
         import ht3.gui
-        @ht3.gui.do_on_start
         @Env
         @cmd
         def PlaceOverTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
-            h = GetTaskBarHandle()
-            if h:
-                r = GetWindowRect(h)
-                ht3.gui.cmd_win_set_rect(*r)
-                Env.log("Set window Rect" + repr(r))
+
+            @ht3.gui.interact(False)
+            def doit(GUI):
+                h = GetTaskBarHandle()
+                if h:
+                    r = GetWindowRect(h)
+                    ht3.gui.cmd_win_set_rect(*r)
+                    Env.log("Set window Rect" + repr(r))
+            doit()
 
         @Env
         @cmd
         def DockInTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
-            h = GetTaskBarHandle()
-            if not h:
-                return
-            c = ht3.gui.GUI.cmd_win.window.winfo_id()
-            left, top, width, height = GetWindowRect(h)
-            ht3.gui.cmd_win_set_rect(0, 0, width, height)
+            @ht3.gui.interact(False)
+            def foo(GUI):
+                h = GetTaskBarHandle()
+                if not h:
+                    return
+                c = GUI.cmd_win.window.winfo_id()
+                left, top, width, height = GetWindowRect(h)
+                ht3.gui.cmd_win_set_rect(0, 0, width, height)
 
-            def to_front(*args):
-                ht3.gui.cmd_win_to_front()
+                def to_front(*args):
+                    ht3.GUI.cmd_win_to_front()
 
-            # Hack so after docking, the windows isnt moved arround.
-            ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
-            ht3.gui.GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
-            ht3.gui.GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)
-            ht3.gui.GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
+                # Hack so after docking, the windows isnt moved arround.
+                GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
+                GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
+                GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)
+                GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
 
-            SetParent(c, h)
+                SetParent(c, h)
+            foo()
 
     @cmd
     def analyze_windows(w:WindowHandle):
