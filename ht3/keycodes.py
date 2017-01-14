@@ -49,6 +49,8 @@ KEY_CODES = {
     "INSERT":               0x2D,
     "DELETE":               0x2E,
     "HELP":                 0x2F,
+    "WINDOWS":              0x5B,
+    "MOD4":                 0x5B,
     "LWIN":                 0x5B,
     "RWIN":                 0x5C,
     "APPS":                 0x5D,

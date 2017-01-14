@@ -22,7 +22,6 @@ mouse_event = ctypes.windll.user32.mouse_event
 keybd_event = ctypes.windll.user32.keybd_event
 keyscan = ctypes.windll.user32.VkKeyScanW
 
-
 EXTENDED_KEYS=set(KEY_CODES[k] for k in (
         'UP',
         'DOWN',
@@ -119,8 +118,8 @@ def type_string(s, interval=0):
             pass
     for c in s:
         x = keyscan(ord(c))
-        if x < 0:
-            raise OSError("Cannot get keycode")
+        if x & 0x8000: # 'negative'
+            raise OSError("Can not get keycodes on current keyboard layout for character \\u{0:04X}: {1}".format(ord(c), c))
 
         if x & 0x100:
             i()
@@ -131,10 +130,16 @@ def type_string(s, interval=0):
         if x & 0x400:
             i()
             key_down(KEY_CODES['ALT'])
+        if x & 0x800:
+            i()
+            raise NotImplementedError("What is a Hankaku Key?")
         i()
         key_down(x&0xff)
         i()
         key_up(x&0xff)
+        if x & 0x800:
+            i()
+            raise NotImplementedError("What is a Hankaku Key?")
         if x & 0x400:
             i()
             key_up(KEY_CODES['ALT'])

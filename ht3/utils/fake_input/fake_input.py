@@ -42,7 +42,7 @@ fake_types = (
                     r"((?P<mod2>\w+)\+)?"
                     r"((?P<mod3>\w+)\+)?"
                     r"((?P<mod4>\w+)\+)?"
-                    r"(?P<modkey>\w+)"),
+                    r"(?P<modkey>[0-9a-zA-Z_]+)"),
     ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
     ("HKEY",        r"(?P<hkud>\+|-|)0x(?P<hkey>[0-9a-fA-F]{2})"),
     ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
@@ -75,8 +75,15 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     Press Mod1 and Mod2, then press and releasae key,
                     then release mod2 and mod1
     *   ``(10.3)``  Sleep 10.3 ms
+    *   ``"Text"`` and ``'Text'``
+                    Type text, by querying the current keybord layout for the
+                    correct sequence of keystrokes to produce a character.
     Waits for ``interval`` milliseconds between every event. (thus
     twice when pressing and releasing keys/buttons). also before sleeps.
+    Example that activates the first window, clicks in it, waits and
+    then types HANSTool:
+        fake("WINDOWS+1 300/45 M1 (100) +Shift H A N S -Shift 'Tool'")
+
     """
 
     sequence = []

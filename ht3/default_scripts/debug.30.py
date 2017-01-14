@@ -66,8 +66,8 @@ def exception_trace(i:int=-1):
     if isinstance(e, SyntaxError):
         s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
     show(s)
-    with tempfile.NamedTemporaryFile('wt', delete=False) as f:
-        f.write(s)
+    with tempfile.NamedTemporaryFile('wb', delete=False) as f:
+        f.write(s.encode("UTF-8"))
         f.flush()
         vimservers = procio('vim', '--serverlist')
         vimservers = vimservers.split()
