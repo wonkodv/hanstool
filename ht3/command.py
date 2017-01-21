@@ -165,10 +165,9 @@ def parse_command(string):
 
 def get_command(string):
     cmd, sep, args = parse_command(string)
-    try:
+    if cmd in COMMANDS:
         return COMMANDS[cmd](string, args)
-    except KeyError:
-        raise NoCommandError(cmd, sep, args) from None
+    raise NoCommandError(cmd, sep, args) from None
 
 def run_command(string):
     if THREAD_LOCAL.command is None:
