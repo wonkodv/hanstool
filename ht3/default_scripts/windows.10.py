@@ -113,7 +113,7 @@ if CHECK.os.win:
                 ht3.gui.cmd_win_set_rect(0, 0, width, height)
 
                 def to_front(*args):
-                    ht3.GUI.cmd_win_to_front()
+                    ht3.gui.cmd_win_to_front()
 
                 # Hack so after docking, the windows isnt moved arround.
                 GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
