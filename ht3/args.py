@@ -60,7 +60,9 @@ class MultiParam:
         self.param = _get_param(param, False)
 
     def complete(self, strings):
-        return self.param.complete(strings[-1])
+        if strings:
+            return self.param.complete(strings[-1])
+        return self.param.complete("")
 
     def convert(self, strings):
         return [self.param.convert(s) for s in strings]
