@@ -31,7 +31,7 @@ class OptionDialog(tk.Tk):
 
 
     def _option(self, o):
-        b = tk.Button(self.buttons, text=str(o), width=10, command=lambda:self._select(o))
+        b = tk.Button(self.buttons, text=str(o), width=len(str(o)), command=lambda:self._select(o))
         b.pack(side=tk.LEFT, padx=5, pady=5)
         return b
 
