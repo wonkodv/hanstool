@@ -37,6 +37,7 @@ def load_frontend(name):
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
 
+_FrontendWaitEvt = threading.Event()
 
 def run_frontends():
     """
@@ -52,56 +53,44 @@ def run_frontends():
     if not frontends:
         raise ValueError("No Frontend Loaded yet")
 
-    if len(frontends) == 1:     # Shortcut if there is no need for threading stuff
-        fe = frontends[0]
-        THREAD_LOCAL.frontend = fe.__name__
+    threads = []
+
+    _FrontendWaitEvt.clear()
+
+    for fe in frontends:
         fe.start()
-        check.CHECK.frontends_running = True # Can set before loop() because singlethreaded
+    def _run_fe(fe):
+        THREAD_LOCAL.frontend = fe.__name__
+        THREAD_LOCAL.command = None
         try:
             fe.loop()
         except Exception as e:
             EXCEPTION_HOOK(exception=e)
-        check.CHECK.frontends_running = False
-        try:
-            fe.stop()
-        except Exception as e:
-            EXCEPTION_HOOK(exception=e)
-        THREAD_LOCAL.frontend = None
-    else:
-        threads = []
-        evt = threading.Event()
+        finally:
+            _FrontendWaitEvt.set()
+    for fe in frontends:
+        t = threading.Thread(target=_run_fe, args=[fe], name=fe.__name__)
+        t.start()
+        threads.append((t, fe))
+    check.CHECK.frontends_running = True
 
-        for fe in frontends:
-            fe.start()
-        def _run_fe(fe):
-            THREAD_LOCAL.frontend = fe.__name__
-            THREAD_LOCAL.command = None
+    try:
+        _FrontendWaitEvt.wait() # wait till some Frontend's loop() method returns
+    finally:
+        # stop all frontends
+        check.CHECK.frontends_running = False
+        for t, f in threads:
             try:
-                fe.loop()
+                f.stop()
             except Exception as e:
                 EXCEPTION_HOOK(exception=e)
-            finally:
-                evt.set()
-        for fe in frontends:
-            t = threading.Thread(target=_run_fe, args=[fe], name=fe.__name__)
-            t.start()
-            threads.append((t, fe))
-        check.CHECK.frontends_running = True
 
-        try:
-            evt.wait() # wait till some Frontend's loop() method returns
-        finally:
-            # stop all frontends
-            check.CHECK.frontends_running = False
-            for t, f in threads:
-                try:
-                    f.stop()
-                except Exception as e:
-                    EXCEPTION_HOOK(exception=e)
+        # wait for all frontends to finish.
+        for t, f in threads:
+            t.join()
 
-            # wait for all frontends to finish.
-            for t, f in threads:
-                t.join()
+def stop_frontends():
+    _FrontendWaitEvt.set()
 
 def execute_py_expression(s):
     """Execute a python expression"""
@@ -151,6 +140,8 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
         try:
             r = func(*args, **kwargs)
             on_finish(r)
+        except SystemExit:
+            stop_frontends()
         except Exception as e:
             on_exception(e)
     t = threading.Thread(target=target, name=name)
