@@ -163,17 +163,17 @@ def cmd(func=None, **kwargs):
 def parse_command(string):
     return string.partition(' ')
 
-def get_command(string):
+def get_registered_command(string):
     cmd, sep, args = parse_command(string)
     if cmd in COMMANDS:
         return COMMANDS[cmd](string, args)
     raise NoCommandError(cmd, sep, args) from None
 
-def run_command(string):
+def get_command(string):
     if THREAD_LOCAL.command is None:
         ht3.history.append_history(string)
     try:
-        cmd = get_command(string)
+        cmd = get_registered_command(string)
     except NoCommandError:
         try:
             cmd = COMMAND_NOT_FOUND_HOOK(command_string=string)
@@ -182,4 +182,7 @@ def run_command(string):
 
     assert isinstance(cmd, Command), "{} should be a Command".format(cmd)
 
-    return cmd()
+    return cmd
+
+def run_command(string):
+    return get_command(string)()

@@ -5,7 +5,7 @@ import os.path
 import threading
 
 from .env import Env
-from .command import run_command
+from .command import get_command
 from .complete import complete_command_with_args
 
 import ht3.lib
@@ -42,14 +42,12 @@ def loop():
             return
         if s:
             try:
-                result = run_command(s)
+                cmd = get_command(s)()
             except KeyboardInterrupt:
                 print("\n!!Aborted")
             except SystemExit:
                 print("\nQuitting")
                 raise
-            except Exception as e:
-                ht3.lib.EXCEPTION_HOOK(exception=e)
 
 def stop():
     _evt.set()

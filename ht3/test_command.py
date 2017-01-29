@@ -1,6 +1,6 @@
 import unittest
 from unittest.mock import patch, MagicMock
-from ht3.command import cmd, get_command, NoCommandError, run_command
+from ht3.command import cmd, get_registered_command, NoCommandError, run_command
 from ht3.lib import THREAD_LOCAL
 
 
@@ -84,7 +84,7 @@ class Test_get_command(unittest.TestCase):
         m =  MagicMock()
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
-        c = get_command("cmd")
+        c = get_registered_command("cmd")
         m.assert_called_with("cmd","")
         assert m() is c
 
@@ -94,15 +94,15 @@ class Test_get_command(unittest.TestCase):
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
         with self.assertRaises(NoCommandError):
-            get_command("cmd1")
+            get_registered_command("cmd1")
         with self.assertRaises(NoCommandError):
-            get_command(" cmd")
+            get_registered_command(" cmd")
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
         m =  MagicMock()
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
-        c = get_command("cmd arg string")
+        c = get_registered_command("cmd arg string")
         m.assert_called_with("cmd arg string", "arg string")
         assert m() is c

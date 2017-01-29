@@ -17,14 +17,7 @@ def debug(string:args.Union(args.Command, args.Python)):
     """ Debug a Command """
 
     p = pdb.Pdb()
-    try:
-        cmd = get_command(string)
-    except NoCommandError:
-        try:
-            cmd = COMMAND_NOT_FOUND_HOOK(command_string=string)
-        except ht3.hook.NoResult:
-            raise NoCommandError(string) from None
-
+    cmd = get_command(string)
     p.rcLines.append("b self.run")
     p.rcLines.append("c")
     p.runcall(cmd)

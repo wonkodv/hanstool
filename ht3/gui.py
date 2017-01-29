@@ -54,20 +54,17 @@ class UserInterface():
         self.closed_evt.set()
 
     def run_command(self, string):
-        if string:
-            self.cmd_win.set_state("Working")
-            try:
-                command.run_command(string)
-            except Exception as e:
-                self.cmd_win.set_state("Error")
-                lib.EXCEPTION_HOOK(exception=e)
-                return False
-            else:
-                self.cmd_win.set_state("Waiting")
-                return True
-        else:
-            self.cmd_win.set_state("Waiting")
+        if not string:
             return False
+        try:
+            cmd = command.get_command(string)
+        except Exception as e:
+            ht3.lib.EXCEPTION_HOOK(exception=e)
+            return False
+
+        lib.start_thread(cmd, name="Gui Command "+string)
+        return True
+
 
     class CommandWindow():
         def __init__(self, ui):

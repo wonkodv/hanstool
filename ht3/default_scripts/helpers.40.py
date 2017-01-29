@@ -38,6 +38,6 @@ def rerun(x:args.Union(args.Int,args.Str)):
             raise KeyError("Nothing in history", x)
 
     log("Rerun: " + c)
-    run_command(c)
+    get_command(c)()
     ht3.history.append_history(c)
 
