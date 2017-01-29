@@ -26,7 +26,13 @@ import threading
 import tkinter as tk
 import traceback
 
+
 class UserInterface():
+
+    BUSY = 1
+    IDLE = 2
+    ERROR= 3
+
     def __init__(self):
         self.root = tk.Tk()
         self.root.overrideredirect(True)
@@ -40,18 +46,13 @@ class UserInterface():
         self.root.after(time, cb)
 
     def loop(self):
-        self.closed_evt = threading.Event()
-        self.root.after(500, self.check_closed)
         self.root.mainloop()
 
-    def check_closed(self):
-        if self.closed_evt.is_set():
-            self.root.quit()
-        else:
-            self.root.after(500, self.check_closed)
+    def close(self):
+        self.root.quit()
 
-    def close_soon(self):
-        self.closed_evt.set()
+    def set_state(self, state):
+        self.cmd_win.set_state(state)
 
     def run_command(self, string):
         if not string:
@@ -105,7 +106,7 @@ class UserInterface():
             self.text.bind("<KeyPress-Up>",lambda e: self._set_history(1))
             self.text.bind("<KeyPress-Down>",lambda e: self._set_history(-1))
 
-            self._state = "Waiting"
+            self._state = UserInterface.IDLE
             self._has_focus = False
             self._update_color()
             self.window.bind("<FocusIn>", lambda e:self._set_focus(True))
@@ -116,14 +117,14 @@ class UserInterface():
             self._update_color()
 
         def _update_color(self):
-            if self._state == 'Waiting':
+            if self._state == UserInterface.IDLE:
                 if self._has_focus:
                     self.text['bg'] = 'white'
                 else:
                     self.text['bg'] = '#D4D0C8'
-            elif self._state == 'Working':
+            elif self._state == UserInterface.BUSY:
                 self.text['bg'] = 'red'
-            elif self._state == 'Error':
+            elif self._state == UserInterface.ERROR:
                 self.text['bg'] = 'orange'
             else:
                 assert False
@@ -319,7 +320,7 @@ class UserInterface():
             self.to_front()
 
         def log_command(self, frontend, command):
-            self.log("Command from {1}: {0}' ".format(command, frontend))
+            self.log("Command from {1}: {0}".format(command, frontend))
 
         def log_command_finished(self, frontend, command, result):
             if result is None:
@@ -432,23 +433,23 @@ def loop():
 
 
     finally:
-        gui = None
+        del tl.gui
 
 def stop():
-    tl.gui.close_soon()
-    del tl.gui
+    close()
 
 def _reptor_tk_ex(self, typ, val, tb):
     lib.EXCEPTION_HOOK(exception=val)
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
-#logging
 
 @interact(False)
 def _log_in_gui(topic, frontend, kwargs, GUI):
     l = getattr(GUI.log_win, topic)
     l(frontend, **kwargs)
 
+
+#logging
 
 def _log_proxy(topic):
     def forward(**kwargs):
@@ -470,9 +471,39 @@ command.COMMAND_EXCEPTION_HOOK.register(_log_proxy('log_error'))
 ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(_log_proxy('log_subprocess_finished'))
 ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy('log_subprocess'))
 
+# Window State for Commands
+
+@command.COMMAND_RUN_HOOK.register
+@interact(False)
+def _command_run(command, GUI):
+    if command.parent is None:
+        GUI.set_state(GUI.BUSY)
+
+@command.COMMAND_RESULT_HOOK.register
+@interact(False)
+def _command_done(command, result, GUI):
+    if command.parent is None:
+        GUI.set_state(GUI.IDLE)
+
+@command.COMMAND_EXCEPTION_HOOK.register
+@interact(False)
+def _command_err(command, exception, GUI):
+    if command.parent is None:
+        GUI.set_state(GUI.ERROR)
+
+
+# For interacting with scripts:
+
+_excluded = set(globals())
+
+
 def do_on_start(f):
     interact(False)(f)()
     return f
+
+@interact(True)
+def close(GUI):
+    GUI.close()
 
 @interact(True)
 def cmd_win_stay_on_top(GUI):
@@ -490,9 +521,5 @@ def log_win_to_front(GUI):
 def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
 
-__all__ = (
-    'cmd_win_set_rect',
-    'cmd_win_stay_on_top',
-    'cmd_win_to_front',
-    'get_win_id'
-)
+__all__ = (n for n in globals() if not n in _excluded)
+
