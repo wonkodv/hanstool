@@ -1,6 +1,7 @@
 from .hook import *
 import unittest
 import unittest.mock
+import sys
 
 class TestHook(unittest.TestCase):
     def test_hook(self):
@@ -18,6 +19,7 @@ class TestHook(unittest.TestCase):
         h(x=2)
         assert X == [1,2]
 
+    @unittest.skipIf(sys.version_info < (3,5), "signature(follow_wrapped) not implemented")
     def test_signature_check(self):
         h = Hook("a","b")
 

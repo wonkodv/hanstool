@@ -10,9 +10,14 @@ class Hook():
         """Register a callback for the hook."""
 
         try:
-            inspect.signature(cb).bind(**{p:None for p in self.parameters})
+            sig = inspect.signature(cb, follow_wrapped=False)
         except TypeError:
-            raise TypeError("Incompatible Signature", cb, self.parameters) from None
+            pass # python < 3.5 or builtin or something. ignore
+        else:
+            try:
+                sig.bind(**{p:None for p in self.parameters})
+            except TypeError:
+                raise TypeError("Incompatible Signature", cb, sig, self.parameters) from None
         self.callbacks.append(cb)
         return cb
 
