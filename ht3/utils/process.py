@@ -37,13 +37,30 @@ def execute(*args, shell=False, is_split=..., **kwargs):
         name = pathlib.Path(shlex.split(args)[0]).name
     else:
         if is_split is ...:
-            is_split = True
+            if len(args) == 1:
+                # works: execute("ls -l")
+                # doesn't work: execute("c:/program files/mozilla/firefox.exe")
+                # works: execute('"c:/program files/mozilla/firefox.exe"')
+                # works: execute('"c:/program files/mozilla/firefox.exe" http://example.com')
+                # works: execute("c:/program files/mozilla/firefox.exe", "http://example.com")
+                is_split = False
+            else:
+                is_split = True
 
         if not is_split:
             if len(args) != 1:
                 raise TypeError("Pass only 1 argument if not `is_split`", args)
-            args = shlex.split(args[0])
-        name = pathlib.Path(args[0]).name
+            if CHECK.os.posix:
+                is_split = True
+                args = shlex.split(args[0])
+                name = pathlib.Path(args[0]).name
+            else:
+                args = args[0]
+                name = pathlib.Path(shlex.split(args)[0]).name
+        else:
+            name = pathlib.Path(args[0]).name
+
+    assert isinstance(args, str) != is_split
 
     try:
         p = subprocess.Popen(args, shell=shell, **kwargs)
@@ -102,7 +119,7 @@ def procio(*args, input=None, timeout=None, **kwargs):
         raise ProcIOException("Non-zero return code", p.returncode, out, err, args)
     return out
 
-def complete_executables(s):
+def complete_executable(s):
     s = shlex.split(s)
     if len(s) != 1:
         return

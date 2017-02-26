@@ -17,17 +17,38 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
         if not isinstance(a, str):
             raise TypeError("Expecting only strings as args", a, type(a))
     if not shell:
-        if not is_split:
+        if is_split is ...:
+            if len(args) == 0:
+                # works: execute("ls -l")
+                # doesn't work: execute("c:/program files/mozilla/firefox.exe")
+                # works: execute('"c:/program files/mozilla/firefox.exe"')
+                # works: execute('"c:/program files/mozilla/firefox.exe" http://example.com')
+                # works: execute("c:/program files/mozilla/firefox.exe", "http://example.com")
+                is_split = False
+            else:
+                is_split = True
+
+        if is_split:
+            # replace exe with looked up exe
+            try:
+                exe = next(_get_exe_path(exe, True, False))
+            except StopIteration:
+                raise FileNotFoundError(exe) from None
+        else:
+            # replace 1st word in exe with looked up 1st word
             if args:
                 raise ValueError("Expecting only 1 string if not `is_split`")
-            args = shlex.split(exe)
-            exe = args[0]
-            args = args[1:]
-            is_split=True
-        try:
-            exe = next(_get_exe_path(exe, True, False))
-        except StopIteration:
-            raise FileNotFoundError(exe) from None
+            e = shlex.split(exe)[0]
+            if exe.startswith(e+" "):
+                # try to change the 1st word to the full path of an executable file
+                tail = exe[len(e):]
+                try:
+                    e = shellescape(next(_get_exe_path(e, True, False)))
+                except StopIteration:
+                    pass # maybe windows can use it
+                assert tail[0] == ' '
+                exe = e + tail
+
 
     # Ugly flag stuff so windows does not create ConsoleWindows for processes which have the io streams set.
     if all(x in kwargs and kwargs[x] == subprocess.PIPE for x in ('stdin','stdout','stderr')):
