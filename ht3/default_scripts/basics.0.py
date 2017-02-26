@@ -36,7 +36,6 @@ args.Path = args.Param(convert=pathlib.Path,
              complete=lambda s:Env.complete_path(s),
              doc="Path")
 args.Executable = args.Param(complete=lambda s:Env.complete_executable(s), doc="Executable")
-args.ExecutableWithArgs = args.Param(complete=lambda s:Env.complete_executable_with_args(s), doc="ExecutableWithArgs")
 args.Command = args.Param(complete=lambda s:Env.complete_commands(s), doc="Command")
 args.CommandWithArgs = args.Param(complete=lambda s:Env.complete_command_with_args(s),
                         doc="CommandWithArgs")
