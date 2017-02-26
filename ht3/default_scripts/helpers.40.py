@@ -14,12 +14,12 @@ def strings_in(needles, haystack):
 @cmd
 def history(*search):
     """Search for a command in the history file."""
-    if search is None:
+    if not search:
         edit_file(ht3.history.get_history_file())
     else:
         for i,l in enumerate(ht3.history.get_history()):
             if strings_in(search,l):
-                if not search.startswith("history"):
+                if not l.startswith("history"):
                     show("{0: 4d} {1}".format(i,l.strip()))
 
 @cmd(name='!')

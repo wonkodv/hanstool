@@ -63,9 +63,9 @@ if CHECK.os.win:
 
     @cmd(name="%")
     def explore_command(cmd:args.Command):
-        """Show the directory or file used in the target commands source in explorer."""
+        """Show the directory or file used in the target command's source in explorer."""
 
-        w = COMMANDS[cmd].function
+        w = COMMANDS[cmd].target
 
         strings = []
         if isinstance(w, functools.partial):
@@ -79,8 +79,7 @@ if CHECK.os.win:
                 if p.is_dir():
                     arg = str(p)
                 else:
-                    arg = '/select,' + str(p)
-                execute_disconnected('explorer', arg)
+                    execute_disconnected('explorer /select,'+shellescape(str(p)))
                 return
 
     if CHECK.frontend('ht3.gui'):
@@ -146,3 +145,6 @@ if CHECK.os.win:
                 handle = p
                 p = GetParent(p)
         return handle
+
+    def device_manager():
+        execute_disconnected('mmc devmgmt.msc')

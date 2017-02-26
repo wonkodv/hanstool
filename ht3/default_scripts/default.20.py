@@ -237,6 +237,7 @@ def reload(*modules:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=Tru
     finally:
         if CHECK.frontend('ht3.hotkey'):
             ht3.hotkey.reload_hotkeys()
+    log("\n== Done ==\n")
 
 
 @cmd

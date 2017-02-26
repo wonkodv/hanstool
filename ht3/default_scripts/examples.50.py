@@ -4,6 +4,7 @@ from Env import *
 
 import random
 import subprocess
+import string
 
 
 if CHECK.frontend('ht3.cli'):
@@ -22,11 +23,10 @@ def txt():
     edit_file(expanduser("~/txt"))
 
 @cmd(threaded=True)
-def timer(t:float=3, event:str="Done"):
+def timer(t:float, event:str="Done"):
     """ timer timer """
     sleep(t*60)
     option_dialog("Timer", "Timer up ({0})".format(event),"OK")
-
 
 def complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
@@ -52,3 +52,7 @@ def rand(low:int=0, high:int=0xFFFFFFFF):
     r = random.randint(low,high)
     set_clipboard("0x{:8X}".format(r))
     show(r)
+
+@cmd
+def password():
+    set_clipboard("".join(random.sample(string.printable, 12)))
