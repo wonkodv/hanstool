@@ -1,13 +1,20 @@
 import inspect
+
 class Hook():
+    """Delegate calls to all registered callbacks in reversed order."""
     HOOKS = []
+
     def __init__(self, *parameters):
+        """Create a hook which is with the passed **kwargs."""
         self.callbacks = []
         self.parameters = parameters
         Hook.HOOKS.append(self)
 
     def register(self, cb):
-        """Register a callback for the hook."""
+        """Register a callback for the hook.
+
+        A basic signature check is performed to ensure the callback can
+        be called with the hook's **kwargs."""
 
         try:
             sig = inspect.signature(cb, follow_wrapped=False)
@@ -32,9 +39,27 @@ class NoResult(Exception):
     pass
 
 class ResultHook(Hook):
+    """Invokes the registered callbacks until one doesn't return `None`"""
     def __call__(self, **kwargs):
         for c in reversed(self.callbacks):
             r = c(**kwargs)
             if r is not None:
                 return r
         raise NoResult()
+
+class GeneratorHook(Hook):
+    """Yields elements of registered callbacks.
+
+    If a function raises a StopIteration with as value that ahs non-False boolean,
+    no other callbacks are called. can be done with `return True` inside a
+    generator."""
+
+    def __call__(self, **kwargs):
+        for c in reversed(self.callbacks):
+            i = iter(c(**kwargs))
+            try:
+                while True:
+                    yield next(i)
+            except StopIteration as e:
+                if e.value:
+                    return e.value

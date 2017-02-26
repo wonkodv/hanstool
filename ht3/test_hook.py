@@ -56,4 +56,26 @@ class TestResultHook(unittest.TestCase):
 
         assert h() == 1
 
+class TestGeneratorHook(unittest.TestCase):
+    def test_generatorHook(self):
+        h = GeneratorHook()
+
+        @h.register
+        def a():
+            yield "a"
+            yield "a1"
+
+        @h.register
+        def b():
+            yield "b"
+            return True
+            yield "b2"
+
+        @h.register
+        def c():
+            yield "c"
+            yield "c2"
+            return False
+
+        assert list(h()) == ["c","c2","b"]
 

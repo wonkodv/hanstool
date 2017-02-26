@@ -29,6 +29,8 @@ class Command():
 
     threaded = False
 
+    run = None # Must be overwritten by subclasses
+
     def __init__(self, invocation):
         self.invocation = invocation
         self.ran = False
