@@ -16,6 +16,8 @@ def get_history_file():
     p = str(p) # in case it's a Path
     p = os.path.expanduser(p)
     p = pathlib.Path(p)
+    if not p.parent.exists():
+        p.parent.mkdir(parents=True)
     global get_history_file
     get_history_file = lambda:p
     return p
