@@ -33,7 +33,7 @@ def main(args):
         scripts = []
 
         def load_default_scripts():
-            s = Env.get('SCRIPTS', False)
+            s = Env.get('HT3_SCRIPTS', False)
             if s:
                 for p in s.split(':'): #TODO use ; on Win
                     load_scripts(os.path.expanduser(p))
@@ -80,19 +80,16 @@ def main(args):
                 if a not in ['-h','--help','/?','/help']:
                     print ("Invalid Option: "+a)
                 print (HELP)
-
                 return 1
-
-        if not (_f or _x):
-            print("Loading default frontend `ht3.cli` Load others with `-f`")
-            lib.load_frontend('ht3.cli')
-            _f = True
-
         if not _l:
                 if not scripts:
                     load_default_scripts()
                 for s in scripts:
                     load_scripts(s)
+
+        if not (_f or _x):
+            lib.load_frontend('ht3.cli')
+            _f = True
 
         if not _r and _f:
             lib.run_frontends()

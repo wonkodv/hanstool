@@ -34,8 +34,8 @@ def complete_virtualbox(s=None):
 
     # "debian" {fbc948a5-7b8b-489c-88b0-7f5eaceb150e}
     for s in sorted(vms.split('\n')):
-        x = s.split('"')
-        if x:
+        if s:
+            x = s.split('"')
             yield x[1]
 
 @cmd
