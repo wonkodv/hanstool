@@ -1,5 +1,4 @@
 from Env import *
-from ht3.test import test
 
 import shlex
 import shutil
@@ -83,6 +82,7 @@ def _executable_command_h(command_string):
     except ValueError:
         pass
     else:
+        #TODO use Env.which and decide how to execute this
         if shutil.which(parts[0]):
             return _procio.command(s, s)
 
@@ -169,10 +169,4 @@ if shutil.which('bash') and False:
                 shell=False,
                 is_split=False)
         print(t)
-@test
-def _test_function():
-    i = EXECUTABLE_W_ARGS_COMPLETE_HOOK(parts="ls -".split())
-    l = list(i)
-    assert 'ls -l' in l
-
 

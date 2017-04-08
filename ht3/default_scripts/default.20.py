@@ -80,7 +80,6 @@ def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
     show(r)
-    return r
 
 @cmd(name=';')
 def _execute_py_expression(s:args.Python):

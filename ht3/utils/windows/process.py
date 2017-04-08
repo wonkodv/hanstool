@@ -30,10 +30,10 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
 
         if is_split:
             # replace exe with looked up exe
-            try:
-                exe = next(_get_exe_path(exe, True, False))
-            except StopIteration:
-                raise FileNotFoundError(exe) from None
+            p = which(exe)
+            if not p:
+                raise FileNotFoundError("Cannot find executable",exe)
+            exe = str(p)
         else:
             # replace 1st word in exe with looked up 1st word
             if args:
@@ -42,10 +42,13 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
             if exe.startswith(e+" "):
                 # try to change the 1st word to the full path of an executable file
                 tail = exe[len(e):]
-                try:
-                    e = shellescape(next(_get_exe_path(e, True, False)))
-                except StopIteration:
-                    pass # maybe windows can use it
+                p = which(e)
+
+                if p:
+                    e = shellescape(str(p))
+                else:
+                    pass # good luck with that, maybe its a shell command
+
                 assert tail[0] == ' '
                 exe = e + tail
 
@@ -65,7 +68,11 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
 _extensions = os.environ.get('PATHEXT','').split(os.pathsep)
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]
 
-
+def which(exe):
+    try:
+        return next(_get_exe_path(exe, True, False))
+    except StopIteration:
+        return None
 
 def _get_exe_path_ext(p, full_path, glob):
     if glob:

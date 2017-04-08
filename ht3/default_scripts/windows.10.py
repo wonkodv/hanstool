@@ -77,9 +77,12 @@ if CHECK.os.win:
             p = Path(s)
             if p.exists():
                 if p.is_dir():
+                    log("Directory: "+str(p))
                     arg = str(p)
                 else:
-                    execute_disconnected('explorer /select,'+shellescape(str(p)))
+                    log("File: "+str(p))
+                    arg="/select," + shellescape(str(p))
+                execute_disconnected('explorer ' + arg)
                 return
 
     if CHECK.frontend('ht3.gui'):

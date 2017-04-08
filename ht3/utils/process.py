@@ -78,6 +78,22 @@ def execute(*args, shell=False, is_split=..., **kwargs):
     p.onreturn(lambda p: SUBPROCESS_FINISH_HOOK(process=p))
     return p
 
+_paths = [pathlib.Path(p) for p in os.get_exec_path()]
+
+def which(exe):
+    p = pathlib.Path(exe)
+    parts = p.parts
+    if len(parts) > 1:
+        if p.exists():
+            return p
+        else:
+            return None
+    for c in Env.get('PATH',_paths):
+        p = c/exe
+        if p.exists():
+            return p
+    return None
+
 def execute_disconnected(*args, **kwargs):
     """Execute a program without any file handles attached."""
     return Env.execute(*args,
