@@ -4,6 +4,7 @@ from Env import *
 
 from pathlib import Path
 import functools
+import re
 
 if CHECK.os.win:
     from ctypes import windll
@@ -53,8 +54,9 @@ if CHECK.os.win:
 
     @Env
     @cmd(name='o')
-    def shellexecute(s):
+    def shellexecute(s:args.Union(args.Path,args.Executable)):
         """Shell Execute, windows's all purpose opening function for files and programms."""
+        s = str(s)
         r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
         if r > 32:
             return None
@@ -125,6 +127,26 @@ if CHECK.os.win:
 
                 SetParent(c, h)
             foo()
+
+    def GetCommandLineFromHWND(hwnd):
+            _, procid = GetWindowThreadProcessId(hwnd)
+            o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
+                    errors="backslashreplace",
+            )
+            lines = [ l for l in o.split("\n") if l ]
+            assert lines[0].strip() == 'CommandLine'
+            assert len(lines) == 2
+            return lines[1]
+
+    def _complete_script_names(s):
+        return Env._complete_script_names(s)
+
+    @cmd(apply_default_param_anotations=True)
+    def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS"):
+        cmdline = GetCommandLineFromHWND(hwnd)
+        name = GetWindowText(hwnd)
+        name = name.lower()
+        Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
 
     @cmd
     def analyze_windows(w:WindowHandle):

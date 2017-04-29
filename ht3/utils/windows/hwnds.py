@@ -1,7 +1,7 @@
 """Functions that deal with Windows Windows."""
 import ctypes
-from ctypes.wintypes import RECT, POINT, HWND, LPARAM
-from ctypes import c_wchar, c_bool
+from ctypes.wintypes import RECT, POINT, HWND, LPARAM, DWORD
+from ctypes import c_wchar, c_bool, byref
 
 def EnumWindows(cb):
     exc = None
@@ -38,7 +38,7 @@ def GetClassName(wnd):
 
 def GetCursorPos():
     p = POINT()
-    if not ctypes.windll.user32.GetCursorPos(ctypes.byref(p)):
+    if not ctypes.windll.user32.GetCursorPos(byref(p)):
         raise ctypes.WinError()
     return p
 
@@ -47,6 +47,11 @@ def GetForegroundWindow():
 
 def GetParent(hWnd):
     return ctypes.windll.user32.GetParent(hWnd)
+
+def GetWindowThreadProcessId(hwnd):
+    procid = DWORD()
+    threadid = ctypes.windll.user32.GetWindowThreadProcessId(hwnd, byref(procid))
+    return threadid, procid.value
 
 def GetTaskBarHandle():
     h = FindWindow(cls='Shell_TrayWnd')
@@ -62,7 +67,7 @@ def GetTaskBarHandle():
 
 def GetWindowRect(hwnd):
     r = RECT(0,0,0,0)
-    p = ctypes.byref(r)
+    p = byref(r)
     if not ctypes.windll.user32.GetWindowRect(hwnd, p):
         raise ctypes.WinError()
     return r.left, r.top, r.right - r.left, r.bottom - r.top

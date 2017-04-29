@@ -133,9 +133,10 @@ def edit_command(c:args.Union(args.Command, args.Python)):
             l = 0
     p = edit_file(f, l)
 
+@Env
 def _complete_script_names(s):
     return reversed(list(filter_completions(s, (p.name for p in SCRIPTS))))
-
+@Env
 @cmd(name="++")
 def add_command(script:_complete_script_names, name=None, text=None):
     """Define a command in a script.
@@ -169,7 +170,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
         assert not s.exists() # s should have matched above.
         show("New Script "+str(s))
         with s.open('wt') as f:
-            f.write('"""" A new Script """\n\nfrom Env import * \n\n')
+            f.write('"""" A new Script """\n\nfrom Env import *\n\n')
 
     if name:
         with s.open("ta") as f:
