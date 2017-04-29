@@ -71,7 +71,9 @@ def status():
     b = request("/requests/status.json")
     s = b.decode("utf-8")
     o = json.loads(s)
-    show(o['information']['category']['meta'])
+    m = o['information']['category']['meta']
+    show(m)
+    set_clipboard("{artist} - {title}".format(**m))
 
 def vlc(*args):
     return execute_disconnected("vlc","--http-host=localhost","--http-port=63215","--http-password=" + PASSWORD, *args)
