@@ -16,7 +16,7 @@ from . import lib
 
 SCRIPTS = []
 
-_SCRIPT_FILE_NAME = re.compile('^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
+_SCRIPT_FILE_NAME = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
 
 def _script_module(path):
     name = path.stem

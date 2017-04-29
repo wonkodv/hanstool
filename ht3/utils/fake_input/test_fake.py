@@ -45,7 +45,7 @@ class Test_fake(unittest.TestCase):
             A
             (100)
             -Shift
-            'A\SD"F'
+            'A\\SD"F'
             "GH'I"
             1000x2000
             01/250
@@ -60,7 +60,7 @@ class Test_fake(unittest.TestCase):
             ['ku',k['A']],
             ['s', 0.1],
             ['ku',k['SHIFT']],
-            ['t', 'A\SD"F', 0],
+            ['t', 'A\\SD"F', 0],
             ['t', "GH'I", 0],
             ['ma', 1000, 2000],
             ['ma', 1, 250],
