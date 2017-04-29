@@ -104,7 +104,7 @@ def execute_disconnected(*args, **kwargs):
 
 def execute_auto(*args, **kwargs):
     """Execute a program, in foreground if on CLI, else in background."""
-    if CHECK.current_frontend('ht3.cli'):
+    if CHECK.is_cli_frontend:
         p = Env.execute(*args, **kwargs)
         p.wait()
     else:

@@ -18,6 +18,7 @@ except ImportError:
 
 #TODO: resgister with ht3.history.APPEND_HOOK to add to history if not self
 
+_IS_CLI_FRONTEND = True
 
 _evt = threading.Event()
 

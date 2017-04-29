@@ -74,6 +74,10 @@ def _execute_bg(cmd:args.ExecutableWithArgs):
     p = execute_disconnected(cmd, is_split=False)
     return p
 
+@cmd(name="")
+def _execute_auto(cmd:args.ExecutableWithArgs):
+    p = execute_auto(cmd, is_split=False)
+
 @COMMAND_NOT_FOUND_HOOK.register
 def _executable_command_h(command_string):
     s = command_string

@@ -27,6 +27,14 @@ check.CHECK.frontend = check.Group(FRONTENDS)
 check.CHECK.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
 check.CHECK.frontends_running = False
 
+def _is_cli_frontend():
+    fe = THREAD_LOCAL.frontend
+    if fe is None:
+        return False
+    m = importlib.import_module(fe)
+    return getattr(m,'_IS_CLI_FRONTEND', None)
+
+check.CHECK.is_cli_frontend = check.Value(_is_cli_frontend)
 
 def load_frontend(name):
     """Load a the frontend with qualified name: ``name``"""
