@@ -37,15 +37,7 @@ def execute(*args, shell=False, is_split=..., **kwargs):
         name = pathlib.Path(shlex.split(args)[0]).name
     else:
         if is_split is ...:
-            if len(args) == 1:
-                # works: execute("ls -l")
-                # doesn't work: execute("c:/program files/mozilla/firefox.exe")
-                # works: execute('"c:/program files/mozilla/firefox.exe"')
-                # works: execute('"c:/program files/mozilla/firefox.exe" http://example.com')
-                # works: execute("c:/program files/mozilla/firefox.exe", "http://example.com")
-                is_split = False
-            else:
-                is_split = True
+            is_split = len(args) != 1
 
         if not is_split:
             if len(args) != 1:

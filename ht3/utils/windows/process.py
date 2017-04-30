@@ -18,39 +18,51 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
             raise TypeError("Expecting only strings as args", a, type(a))
     if not shell:
         if is_split is ...:
-            if len(args) == 0:
-                # works: execute("ls -l")
-                # doesn't work: execute("c:/program files/mozilla/firefox.exe")
-                # works: execute('"c:/program files/mozilla/firefox.exe"')
-                # works: execute('"c:/program files/mozilla/firefox.exe" http://example.com')
-                # works: execute("c:/program files/mozilla/firefox.exe", "http://example.com")
-                is_split = False
-            else:
-                is_split = True
+            is_split = len(args) > 0
 
         if is_split:
             # replace exe with looked up exe
+            # execute("c:/program files/mozilla/firefox.exe", "http://example.com")
             p = which(exe)
             if not p:
                 raise FileNotFoundError("Cannot find executable",exe)
             exe = str(p)
         else:
-            # replace 1st word in exe with looked up 1st word
             if args:
                 raise ValueError("Expecting only 1 string if not `is_split`")
+
+            # replace 1st word in exe with looked up 1st word
             e = shlex.split(exe)[0]
-            if exe.startswith(e+" "):
+            if e == exe:
+                # execute("ls")
+                p = which(e)
+                if p:
+                    exe = shellescape(str(p))
+                else:
+                    pass # good luck with that, maybe it's a shell command
+            elif exe.startswith(e+" "):
+                # execute("ls -l")
                 # try to change the 1st word to the full path of an executable file
                 tail = exe[len(e):]
                 p = which(e)
-
                 if p:
                     e = shellescape(str(p))
                 else:
-                    pass # good luck with that, maybe its a shell command
+                    pass # good luck with that, maybe it's a shell command
 
                 assert tail[0] == ' '
                 exe = e + tail
+            else:
+                pass
+                # execute('"c:/program files/mozilla/firefox.exe" http://example.com')
+                # execute('"c:/program files/mozilla/firefox.exe"')
+
+                # execute("c:/program files/mozilla/firefox.exe")
+                #     MSDN: The System tries to interpret the possibilities in the following order:
+                #       c:\program.exe files\sub dir\program name
+                #       c:\program files\sub.exe dir\program name
+                #       c:\program files\sub dir\program.exe name
+                #       c:\program files\sub dir\program name.exe
 
 
     # Ugly flag stuff so windows does not create ConsoleWindows for processes which have the io streams set.
@@ -138,6 +150,14 @@ def WaitForInputIdle(process, timeout=-1):
     r = ctypes.windll.user32.WaitForInputIdle(process._handle, timeout)
     if r == 0:
         return True
-    if r == 0x102:
-        return False
-    raise ctypes.WinError()
+    if r == 0x102: #WAIT_TIMEOUT
+        raise TimeoutError()
+    if r == 0x80: #WAIT_ABANDONED
+        raise ChildProcessError("Wait abandoned", r, p)
+    if r == -1: # WAIT_FAILED
+        pass
+    try:
+        raise ctypes.WinError()
+    except:
+        raise ValueError("Unexpected return value", r)
+
