@@ -4,10 +4,8 @@ import faulthandler
 import ht3.command
 import importlib
 import inspect
-import inspect
 import os.path
 import pdb
-import sys
 import sys
 import tempfile
 import warnings
@@ -90,5 +88,32 @@ def update_check():
         show("Git status: "+status)
     else:
         show("Git up to date")
+
+if Env.get('MAKELEVEL',False):
+    @EXCEPTION_HOOK.register
+    def _format_exceptions_liek_make(exception):
+        t = exception.__traceback__
+        while(t.tb_next):
+            file = t.tb_frame.f_code.co_filename
+            file = os.path.abspath(file)
+            line = t.tb_lineno
+            name = t.tb_next.tb_frame.f_code.co_name
+            args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
+            if os.path.exists(file):
+                print("{0}:{1:d}:1:{2}{3}".format(file, line, name, args))
+            t = t.tb_next
+
+        file = t.tb_frame.f_code.co_filename
+        file = os.path.abspath(file)
+        line = t.tb_lineno
+        s = "{0}:{1:d}:1:{2}: {3:s}".format(
+                file,
+                line,
+                type(exception).__name__,
+                str(exception.args)
+            )
+        if isinstance(exception, SyntaxError):
+            s += "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(exception)
+        print(s)
 
 warnings.simplefilter("error")
