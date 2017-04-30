@@ -276,7 +276,7 @@ class SingleArgParser(BaseArgParser):
         self.param_info = list(helper.param_info.values())[0]
 
     def convert(self, s):
-        if not s.strip():
+        if not s:
             if self.param_info.optional:
                 args = []
             else:
@@ -301,7 +301,7 @@ class ShellArgParser(BaseArgParser):
         self.param_info = [pi for pi in helper.param_info.values() if pi.positional]
 
     def convert(self, string):
-        args = shlex.split(string.strip())
+        args = shlex.split(string)
         return self.helper.apply_args(args,{})
 
     def complete(self, string):
@@ -397,7 +397,7 @@ class GetOptArgParser(BaseArgParser):
                     yield string + o
 
     def convert(self, string):
-        optlist, args = getopt.gnu_getopt(shlex.split(string.strip()), self.opts)
+        optlist, args = getopt.gnu_getopt(shlex.split(string), self.opts)
         kwargs = {}
         for k, v in optlist:
             k = k[1:]
