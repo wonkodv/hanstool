@@ -50,7 +50,7 @@ class ResultHook(Hook):
 class GeneratorHook(Hook):
     """Yields elements of registered callbacks.
 
-    If a function raises a StopIteration with as value that ahs non-False boolean,
+    If a function raises a StopIteration with as value that hs non-False boolean,
     no other callbacks are called. can be done with `return True` inside a
     generator."""
 
