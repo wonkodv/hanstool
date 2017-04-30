@@ -43,16 +43,18 @@ def loop():
             return
         if s:
             try:
-                cmd = get_command(s)()
+                cmd = get_command(s)
+                cmd()
             except KeyboardInterrupt:
                 print("\n!!Aborted")
             except SystemExit:
                 print("\nQuitting")
                 raise
+            except Exception as e:
+                ht3.lib.EXCEPTION_HOOK(exception=e)
 
 def stop():
     _evt.set()
-
 
 def _setup_readline():
     if not readline:
