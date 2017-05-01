@@ -89,6 +89,10 @@ def update_check():
     else:
         show("Git up to date")
 
+@cmd
+def threadlist():
+    show("\n".join("{0.ident: 10d} {0.name:>10s}".format(t) for t in threading.enumerate()))
+
 if Env.get('MAKELEVEL',False):
     @EXCEPTION_HOOK.register
     def _format_exceptions_liek_make(exception):
