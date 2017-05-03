@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(  name='ht3',
-        version='0.1.0.dev1',
+        version='0.2.0',
         description='Shell like Python interface',
         license='GPLv2',
         author='Wonko',
