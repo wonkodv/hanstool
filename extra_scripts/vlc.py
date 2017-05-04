@@ -1,4 +1,6 @@
-"""Control VLC via its web interface"""
+"""Control VLC via its http json interface
+
+Documented in http://localhost:63215/requests/README.txt"""
 
 
 from Env import cmd, log, show, Path, execute_disconnected, PATH, set_clipboard
@@ -13,9 +15,6 @@ import base64
 
 PASSWORD = "Passwort123"
 PASSWORD_b64=base64.b64encode((":"+PASSWORD).encode("ASCII")).decode("ASCII")
-
-
-PATH.append(Path(r"C:\Program Files\VideoLAN\VLC"))
 
 def request(s):
     c = http.client.HTTPConnection("localhost",63215)

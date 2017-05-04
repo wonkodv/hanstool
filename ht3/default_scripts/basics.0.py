@@ -28,6 +28,7 @@ from ht3.complete import *
 if CHECK.os.windows:
     from ht3.utils.windows import *
 
+from pathlib import Path
 
 
 args.Python = args.Param(complete=lambda s:Env.complete_py(s),

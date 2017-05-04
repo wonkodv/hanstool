@@ -12,9 +12,8 @@ from importlib.util import spec_from_file_location
 from .env import Env
 from . import lib
 
-
-
 SCRIPTS = []
+ADDED_SCRIPTS = []
 
 _SCRIPT_FILE_NAME = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
 
@@ -30,32 +29,35 @@ def _script_module(path):
     return name
 
 def _script_order_key(p):
-    """get a key that sorts b.5.py before a.20.py before  c.py """
+    """get a key that sorts scripts"""
     m = _SCRIPT_FILE_NAME.fullmatch(p.stem)
     name = m.group(1)
     idx = m.group(3)
     if idx:
-        return 1, int(idx), name
+        return int(idx), name
     else:
-        return 2, 0, name
+        return 100, name
 
-
-
-def load_scripts(path):
-    """
-    Load a script or directory full of scripts.
-
-    Path can be a string path or pathlib.Path.
-    Scripts will be sorted by ``int(path.name.split(.)[-2])``.
-    If a script raises NotImplementedError, this is ignored.
-    """
+def add_scripts(path):
+    """ Add a script or directory full of scripts.  """
     path = pathlib.Path(path)
     if path.is_dir():
         l = path.glob('*.py')
-        l = sorted(l, key=_script_order_key)
         for p in l:
-            load_scripts(p)
+            add_scripts(p)
     elif path.is_file():
+        ADDED_SCRIPTS.append(path)
+    elif not path.exists():
+        raise FileNotFoundError(path)
+    else:
+        raise Exception("not file or dir", path)
+
+def load_scripts():
+    """Load added Scripts, sorted d.5.py before c.20.py before b.py before a.101.py."""
+
+    l = sorted(ADDED_SCRIPTS, key=_script_order_key)
+    ADDED_SCRIPTS.clear()
+    for path in l:
         name = _script_module(path)
         ename = 'Env.' + name
         spec = spec_from_file_location(ename, str(path))
@@ -65,17 +67,12 @@ def load_scripts(path):
         assert mod.__file__ == str(path)
         SCRIPTS.append(path)
         Env.put(name, mod)
-    elif not path.exists():
-        raise FileNotFoundError(path)
-    else:
-        raise Exception("not file or dir", path)
 
 
 def reload_all():
-    s = list(SCRIPTS)
+    ADDED_SCRIPTS.extend(SCRIPTS)
     SCRIPTS.clear()
-    for path in s:
-        load_scripts(path)
+    load_scripts()
 
 def check_all_compilable():
     r = True

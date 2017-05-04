@@ -8,7 +8,7 @@ import os.path
 from . import lib
 from .command import run_command
 from .env import Env
-from .scripts import load_scripts
+from .scripts import load_scripts, add_scripts
 
 
 HELP= """call ht with the following arguments:
@@ -29,34 +29,33 @@ def main(args):
         _f = False
         _r = False
         _l = False
+        _s = False
         arg_iter = iter(args)
-        scripts = []
 
-        def load_default_scripts():
+        def add_default_scripts():
             s = Env.get('HT3_SCRIPTS', False)
             if s:
                 for p in s.split(':'): #TODO use ; on Win
-                    load_scripts(os.path.expanduser(p))
+                    add_scripts(os.path.expanduser(p))
             else:
                 import pkg_resources
                 s = pkg_resources.resource_filename(__name__,'default_scripts')
-                load_scripts(s)
+                add_scripts(s)
                 s = os.path.expanduser('~/.config/ht3')
                 if os.path.exists(s):
-                    load_scripts(s)
+                    add_scripts(s)
 
         for a in arg_iter:
             if a == '-s':
                 s = next(arg_iter)
                 s = os.path.expanduser(s)
-                scripts.append(s)
+                add_scripts(s)
+                _s = True
                 _l = False
             elif a == '-l':
-                if not scripts:
-                    load_default_scripts()
-                for s in scripts:
-                    load_scripts(s)
-                scripts.clear()
+                if not _s:
+                    add_default_scripts()
+                load_scripts()
                 _l = True
             elif a == '-f':
                 f = next(arg_iter)
@@ -82,10 +81,9 @@ def main(args):
                 print (HELP)
                 return 1
         if not _l:
-                if not scripts:
-                    load_default_scripts()
-                for s in scripts:
-                    load_scripts(s)
+            if not _s:
+                add_default_scripts()
+            load_scripts()
 
         if not (_f or _x):
             lib.load_frontend('ht3.cli')

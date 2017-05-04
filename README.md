@@ -152,7 +152,7 @@ More in [Env](./docs/ENV.md)
 Scripts
 -----------
 
-Scripts are python scripts that are imported as submodules of `Env`.
+Scripts are python files that are imported as submodules of `Env`.
 You can define functions variables and most important, commands there.
 The way you load scripts:
 1.  Specify one or more scripts or directories with scripts on the command line
@@ -170,13 +170,16 @@ The order in which scripts are loaded matters if they overwrite things that
 other scripts defined. Your scripts can for example redefine commands that
 the default scripts already defined.
 
-Inside a directory, scripts are sorted by a numeric index before the `.py` suffix.
-1.  a.py
-1.  z.py
-2.  W.10.py
-3.  a.30.py
-4.  b.30.py
-5.  a.1.2.3.z.40.py
+Scripts are added (`-s` argument) and loaded (`-l`). In the loading step,
+all added scripts (and scripts in added directories) are sorted by a numeric
+index before the `.py` suffix and by their name, not (!) by the order in which
+they were added.
+1.  W.10.py
+2.  a.30.py
+3.  b.30.py
+4.  a.1.2.3.z.40.py
+5.  a.py
+6.  z.py
 
 The default scripts might change. If you dont like that, copy them to your
 script directory and pass it explicitly.
@@ -188,6 +191,29 @@ A script can do `from Env import *` to have most functionality it needs already 
 
 Scripts are imported as submodules of `Env`. `a.10.py` will be accessible as `Env.a`, (and of
 course as Env['a']).
+
+### Script Numbering
+The shipped scripts use a numbering scheme, where some areas are reserved for use by
+the (current or future) shipped scripts while all others can be used by user scripts
+to modify, extend, ... or undo what the shipped scripts do
+*   0-9:    Load and Populate `Env`
+*   20-29:  Functions and Commands that operate on the HT
+*   40-49:  Useful / exemplary commands
+
+The user scripts can use the following areas:
+*   10-19:  Modify Environment
+*   30-39:  Modify Functions that operate on HT
+*   50-99:  Functions commands, ...
+*   100:    Unnumbered Scripts are assigned the sortkey 100
+*   100..:  Meta stuff after all commands, functions, ... are already defined
+
+The recommended use is to put your user scripts with numbering from the UserRange
+in `~/.config/ht3`
+
+### Extra scripts
+
+The extra scripts in `/extra_scripts` are not loaded by default, as they are very specific.
+
 
 Some Default Commands
 -----------------

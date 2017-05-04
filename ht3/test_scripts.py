@@ -18,21 +18,16 @@ def test_order_key():
     c = Path('/c.py')
     d = Path('/d.4.py')
     e = Path('/e.py')
+    f = Path('/f.105.py')
 
     k = _script_order_key
 
-    assert k(a) == (2, 0, 'a')
-    assert k(b) == (1, 10, 'b')
-    assert k(d) == (1, 4, 'd')
+    assert k(a) == (100, 'a')
+    assert k(b) == (10, 'b')
+    assert k(d) == (4, 'd')
+    assert k(f) == (105, 'f')
 
-    assert k(a) < k(c)
-    assert k(b) < k(a)
-    assert k(d) < k(b)
-
-    l = [a,b,c,d,e]
-
-    s = sorted(l, key=_script_order_key)
-
-    assert s == [d,b,a,c,e]
+    s = sorted([a,b,c,d,e,f], key=_script_order_key)
+    assert s == [d,b,a,c,e,f]
 
 

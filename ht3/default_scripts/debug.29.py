@@ -8,7 +8,6 @@ import os.path
 import pdb
 import sys
 import tempfile
-import warnings
 
 @cmd
 def debug(string:args.Union(args.Command, args.Python)):
@@ -24,7 +23,6 @@ def debug(string:args.Union(args.Command, args.Python)):
 def py():
     """ start a python repl """
     return execute_auto(sys.executable)
-
 
 EXCEPTIONS = Env['EXCEPTIONS'] = []
 
@@ -120,4 +118,5 @@ if Env.get('MAKELEVEL',False):
             s += "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(exception)
         print(s)
 
-warnings.simplefilter("error")
+if Env.get('DEBUG', False):
+    warnings.simplefilter("error")

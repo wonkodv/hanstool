@@ -174,3 +174,7 @@ if shutil.which('bash') and False:
                 is_split=False)
         print(t)
 
+
+@cmd(name="which")
+def _which(cmd:args.Executable):
+    show(which(cmd))

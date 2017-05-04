@@ -4,7 +4,6 @@ All functions here use posix semantics, some are redefined in ht3.util.windows.p
 
 import subprocess
 import shlex
-import warnings
 import pathlib
 import os
 
