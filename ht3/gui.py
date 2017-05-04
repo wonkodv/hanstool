@@ -410,6 +410,10 @@ def start():
     pass
 
 def loop():
+    if threading.current_thread() is not threading.main_thread():
+        import warnings
+        warnings.warn("ht3.gui is not running in the main thread."
+            " Expect erratic, hard to debug crashes.")
     try:
         gui = UserInterface()
 

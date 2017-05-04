@@ -62,10 +62,9 @@ def _run_fe(fe):
         fe.loop()
     except Exception as e:
         EXCEPTION_HOOK(exception=e)
-
-    _FrontendWaitEvt.set()
-
-    thread.name = old_thread_name
+    finally:
+        _FrontendWaitEvt.set()
+        thread.name = old_thread_name
 
 def _wait_and_stop_frontends(frontends):
     check.CHECK.frontends_running = True

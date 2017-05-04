@@ -26,6 +26,9 @@ def start():
     _evt.clear()
 
 def loop():
+    if threading.current_thread() is not threading.main_thread():
+        print("ht3.cli is not running in main thread, but"
+                " Ctrl+C is only sent to the main thread")
     _setup_readline()
     for c in _do_on_start:
         c()
