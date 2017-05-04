@@ -41,6 +41,14 @@ class UserInterface():
         self.cmd_win = self.CommandWindow(self)
         self.root.after(100, self.cmd_win.to_front)
         self.root.after(400, self.cmd_win.to_front)
+        self._thread = threading.current_thread()
+        self.__getattribute__ = self._getattr
+
+
+    def _getattr(self, name):
+        t = object.__getattribute__(self, "_thread")
+        assert t is threading.current_thread()
+        return object.__getattribute__(self, name)
 
     def schedule(self, time, cb):
         self.root.after(time, cb)
@@ -410,6 +418,14 @@ def start():
     pass
 
 def loop():
+    if True:
+        # TODO: Debug crashes
+        import sys
+        guitrace = open("gui_trace","wt")
+        @sys.settrace
+        def _trace_stmt(frame, evt, arg):
+            guitrace.write("{}:{}:{}\n".format(frame.f_code.co_filename, frame.f_lineno,evt))
+            return _trace_stmt
     try:
         gui = UserInterface()
 
@@ -439,6 +455,7 @@ def stop():
     close()
 
 def _reptor_tk_ex(self, typ, val, tb):
+    print(val)
     lib.EXCEPTION_HOOK(exception=val)
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
@@ -522,4 +539,3 @@ def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
 
 __all__ = (n for n in globals() if not n in _excluded)
-

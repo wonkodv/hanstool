@@ -116,4 +116,10 @@ if Env.get('MAKELEVEL',False):
             s += "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(exception)
         print(s)
 
+
+_fault = open("faults", "wt")
+import faulthandler
+faulthandler.enable(_fault)
+
+
 warnings.simplefilter("error")
