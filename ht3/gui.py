@@ -458,6 +458,7 @@ def stop():
     close()
 
 def _reptor_tk_ex(self, typ, val, tb):
+    print(val)
     lib.EXCEPTION_HOOK(exception=val)
 tk.Tk.report_callback_exception = _reptor_tk_ex
 
@@ -541,4 +542,4 @@ def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
 
 _globals = globals()
-__all__ = [n for n in _globals if not n in _excluded]
+__all__ = tuple(n for n in _globals if not n in _excluded)
