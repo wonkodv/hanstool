@@ -1,11 +1,16 @@
+"""Completion hook for executables with args.
+
+The string is shlex.split and passed as `parts`.
+functions should yield completed versions of `parts[-1],
+The completers that are 
+"""
 from Env import *
 
 import shlex
-import shutil
-import queue
-import shutil
+import ht3.hook
 
-from subprocess import PIPE
+EXECUTABLE_W_ARGS_COMPLETE_HOOK = ht3.hook.GeneratorHook("parts")
+Env['EXECUTABLE_W_ARGS_COMPLETE_HOOK'] = EXECUTABLE_W_ARGS_COMPLETE_HOOK
 
 @Env.updateable
 def complete_executable_with_args(string):
@@ -30,9 +35,11 @@ def complete_executable_with_args(string):
     current = parts[-1][:-1]
     parts[-1] = current
 
-    prefix = string[:len(string)-len(current)]
+    #TODO: Does not work if string is `foo b"a"r` because current is `bar` not `b"a"r`
+    prefix = string[:len(string)-len(current+quote)]
 
     for v in EXECUTABLE_W_ARGS_COMPLETE_HOOK(parts=parts):
+        v = str(v)
         if shlex._find_unsafe(v) is None:
             s = prefix + v + quote
             if s.startswith(string):
@@ -51,54 +58,10 @@ def complete_executable_with_args(string):
                         v[len(current):].replace('"', r'\"') +
                         '"'
                     )
-                    assert s.startswith(string)
+                    assert s.startswith(string), (s, string)
                     yield s
 
 args.ExecutableWithArgs = args.Param(complete=complete_executable_with_args, doc="ExecutableWithArgs")
-
-@cmd(name="$")
-def _procio(cmd:args.ExecutableWithArgs):
-    """Show output of a shell command."""
-    show(procio(cmd, shell=True, is_split=False))
-
-@cmd(name="#")
-def _execute(cmd:args.ExecutableWithArgs):
-    """Execute a Program and wait for completion."""
-    p = execute(cmd, is_split=False)
-    p.wait()
-    return p
-
-@cmd(name="&")
-def _execute_bg(cmd:args.ExecutableWithArgs):
-    """Execute a Program and let it run in background."""
-    p = execute_disconnected(cmd, is_split=False)
-    return p
-
-@cmd(name="")
-def _execute_auto(cmd:args.ExecutableWithArgs):
-    p = execute_auto(cmd, is_split=False)
-
-@COMMAND_NOT_FOUND_HOOK.register
-def _executable_command_h(command_string):
-    s = command_string
-    try:
-        parts = shlex.split(s)
-    except ValueError:
-        pass
-    else:
-        #TODO use Env.which and decide how to execute this
-        if shutil.which(parts[0]):
-            return _procio.command(s, s)
-
-
-"""Completion hook for executables with args.
-
-The string is shlex.split and passed as `parts`.
-functions should yield completed versions of `parts[-1],
-The completers that are 
-"""
-EXECUTABLE_W_ARGS_COMPLETE_HOOK = ht3.hook.GeneratorHook("parts")
-
 
 @EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
 def _complete_executeble_wo_args(parts):
@@ -112,19 +75,7 @@ def _complete_w_file(parts):
         return complete_path(parts[-1])
     return []
 
-
-@EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
-def complete_ls(parts):
-    if parts[0] != 'ls':
-        return
-
-    if parts[-1] == '-':
-        for f in 'lrst10':
-            yield '-' + f
-        return True
-
-
-if shutil.which('bash') and False:
+if which('bash') and False:
 
     # TODO: make this like
     #   https://github.com/Kloadut/awesome-debian/blob/master/lib/awful/completion.lua
@@ -174,7 +125,24 @@ if shutil.which('bash') and False:
                 is_split=False)
         print(t)
 
+SPECIFIC_COMPLETERS = {}
+Env['SPECIFIC_COMPLETERS'] = SPECIFIC_COMPLETERS
 
-@cmd(name="which")
-def _which(cmd:args.Executable):
-    show(which(cmd))
+@EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
+def specific_completions(parts):
+    main = Path(parts[0])
+    exe = main.name.lower()
+    try:
+        c = SPECIFIC_COMPLETERS[exe]
+    except KeyError:
+        return ()
+    return c(parts)
+
+@Env
+def exe_completer(e):
+    assert not callable(e)
+    def deco(f):
+        SPECIFIC_COMPLETERS[e] = f
+    return deco
+
+

@@ -128,7 +128,8 @@ if CHECK.os.win:
                 SetParent(c, h)
             foo()
 
-    def GetCommandLineFromHWND(hwnd):
+    @cmd
+    def GetCommandLineFromHWND(hwnd:WindowHandle):
             _, procid = GetWindowThreadProcessId(hwnd)
             o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
                     errors="backslashreplace",
