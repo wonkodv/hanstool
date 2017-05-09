@@ -505,7 +505,7 @@ def do_on_start(f):
     interact(False)(f)()
     return f
 
-@interact(True)
+@interact(False)
 def close(GUI):
     GUI.close()
 
