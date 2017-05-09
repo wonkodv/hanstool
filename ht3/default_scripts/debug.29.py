@@ -15,9 +15,10 @@ def debug(string:args.Union(args.Command, args.Python)):
 
     p = pdb.Pdb()
     cmd = get_command(string)
-    p.rcLines.append("b self.run")
+    p.rcLines.append("b cmd.run")
     p.rcLines.append("c")
-    p.runcall(cmd)
+    p.set_trace()
+    cmd()
 
 @cmd
 def py():

@@ -54,5 +54,36 @@ def rand(low:int=0, high:int=0xFFFFFFFF):
     show(r)
 
 @cmd
-def password():
-    set_clipboard("".join(random.sample(string.printable, 12)))
+def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True, other:bool=True):
+    ll = set(string.ascii_lowercase)
+    ul = set(string.ascii_uppercase)
+    no = set(string.digits)
+    ot = set(string.printable) - ll - ul - no
+
+    pwchars = set()
+    if lower:
+        pwchars = pwchars | ll
+    if upper:
+        pwchars = pwchars | ul
+    if numbers:
+        pwchars = pwchars | no
+    if other:
+        pwchars = pwchars | ot
+
+    for i in range(100):
+        pwd = random.sample(pwchars, length)
+        if lower:
+            if not any(c in ll for c in pwd):
+                continue
+        if upper:
+            if not any(c in ul for c in pwd):
+                continue
+        if numbers:
+            if not any(c in no for c in pwd):
+                continue
+        if other:
+            if not any(c in ot for c in pwd):
+                continue
+        set_clipboard("".join(pwd))
+        return
+    raise ValueError("can not match all categories", "".join(sorted(pwd)), "".join(sorted(pwchars)))
