@@ -269,3 +269,11 @@ if CHECK.frontend('ht3.hotkey'):
         else:
             ht3.hotkey.disable_all_hotkeys()
 
+    @cmd
+    def enable_hotkey(hk:complete_hotkey=None):
+        """Disable a hotkey."""
+        if hk:
+            hk = ht3.hotkey.get_hotkey(hk)
+            hk.register()
+        else:
+            ht3.hotkey.enable_all_hotkeys()
