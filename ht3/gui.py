@@ -63,7 +63,7 @@ class UserInterface():
             ht3.lib.EXCEPTION_HOOK(exception=e)
             return False
 
-        lib.start_thread(cmd, name="Gui Command "+string)
+        cmd()
         return True
 
 
