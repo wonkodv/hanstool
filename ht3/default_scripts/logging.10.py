@@ -24,7 +24,10 @@ def log(o):
 @SUBPROCESS_SPAWN_HOOK.register
 def log_subprocess(process):
     if Env.get('DEBUG', False):
-        _print("Process spawned {}{}:{}".format(process.pid, ' shell' if process.shell else '', process.args))
+        args = process.args
+        if not isinstance(args, str):
+            args = shellescape(*args)
+        _print("Process spawned {}{}:{}".format(process.pid, ' shell' if process.shell else '', args))
 
 @SUBPROCESS_FINISH_HOOK.register
 def log_subprocess_finished(process):

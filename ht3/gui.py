@@ -353,7 +353,10 @@ class UserInterface():
             self.to_front()
 
         def log_subprocess(self, frontend, process):
-            self.log("Spawned %s %d: %r" % ('Shell' if getattr(process, 'shell', False) else 'Process', process.pid, process.args))
+            args = process.args
+            if not isinstance(args, str):
+                args = Env.shellescape(*args)
+            self.log("Process spawned {}{}:{}".format(process.pid, ' shell' if process.shell else '', args))
 
         def log_subprocess_finished(self, frontend, process):
             a = process.args
