@@ -28,6 +28,9 @@ class Command():
     """
 
     run = None # Must be overwritten by subclasses
+    ignore_result = False
+    attrs = False
+    origin = False
 
     def __init__(self, invocation):
         self.invocation = invocation

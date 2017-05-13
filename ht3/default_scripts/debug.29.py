@@ -1,6 +1,5 @@
 from Env import *
 
-import faulthandler
 import ht3.command
 import importlib
 import inspect
@@ -120,4 +119,12 @@ if Env.get('MAKELEVEL',False):
         print(s)
 
 if Env.get('DEBUG', False):
+    import warnings
     warnings.simplefilter("error")
+
+    _fault = open("faults", "wt")
+    import faulthandler
+    import atexit
+    faulthandler.enable(_fault)
+    atexit.register(lambda : _fault.close())
+

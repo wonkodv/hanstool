@@ -41,6 +41,15 @@ class UserInterface():
         self.cmd_win = self.CommandWindow(self)
         self.root.after(100, self.cmd_win.to_front)
         self.root.after(400, self.cmd_win.to_front)
+        self._thread = threading.current_thread()
+        if Env.get('DEBUG', False):
+            self.__getattribute__ = self._getattr
+
+    def _getattr(self, name):
+        """Prevent other Threads from accessing anything"""
+        t = object.__getattribute__(self, "_thread")
+        assert t is threading.current_thread()
+        return object.__getattribute__(self, name)
 
     def schedule(self, time, cb):
         self.root.after(time, cb)
@@ -533,4 +542,3 @@ def cmd_win_set_rect(left, top, width, height, GUI):
 
 _globals = globals()
 __all__ = [n for n in _globals if not n in _excluded]
-
