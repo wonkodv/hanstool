@@ -130,14 +130,14 @@ if CHECK.os.win:
 
     @cmd
     def GetCommandLineFromHWND(hwnd:WindowHandle):
-            _, procid = GetWindowThreadProcessId(hwnd)
-            o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
-                    errors="backslashreplace",
-            )
-            lines = [ l for l in o.split("\n") if l ]
-            assert lines[0].strip() == 'CommandLine'
-            assert len(lines) == 2
-            return lines[1]
+        _, procid = GetWindowThreadProcessId(hwnd)
+        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
+                errors="backslashreplace",
+        )
+        lines = [ l for l in o.split("\n") if l ]
+        assert lines[0].strip() == 'CommandLine'
+        assert len(lines) == 2
+        return lines[1]
 
     def _complete_script_names(s):
         return Env._complete_script_names(s)

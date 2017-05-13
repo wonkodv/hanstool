@@ -322,11 +322,14 @@ class UserInterface():
         def log_command(self, frontend, command):
             self.log("Command from {1}: {0}".format(command, frontend))
 
-        def log_command_finished(self, frontend, command, result):
-            if result is None:
+        def log_command_finished(self, frontend, command):
+            if command.result is None:
                 if not Env.get('DEBUG', False):
                     return
-            self.log("Result {}".format(repr(result)))
+            if command.parent is None:
+                self.log_show(frontend, "Result {}".format(repr(command.result)))
+            else:
+                self.log("Result {}".format(repr(command.result)))
 
         def log_error(self, frontend, exception, command=None):
             e=exception
@@ -485,7 +488,7 @@ def _command_run(command, GUI):
 
 @command.COMMAND_RESULT_HOOK.register
 @interact(False)
-def _command_done(command, result, GUI):
+def _command_done(command, GUI):
     if command.parent is None:
         GUI.set_state(GUI.IDLE)
 
@@ -525,5 +528,6 @@ def log_win_to_front(GUI):
 def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
 
-__all__ = (n for n in globals() if not n in _excluded)
+_globals = globals()
+__all__ = [n for n in _globals if not n in _excluded]
 

@@ -11,7 +11,7 @@ import ht3.hook
 COMMANDS = {}
 
 COMMAND_RUN_HOOK = ht3.hook.Hook("command")
-COMMAND_RESULT_HOOK = ht3.hook.Hook("command", "result")
+COMMAND_RESULT_HOOK = ht3.hook.Hook("command")
 COMMAND_EXCEPTION_HOOK = ht3.hook.Hook("exception", "command")
 COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook("command_string")
 
@@ -27,48 +27,44 @@ class Command():
     args, invocation string, result, possibly the thread.
     """
 
-    threaded = False
-
     run = None # Must be overwritten by subclasses
 
     def __init__(self, invocation):
         self.invocation = invocation
-        self.ran = False
+        self.started = False
+        self.finished = False
         self.name = type(self).__name__
+        self.result = None
 
     def __call__(self):
-        self._setup()
-        try:
-            if self.threaded:
-                result = self.thread = start_thread(self._run)
-            else:
-                result = self._run()
-        except Exception as e:
-            self._exception(e)
-        else:
-            self._result(result)
-            return result
+        assert not self.started
+        self.started = True
 
-    def _run(self):
-        self.ran = True
-        self.result = self.run()
-        return self.result
-
-    def _setup(self):
         self.parent = THREAD_LOCAL.command
-        THREAD_LOCAL.command = self
-        COMMAND_RUN_HOOK(command=self)
-
-    def _exception(self, e):
-        COMMAND_EXCEPTION_HOOK(command=self, exception=e)
-        THREAD_LOCAL.command = self.parent
-
-    def _result(self, r):
-        COMMAND_RESULT_HOOK(command=self, result=r)
-        THREAD_LOCAL.command = self.parent
+        try:
+            THREAD_LOCAL.command = self
+            COMMAND_RUN_HOOK(command=self)
+            try:
+                self.result = self.run()
+            except Exception as e:
+                if not COMMAND_EXCEPTION_HOOK(command=self, exception=e):
+                    raise
+            finally:
+                self.finished = True
+            COMMAND_RESULT_HOOK(command=self)
+            if not self.ignore_result:
+                return self.result
+        finally:
+            THREAD_LOCAL.command = self.parent
 
     def __repr__(self):
-        return "Command(name={0.name}, invocation={0.invocation}, ran={0.ran})".format(self)
+        if not self.started:
+            state = "New"
+        elif not self.finished:
+            state = "Running"
+        else:
+            state = "Finished"
+        return "Command(name={0.name}, invocation={0.invocation}, state={1}, result={0.result})".format(self, state)
 
     def __str__(self):
         if self.invocation.startswith(self.name):
@@ -96,7 +92,7 @@ class CommandWithArgs(Command):
 
 def register_command(func, *,
                 origin_stacked, name=_DEFAULT,
-                threaded=False, args='auto',
+                ignore_result=False, args='auto',
                 apply_default_param_anotations=False,
                 doc=_DEFAULT, attrs=_DEFAULT):
     """ Register a function as Command """
@@ -124,7 +120,6 @@ def register_command(func, *,
     long_doc = "".join(["Command '%s'" % name, "\n",
         ("Calls %s\n" % func_name ) if func_name != name else "",
         arg_parser.describe_params(), "\n",
-        "Executed in a seperate Thread\n" if threaded else "",
         "\n",
         doc + "\n" if doc else '',
         "\n",
@@ -136,7 +131,7 @@ def register_command(func, *,
         origin=origin,
         arg_parser=arg_parser,
         __doc__=long_doc,
-        threaded=threaded,
+        ignore_result=ignore_result,
         attrs=attrs)
     cmd = type(name, (CommandWithArgs,), d)
 

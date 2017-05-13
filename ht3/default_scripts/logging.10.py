@@ -77,8 +77,10 @@ def last_exception_h(exception, command=None):
 
 
 @COMMAND_RESULT_HOOK.register
-def log_command_finished(result, command):
-    if result is None:
-        if not Env.get('DEBUG', False):
+def log_command_finished(command):
+    if not Env.get('DEBUG', False):
+        if command.result is None:
             return
-    _print("Result: {0}".format(result))
+        if command.parent is None:
+            return
+    _print("Result: {0}".format(command.result))

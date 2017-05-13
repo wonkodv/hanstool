@@ -32,8 +32,11 @@ class Hook():
         self.callbacks.remove(cb)
 
     def __call__(self, **kwargs):
+        handled = False
         for c in reversed(self.callbacks):
             c(**kwargs)
+            handled = True
+        return handled
 
 class NoResult(Exception):
     pass

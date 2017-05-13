@@ -77,7 +77,7 @@ def status():
 def vlc(*args):
     return execute_disconnected("vlc","--http-host=localhost","--http-port=63215","--http-password=" + PASSWORD, *args)
 
-@cmd
+@cmd(ignore_result=True)
 def music(s:Path=None):
     if not s:
         for c in 'GHIJKL':

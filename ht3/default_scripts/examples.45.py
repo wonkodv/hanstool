@@ -22,11 +22,13 @@ def txt():
     """Edit ~/txt."""
     edit_file(expanduser("~/txt"))
 
-@cmd(threaded=True)
+@cmd
 def timer(t:float, event:str="Done"):
     """ timer timer """
-    sleep(t*60)
-    option_dialog("Timer", "Timer up ({0})".format(event),"OK")
+    @threaded
+    def _():
+        sleep(t*60)
+        option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
 def complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
