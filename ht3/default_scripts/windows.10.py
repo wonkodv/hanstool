@@ -59,7 +59,7 @@ if CHECK.os.win:
         s = str(s)
         r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
         if r > 32:
-            return None
+            return
         else:
             raise OSError("ShellExecute returned an error: %d" % r)
 
@@ -128,8 +128,11 @@ if CHECK.os.win:
                 SetParent(c, h)
             foo()
 
-    @cmd
-    def GetCommandLineFromHWND(hwnd:WindowHandle):
+    @cmd(name="command_line_from_hwnd")
+    def _command_line_from_hwnd(hwnd:WindowHandle):
+        show(command_line_from_hwnd(hwnd))
+
+    def command_line_from_hwnd():
         _, procid = GetWindowThreadProcessId(hwnd)
         o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
                 errors="backslashreplace",
@@ -144,7 +147,7 @@ if CHECK.os.win:
 
     @cmd(apply_default_param_anotations=True)
     def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS"):
-        cmdline = GetCommandLineFromHWND(hwnd)
+        cmdline = command_line_from_hwnd(hwnd)
         name = GetWindowText(hwnd)
         name = name.lower()
         Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))

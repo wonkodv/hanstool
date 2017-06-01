@@ -12,13 +12,11 @@ def _execute(cmd:args.ExecutableWithArgs):
     """Execute a Program and wait for completion."""
     p = execute(cmd, is_split=False)
     p.wait()
-    return p
 
 @cmd(name="&")
 def _execute_bg(cmd:args.ExecutableWithArgs):
     """Execute a Program and let it run in background."""
     p = execute_disconnected(cmd, is_split=False)
-    return p
 
 @cmd(name="")
 def _execute_auto(cmd:args.ExecutableWithArgs):

@@ -45,17 +45,6 @@ class TestCmd(unittest.TestCase):
 
 
     @patch('ht3.command.COMMANDS', COMMANDS)
-    def test_context(self):
-        @cmd
-        def someCommand(s):
-            return THREAD_LOCAL.command
-
-        run_command('someCommand asdfg')
-        assert c.arg_string == "asdfg"
-        assert c.name == "someCommand"
-
-
-    @patch('ht3.command.COMMANDS', COMMANDS)
     def test_origin(self):
         @cmd
         def someCommand():
@@ -68,12 +57,18 @@ class TestCmd(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_context(self):
+        X = None
+        @cmd
+        def someOtherCommand():
+            nonlocal X
+            X = THREAD_LOCAL.command
         @cmd
         def someCommand():
-            cmd = THREAD_LOCAL.command
-            return str(cmd), repr(cmd)
-        s,r = run_command('someCommand')
-        assert "someCommand" in r
+            run_command('someOtherCommand')
+        run_command('someCommand')
+        assert X.name == 'someOtherCommand'
+        assert X.parent.name == 'someCommand'
+        assert 'Finished' in repr(X)
 
 
 class Test_get_command(unittest.TestCase):

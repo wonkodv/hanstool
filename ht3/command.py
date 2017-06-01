@@ -11,7 +11,7 @@ import ht3.hook
 COMMANDS = {}
 
 COMMAND_RUN_HOOK = ht3.hook.Hook("command")
-COMMAND_RESULT_HOOK = ht3.hook.Hook("command")
+COMMAND_FINISHED_HOOK = ht3.hook.Hook("command")
 COMMAND_EXCEPTION_HOOK = ht3.hook.Hook("exception", "command")
 COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook("command_string")
 
@@ -24,20 +24,22 @@ class Command():
     """Base class of commands.
 
     each Command will be a derived class. Objects of that class contain
-    args, invocation string, result, possibly the thread.
+    args and the invocation string
     """
 
-    run = None # Must be overwritten by subclasses
-    ignore_result = False
+    # Must be overwritten by subclasses
+    run = None
     attrs = False
     origin = False
 
+    # Must be overwritten by instances
+    started = False
+    finished = False
+    parent = None
+
     def __init__(self, invocation):
         self.invocation = invocation
-        self.started = False
-        self.finished = False
         self.name = type(self).__name__
-        self.result = None
 
     def __call__(self):
         assert not self.started
@@ -48,15 +50,16 @@ class Command():
             THREAD_LOCAL.command = self
             COMMAND_RUN_HOOK(command=self)
             try:
-                self.result = self.run()
+                result = self.result = self.run()
             except Exception as e:
                 if not COMMAND_EXCEPTION_HOOK(command=self, exception=e):
                     raise
+                return
+            else:
+                COMMAND_FINISHED_HOOK(command=self)
+                return result
             finally:
                 self.finished = True
-            COMMAND_RESULT_HOOK(command=self)
-            if not self.ignore_result:
-                return self.result
         finally:
             THREAD_LOCAL.command = self.parent
 
@@ -67,15 +70,15 @@ class Command():
             state = "Running"
         else:
             state = "Finished"
-        return "Command(name={0.name}, invocation={0.invocation}, state={1}, result={0.result})".format(self, state)
+        return "Command(name={0.name}, invocation={0.invocation}, state={1})".format(self, state)
 
     def __str__(self):
         if self.invocation.startswith(self.name):
             return self.invocation
         return self.invocation + " => " + self.name
 
-class CommandWithArgs(Command):
-    """Arguments with name and an argument string."""
+class NamedFunctionCommand(Command):
+    """Command that has a Function, Name and gets an argument string."""
 
     target = None # to be overwritten by subclasses
 
@@ -85,7 +88,9 @@ class CommandWithArgs(Command):
         self.args, self.kwargs = self.parse(arg_string)
 
     def run(self):
-        return type(self).target(*self.args, **self.kwargs)
+        t = type(self).target   # do not bind the target function to self
+        r = t(*self.args, **self.kwargs)
+        return r
 
     def complete(self, s):
         return self.arg_parser.complete(s)
@@ -94,10 +99,12 @@ class CommandWithArgs(Command):
         return self.arg_parser.convert(s)
 
 def register_command(func, *,
-                origin_stacked, name=_DEFAULT,
-                ignore_result=False, args='auto',
+                origin_stacked,
+                name=_DEFAULT,
+                args='auto',
                 apply_default_param_anotations=False,
-                doc=_DEFAULT, attrs=_DEFAULT):
+                doc=_DEFAULT,
+                attrs=_DEFAULT):
     """ Register a function as Command """
 
     origin = traceback.extract_stack()
@@ -134,9 +141,8 @@ def register_command(func, *,
         origin=origin,
         arg_parser=arg_parser,
         __doc__=long_doc,
-        ignore_result=ignore_result,
         attrs=attrs)
-    cmd = type(name, (CommandWithArgs,), d)
+    cmd = type(name, (NamedFunctionCommand,), d)
 
     COMMANDS[name] = cmd
 

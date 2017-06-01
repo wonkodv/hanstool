@@ -38,7 +38,7 @@ def _help(what:args.Union(args.Command, args.Python)):
     """ Show help on a command or evaluated python expression """
     if what in COMMANDS:
         obj = COMMANDS[what]
-        return show(inspect.getdoc(obj))
+        show(inspect.getdoc(obj))
 
     obj = evaluate_py_expression(what)
     f = io.StringIO()

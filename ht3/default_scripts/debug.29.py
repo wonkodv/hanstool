@@ -22,7 +22,7 @@ def debug(string:args.Union(args.Command, args.Python)):
 @cmd
 def py():
     """ start a python repl """
-    return execute_auto(sys.executable)
+    execute_auto(sys.executable)
 
 EXCEPTIONS = Env['EXCEPTIONS'] = []
 

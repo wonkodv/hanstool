@@ -31,12 +31,17 @@ def repeat_fake():
     global FAKE_TEXT
     fake(FAKE_TEXT)
 
+Env['__'] = []
+Env['_'] = None
+
+
 # Some Eval Python functions
 @cmd(name='=')
 def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
     show(r)
+    Env['__'].append(r)
     Env['_'] = r
 
 @cmd(name=';')
@@ -61,6 +66,8 @@ class PythonFallback(ht3.command.Command):
         r = eval(self.c, Env.dict)
         if self.show:
             show(r)
+            Env['__'].append(r)
+            Env['_'] = r
 
     @COMMAND_NOT_FOUND_HOOK.register
     def _hook(command_string):

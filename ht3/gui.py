@@ -332,13 +332,7 @@ class UserInterface():
             self.log("Command from {1}: {0}".format(command, frontend))
 
         def log_command_finished(self, frontend, command):
-            if command.result is None:
-                if not Env.get('DEBUG', False):
-                    return
-            if command.parent is None:
-                self.log_show(frontend, "Result {}".format(repr(command.result)))
-            else:
-                self.log("Result {}".format(repr(command.result)))
+            self.log("Finished: {}".format(repr(command)))
 
         def log_error(self, frontend, exception, command=None):
             e=exception
@@ -485,7 +479,7 @@ lib.DEBUG_HOOK.register(_log_proxy('log_debug'))
 lib.EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
 command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))
-command.COMMAND_RESULT_HOOK.register(_log_proxy('log_command_finished'))
+command.COMMAND_FINISHED_HOOK.register(_log_proxy('log_command_finished'))
 command.COMMAND_EXCEPTION_HOOK.register(_log_proxy('log_error'))
 
 ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(_log_proxy('log_subprocess_finished'))
@@ -499,7 +493,7 @@ def _command_run(command, GUI):
     if command.parent is None:
         GUI.set_state(GUI.BUSY)
 
-@command.COMMAND_RESULT_HOOK.register
+@command.COMMAND_FINISHED_HOOK.register
 @interact(False)
 def _command_done(command, GUI):
     if command.parent is None:

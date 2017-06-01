@@ -88,4 +88,4 @@ if CHECK.os.posix:
     @cmd(name='o')
     def xdg_open(s:Path):
         """Open something with xdg-open."""
-        return execute_disconnected('xdg-open', s)
+        execute_disconnected('xdg-open', s)

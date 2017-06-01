@@ -44,9 +44,9 @@ def complete_virtualbox(s=None):
 def vb(box:complete_virtualbox=None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
-        execute_disconnected("virtualbox")
+        return execute_disconnected("virtualbox")
     else:
-        execute_disconnected("vboxmanage", "startvm", box)
+        return execute_disconnected("vboxmanage", "startvm", box)
 
 @cmd
 def rand(low:int=0, high:int=0xFFFFFFFF):
