@@ -302,7 +302,10 @@ class ShellArgParser(BaseArgParser):
 
     def convert(self, string):
         args = shlex.split(string)
-        return self.helper.apply_args(args,{})
+        try:
+            return self.helper.apply_args(args,{})
+        except TypeError as e:
+            raise ValueError("Arguments do not match", *e.args, args)
 
     def complete(self, string):
         param_info = self.param_info
