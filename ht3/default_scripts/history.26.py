@@ -25,12 +25,14 @@ def history(*search):
 @cmd(name='!')
 def rerun(x:args.Union(args.Int,args.Str)):
     """Redo a command from the history by its number or starting text."""
+    if x == "!":
+        x=-1
+    history = list(ht3.history.get_history())[:-1] # skip newest, thats the ! itself
     if isinstance(x,int):
-        l = list(ht3.history.get_history())
-        c = l[x]
+        c = history[x]
     else:
         search = x.split()
-        for c in reversed(list(ht3.history.get_history())[:-1]): # skip newest, thats the ! itself
+        for c in reversed(history):
             if c.startswith(search[0]):
                 if strings_in(search, c):
                     break
