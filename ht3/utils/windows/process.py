@@ -148,6 +148,7 @@ def shellescape(*strings):
 
 def WaitForInputIdle(process, timeout=-1):
     r = ctypes.windll.user32.WaitForInputIdle(process._handle, timeout)
+    r = int(r)
     if r == 0:
         return True
     if r == 0x102: #WAIT_TIMEOUT

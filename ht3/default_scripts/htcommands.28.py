@@ -174,6 +174,12 @@ def reload(*modules:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=Tru
     finally:
         if CHECK.frontend('ht3.hotkey'):
             ht3.hotkey.reload_hotkeys()
+        if CHECK.frontend('ht3.gui'):
+            @threaded
+            def _():
+                """Somehow reload messes up tkinter's update schedule, so it misses 1."""
+                sleep(0.01)
+                ht3.gui.cmd_win_to_front()
     log("\n== Done ==\n")
 
 
