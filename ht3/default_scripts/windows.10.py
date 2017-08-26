@@ -128,8 +128,8 @@ if CHECK.os.win:
                 SetParent(c, h)
             foo()
 
-    @cmd(name="command_line_from_hwnd")
-    def _command_line_from_hwnd(hwnd:WindowHandle):
+    @cmd
+    def get_command_line_from_hwnd(hwnd:WindowHandle):
         show(command_line_from_hwnd(hwnd))
 
     def command_line_from_hwnd(hwnd):

@@ -156,7 +156,7 @@ def WaitForInputIdle(process, timeout=-1):
     if r == 0x80: #WAIT_ABANDONED
         raise ChildProcessError("Wait abandoned", r, p)
     if r == -1: # WAIT_FAILED
-        pass
+        return False
     try:
         raise ctypes.WinError()
     except:
