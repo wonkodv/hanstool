@@ -146,8 +146,6 @@ def register_command(func, *,
 
     COMMANDS[name] = cmd
 
-    func.command = cmd
-
 def cmd(func=None, **kwargs):
     """Decorate a function to become a command
 
