@@ -51,11 +51,12 @@ For clarification:
 *   command-arguments: The argument part of the command-string  you type to execute
     a command
 *   command-function: The python function in which things happen
-*   command-wrapper: The wrapper around the command-function. This wrapper
-    takes command-arguments, parses them and then calls the command-function with
-    the parsed arguments.
-*   command-attribute:  Attributes of the command (name, hotkey, ...). These are
-    stored as Attributes of the wrapper.
+*   command-class: A Class for each command that knows the command name, function,
+    argument parsing method, .... Instantiated with a command-string to give the
+    command-object, which can be called once to execute the command function.
+*   command-object: One invocation of a command.
+*   command-attributes:  Attributes of the command (name, hotkey, ...). These are
+    stored as Attributes of the command class
 
 
 Command Strings
@@ -87,9 +88,9 @@ function becomes a command-function by passing it to `cmd` or `cmd(kwargs)` usua
     def edit_file(file_name:Path, line:int=0):
         pass # invoke an editor for file_name at line
 
-Note that, the function is stored itself under its own name in the script where it is defined,
-not the wrapper.  The wrapper is stored under the command-name in the
-`COMMANDS` dictionary. The wrapper does not appear anywhere else.
+Note that, the function is stored itself under its own name in the script where it is defined.
+The command class is stored under the command-name in the
+`COMMANDS` dictionary, and does not appear anywhere else.
 The command has the following properties:
 
 *   Name is `e`. This would often be the function name, but can be different.
@@ -98,26 +99,24 @@ The command has the following properties:
     `shlex.split()` to seperate the two arguments, converted to `pathlib.Path` and `int` and
     passes to the `edit_file` function.
 
-Typing `e ~/todo 10` is equivalent to the python expression
+Typing `e ~/todo 10` has mostly the same effect as the python expression
 `edit_file(pathlib.Path("~/todo").expanduser(), 10)`
 
 Argument Parsing Methods
 -------------------------
 
-There are multiple argument parsing strategies implemented, they can be chosen with `@cmd(args=...)` the default, `auto`, choses 
-automatically, based on the function's signature:
+There are multiple argument parsing strategies implemented, they can be chosen
+with `@cmd(args=...)` the default, `auto`, choses automatically, based on the
+function's signature:
 
 *   if there is no parameter, no command-argument is allowed
 *   if there is only parameter, the complete argument-string is passed as the single parameter
 *   if there are multiple positional parameters, the argument-string is parsed with
     `shlex.split()`.
 
-These can be specified explicitly using `0`,`1` or `'shell'`.
+Argument Parsers are also respnsible for argument completion.
 
-If `args` starts with `:`, the argument-string is parsed by `getopt`, and passed to the function as
-`**kwargs`.
-
-More in [Argument Parsing](./docs/ARGUMENTS.md)
+Different Argument parsing strategies are possible, see [Argument Parsing](./docs/ARGUMENTS.md)
 
 The one unified Namespace `Env`
 -------------------------------
@@ -127,7 +126,7 @@ the same namespace saves a lot of typing and allows to overwrite behavior in oth
 Env should be used by scripts to define, use
 and overwrite functions and variables and share these among each other.  For example `edit_file` is
 implemented in `common.10` to use the `EDITOR` variable, but can be overwritten in any script that
-is loaded later`to use an explicit editor.
+is loaded later to use an explicit editor.
 
 `ht3.env.Env` is registered as its own module `Env`. It can be used to import its elements,
 as a dcorator to put functions in Env, has an `updateable` decorator with which functions (like
@@ -137,14 +136,16 @@ as a dcorator to put functions in Env, has an `updateable` decorator with which 
     def some_func(): pass
     Env['PATH'] = foo
 
-    Env.update(vars())
+    X = 1
+    def bar_baz(): pass
+    Env.update(vars()) # add X and bar_baz (and some_func which is already there)
 
     @Env.updateable
     def foo(): return 1
     from Env import foo as f
     @Env.updateable
     def foo(): return 2
-    assert f() == 2 # foo is updateable. you only hold wrappers that look up the newest fucntion in Env
+    assert f() == 2 # foo is updateable. you only hold wrappers that look up the newest function in Env
 
 
 More in [Env](./docs/ENV.md)
@@ -153,7 +154,7 @@ Scripts
 -----------
 
 Scripts are python files that are imported as submodules of `Env`.
-You can define functions variables and most important, commands there.
+You can define functions variables and most importantly, commands there.
 The way you load scripts:
 1.  Specify one or more scripts or directories with scripts on the command line
 2.  If no scripts were loaded on the command line,
@@ -180,6 +181,7 @@ they were added.
 4.  a.1.2.3.z.40.py
 5.  a.py
 6.  z.py
+7.  v.110.py
 
 The default scripts might change. If you dont like that, copy them to your
 script directory and pass it explicitly.
@@ -190,7 +192,7 @@ This can be `basic.0.py` or something else.
 A script can do `from Env import *` to have most functionality it needs already imported.
 
 Scripts are imported as submodules of `Env`. `a.10.py` will be accessible as `Env.a`, (and of
-course as Env['a']).
+course as Env['a']) and in `sys.modules['Env.a']`.
 
 ### Script Numbering
 The shipped scripts use a numbering scheme, where some areas are reserved for use by
@@ -218,7 +220,7 @@ The extra scripts in `/extra_scripts` are not loaded by default, as they are ver
 Some Default Commands
 -----------------
 
-The default scripts define some commands:
+The default scripts define some commands for example:
 
 
     !                    Redo a command from the history by its number or starting text
@@ -231,43 +233,35 @@ The default scripts define some commands:
     ;                    Execute a python statement.
     =                    Evaluate a python expression and show the result
     ?                    Show help on a command or evaluated python expression
-    debug                Debug a Command
+    debug                Debug a Command using PDB. Uses the Console
     edit_file            Edit a file using EDITOR.
     exception_trace      Open the traceback of the latest exception in gvim [...]
     exit                 Quit with return code or 0.
     history              Search for a command in the history file.
     import               Import a module into Env.
     l                    List all commands.
-    mount                Mount a dvice by its label, partlabel or name.
-    o                    Open something with xdg-open.
-    py                   start a python repl
     quit                 Quit with return code or 0.
     rand                 Copy a random number to the Clipboard.
-    reload               Reload none, one or all Modules and all scripts.
-    repeat_fake          Repeat the fake-sequence last tested.
+    reload               Reload none, one or all Modules. Then reload all scripts.
     restart              Restart ht.
-    timer                timer timer
-    txt                  Edit ~/txt.
-    update_check         Check for updates in git.
+    timer                timer
     vb                   Open VirtualBox (the manager) or start a box with the name
-
 
 Frontends
 -----------
 
 Any packet can be a HT-Fronend. The user chooses which one(s) to load on the commandline.
 
-*   CLI: This one is really almost a shell
-*   A little Window with a bigger log window
-*   Hotkeys: (Probably runs paralell to anotherone) which has
-    systemwide hotkeys for some commands
-    Currently only on windows
-*   a Daemon: listens on a socket for commands. commands can be sent with
-    `python -m ht3.client "command"
+*   `ht3.cli`: This one is really almost a shell
+*   `ht3.gui`: A little Window with a bigger log window
+*   `ht3.hotkey`: (Probably runs paralell to anotherone)
+    Systemwide hotkeys for some commands (specify the hotkey in
+    `@cmd(attrs=dict(HotKey="Ctrl+F5"))` Currently only on windows
+*   `ht3.htd`: a Daemon that listens on a socket for commands.
+    Commands can be sent with `python -m ht3.client "command"
     Only on UNIX.
 *   [Awesome WM Client](./docs/AWESOME.md): A piece of lua that runs `ht3.client`
 *   more are easily implemented, see [Frontends](./docs/FRONTENDS.md)
-
 
 Command Line
 -----------
@@ -279,8 +273,8 @@ You can pass any number of the following arguments:
 *   `--help`        Display this text
 *   `-e KEY VALUE`  add a variable to the environment
 *   `-s FILE`       Add a script
-*   `-s PATH`       Add a folder full of scripts. Scripts are sorted (z.10.py before a.20.py)
-*   `-l`            Load scripts that were added (or the default scripts (see below))
+*   `-s PATH`       Add a folder full of scripts. Scripts are sorted
+*   `-l`            Sort and load scripts that were added (or the default scripts (see below))
 *   `-f FRONTEND`   load a frontend.
 *   `-x COMMAND`    execute a command
 *   `-r`            (run) Start all frontends loaded so far.
@@ -313,7 +307,7 @@ executing the cmd
 Configure Things
 ---------------
 
- Behavior of default commands can be configured via settings in `Env`, behavior of the HT-Core can
+Behavior of default commands can be configured via settings in `Env`, behavior of the HT-Core can
 be configured via hooks. Hooks are lists of functions that are all called for notifications, or
 that are called until the first function returns a useful result.
 
@@ -333,10 +327,12 @@ that are called until the first function returns a useful result.
 
 String variables can be configured via environment, but require a `HT3_` prefix, for
 example in `.bashrc`:
+
     export HT3_HISTORY=~/.config/ht3/readline_history
     export HT3_DEBUG=1
     export HT3_SCRIPTS=/opt/imported/scripts:~/__config/ht3
-Other python objects and strings can be configured in scripts. or on the commandline with -x.
+
+Other python objects and strings can be configured in scripts, or on the commandline with -x.
 
 Tipps
 -----
