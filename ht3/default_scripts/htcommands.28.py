@@ -121,8 +121,8 @@ def add_command(script:_complete_script_names, name=None, text=None):
     p.wait()
 
 @cmd
-def reload(*modules:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=True))):
-    """Reload none, one or all Modules and all scripts.
+def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
+    """Reload some modules and all scripts.
 
     Check if all loaded Scripts can be compiled, then reload the specified module
     and reload all scripts.
@@ -156,11 +156,6 @@ def reload(*modules:args.Union(["ENV", "ALL"], args.Option(sys.modules, sort=Tru
     for module in modules:
         if module == 'ENV':
             log("Env")
-            Env._reload()
-        elif module == 'ALL':
-            for m in sys.modules:
-                log(m)
-                importlib.import_module(m)
             Env._reload()
         else:
             log(module)
