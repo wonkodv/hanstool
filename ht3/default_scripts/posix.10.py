@@ -43,7 +43,7 @@ if CHECK.os.posix:
             target.mkdir(parents=True)
 
         fstype = procio("lsblk", "-ln", "-oFSTYPE", str(dev)).strip()
-        options = "nosuid,nodev,noexec,nosuid,relatime,fmask=113,dmask=002"
+        options = "rw,nosuid,nodev,noexec,nosuid,relatime,fmask=113,dmask=002"
         if fstype == 'ext4':
             pass
         elif fstype in[
