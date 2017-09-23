@@ -20,30 +20,29 @@ if CHECK.os.win:
         @cache_for(5)
         def all_windows():
             l = []
-            def cb(handle):
-                if IsWindowVisible(handle):
-                    l.append(GetClassName(handle))
-                    l.append(GetWindowText(handle))
-                return True
-            EnumWindows(cb)
-            yield from iter(sorted(l, key=lambda s:s.lower()))
+            def cb(w):
+                if w.visible:
+                    l.append(w.class_name)
+                    l.append(w.text)
+            Window.enumerate(cb)
+            return sorted(l, key=lambda s:s.lower())
         return filter_completions_i(s, ("_MOUSE_POS", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
 
     def _convert_windowhandle(s):
         if s == "_MOUSE_POS":
-            handle = get_window_under_cursor(main=True)
+            w = get_window_under_cursor(main=True)
         elif s == '_FOREGROUND':
-            handle = GetForegroundWindow()
+            w = Window.foreground()
         elif s == '_WAIT_FOREGROUND':
-            handle = org = GetForegroundWindow()
-            while handle == org:
+            w = org = Window.foreground()
+            while w == org:
                 sleep(0.1)
-                handle = GetForegroundWindow()
+                w = Window.foreground()
         else:
-            handle = FindWindow(s)
+            w = Window.find(s)
 
-        if handle:
-            return handle
+        if w:
+            return w
         raise ValueError("No window",s)
 
     WindowHandle = Env['WindowHandle'] = args.Param(
@@ -133,8 +132,7 @@ if CHECK.os.win:
         show(command_line_from_hwnd(hwnd))
 
     def command_line_from_hwnd(hwnd):
-        _, procid = GetWindowThreadProcessId(hwnd)
-        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format(procid),
+        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format( hwnd.process_id),
                 errors="backslashreplace",
         )
         lines = [ l for l in o.split("\n") if l ]
@@ -149,7 +147,7 @@ if CHECK.os.win:
     def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS", name=None):
         cmdline = command_line_from_hwnd(hwnd)
         if name is None:
-            name = GetWindowText(hwnd)
+            name = hwnd.text
             name = name.lower()
             name = re.sub("[^a-z_0-9]","",name)
         Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
@@ -158,24 +156,24 @@ if CHECK.os.win:
     def analyze_windows(w:WindowHandle):
         arr = []
         while(w):
-            clas = GetClassName(w)
-            title = GetWindowText(w)
-            rect = GetWindowRect(w)
+            clas = w.class_name
+            title = w.text
+            rect = w.rect
             arr.append("{0:6X}\t{1:20s}\t'{2:20s}'\t{3: 4} {4: 4} {5: 4} {6: 4}".format(w, clas, title, *rect))
-            arr.append("    hwnd=FindWindow(cls={}, title={})\n    SetWindowPos(hwnd, left={}, top={}, width={}, height={})".format(repr(clas), repr(title), *rect))
+            arr.append("    w=Window.find(cls={}, title={})\n    w.set_pos(left={}, top={}, width={}, height={})".format(repr(clas), repr(title), *rect))
 
-            w = GetParent(w)
+            w = w.parent
         show("\n".join(arr))
 
     def get_window_under_cursor(main=False):
         p = get_mouse_pos()
-        handle = WindowFromPoint(p)
+        w = Window.from_point(p)
         if main:
-            p = handle
+            p = w
             while p:
-                handle = p
-                p = GetParent(p)
-        return handle
+                w = p
+                p = w.parent
+        return w
 
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')

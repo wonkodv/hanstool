@@ -9,7 +9,8 @@ def EnumWindows(cb):
     @ctypes.WINFUNCTYPE(c_bool, HWND, LPARAM)
     def _cb(handle,_):
         try:
-            return cb(handle)
+            r = cb(handle)
+            return r is None or bool(r)
         except Exception as e:
             nonlocal exc
             exc = e
@@ -17,7 +18,8 @@ def EnumWindows(cb):
     r = ctypes.windll.user32.EnumWindows(_cb, 0)
     if exc:
         raise exc
-    return r
+    if not r:
+        raise ctypes.WinError()
 
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
     if spec is ...:
@@ -33,7 +35,8 @@ def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
 
 def GetClassName(wnd):
     name = (c_wchar * 100)()
-    ctypes.windll.user32.GetClassNameW(wnd, name, 100)
+    if not ctypes.windll.user32.GetClassNameW(wnd, name, 100):
+        raise ctypes.WinError()
     return name.value
 
 def GetCursorPos():
@@ -73,18 +76,46 @@ def GetWindowRect(hwnd):
     return r.left, r.top, r.right - r.left, r.bottom - r.top
 
 def GetWindowText(wnd):
-    name = (c_wchar * 100)()
-    ctypes.windll.user32.GetWindowTextW(wnd, name, 100)
-    return name.value
+    text = (c_wchar * 100)()
+    ctypes.windll.user32.GetWindowTextW(wnd, text, 100)
+    return text.value
+
+def SetWindowText(wnd, text):
+    if not ctypes.windll.user32.SetWindowTextW(wnd, text):
+        raise ctypes.WinError()
 
 def IsWindowVisible(wnd):
     return bool(ctypes.windll.user32.IsWindowVisible(wnd))
+
+def IsWindow(hwnd):
+    return bool(ctypes.windll.user32.IsWindow(hwnd))
+
+_show_command = dict(
+    FORCEMINIMIZE    =  11,
+    HIDE             =   0,
+    MAXIMIZE         =   3,
+    MINIMIZE         =   6,
+    RESTORE          =   9,
+    SHOW             =   5,
+    SHOWDEFAULT      =  10,
+    SHOWMAXIMIZED    =   3,
+    SHOWMINIMIZED    =   2,
+    SHOWMINNOACTIVE  =   7,
+    SHOWNA           =   8,
+    SHOWNOACTIVATE   =   4,
+    SHOWNORMAL       =   1,
+)
+
+def ShowWindow(wnd, cmd):
+    cmd = _show_command.get(cmd, cmd)
+    return ctypes.windll.user32.ShowWindow(wnd, cmd)
 
 def SetForegroundWindow(wnd):
     return ctypes.windll.user32.SetForegroundWindow(wnd)
 
 def SetParent(child, parent):
-    return ctypes.windll.user32.SetParent(child, parent)
+    if not ctypes.windll.user32.SetParent(child, parent):
+        raise ctypes.WinError()
 
 def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., flags=0):
     after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2).get(after,after)
@@ -112,3 +143,103 @@ def WindowFromPoint(p=None):
     elif not isinstance(p, POINT):
         p = POINT(*p)
     return ctypes.windll.user32.WindowFromPoint(p)
+
+
+class Window:
+    def __init__(self, hwnd):
+        self.hwnd=hwnd
+
+    def __bool__(self):
+        """Is this a real window?"""
+        return IsWindow(self.hwnd)
+
+    @classmethod
+    def find(cls, spec=..., *,parent=None, after=None, classname=None, title=None):
+        return cls(FindWindow(spec=spec, parent=parent, after=after, cls=classname, title=title))
+
+    @classmethod
+    def foreground(cls):
+        return cls(GetForegroundWindow())
+
+    @classmethod
+    def from_point(cls, p=None):
+        return cls(WindowFromPoint(p))
+
+    @classmethod
+    def enumerate(cls, cb):
+        def _cb(hwnd):
+            return cb(cls(hwnd))
+        EnumWindows(_cb)
+
+    @property
+    def class_name(self):
+        return GetClassName(self.hwnd)
+
+    @property
+    def parent(self):
+        return type(self)(GetParent(self.hwnd))
+
+    @parent.setter
+    def set_parent(self, parent):
+        SetParent(self.hwnd, parent.hwnd)
+
+    @property
+    def rect(self):
+        return GetWindowRect(self.hwnd)
+
+    @property
+    def text(self):
+        return GetWindowText(self.hwnd)
+    title=text
+
+    @text.setter
+    def _set_text(self, text):
+        return SetWindowText(self.hwnd, text)
+
+    @property
+    def thread_id(self):
+        t,p = GetWindowThreadProcessId(self.hwnd)
+        return t
+
+    @property
+    def process_id(self):
+        t,p = GetWindowThreadProcessId(self.hwnd)
+        return p
+
+    @property
+    def visible(self):
+        return IsWindowVisible(self.hwnd)
+
+    @visible.setter
+    def visible(self, v):
+        if v:
+            self.show()
+        else:
+            self.hide()
+
+    def stay_on_top(self, b):
+        if b:
+            self.set_pos(after="TOPMOST")
+        else:
+            self.set_pos(after="NOTOPMOST")
+
+    def to_front(self):
+        SetForegroundWindow(self.hwnd)
+
+    def set_pos(self, *,after=..., left=..., top=..., width=..., height=..., flags=0):
+        SetWindowPos(self.hwnd, after=after, left=left, top=top, width=width, height=height, flags=flags)
+
+    def show(self):
+        ShowWindow(self.hwnd, "SHOW")
+
+    def hide(self):
+        ShowWindow(self.hwnd, "HIDE")
+
+    def maximize(self):
+        ShowWindow(self.hwnd, "MAXIMIZE")
+
+    def minimize(self):
+        ShowWindow(self.hwnd, "MINIMIZE")
+
+    def restore(self):
+        ShowWindow(self.hwnd, "MINIMIZE")
