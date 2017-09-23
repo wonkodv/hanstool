@@ -177,3 +177,24 @@ if CHECK.os.win:
 
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
+
+    _privatewnd = None
+    @cmd(attrs={"HotKey":"SCROLL"})
+    def private():
+        """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
+        global _privatewnd
+        if not _privatewnd:
+            def cb(w):
+                global _privatewnd
+                if "Firefox (Private" in w.text:
+                    _privatewnd = w
+                    return False
+                return True
+            Window.enumerate(cb)
+        assert _privatewnd
+
+        if _privatewnd.visible:
+            _privatewnd.hide()
+        else:
+            _privatewnd.show()
+            _privatewnd.to_front()
