@@ -127,12 +127,14 @@ def register_command(func, *,
     if doc is _DEFAULT:
         doc = inspect.getdoc(func) or ''
 
-    long_doc = "".join(["Command '%s'" % name, "\n",
-        ("Calls %s\n" % func_name ) if func_name != name else "",
+    long_doc = "".join([
+        doc,
+        "\n",
+        "\n",
+        "Invoked as '%s'" % name,
+        (", calls %s\n" % func_name ) if func_name != name else "",
+        "\n",
         arg_parser.describe_params(), "\n",
-        "\n",
-        doc + "\n" if doc else '',
-        "\n",
         "Defined in:\n\t%s:%d" % origin
     ])
 
@@ -141,6 +143,7 @@ def register_command(func, *,
         origin=origin,
         arg_parser=arg_parser,
         __doc__=long_doc,
+        short_doc=doc,
         attrs=attrs)
     cmd = type(name, (NamedFunctionCommand,), d)
 

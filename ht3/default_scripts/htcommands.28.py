@@ -39,13 +39,13 @@ def _help(what:args.Union(args.Command, args.Python)):
     if what in COMMANDS:
         obj = COMMANDS[what]
         show(inspect.getdoc(obj))
-
-    obj = evaluate_py_expression(what)
-    f = io.StringIO()
-    with contextlib.redirect_stdout(f):
-        help(obj)
-    s = f.getvalue()
-    show(s)
+    else:
+        obj = evaluate_py_expression(what)
+        f = io.StringIO()
+        with contextlib.redirect_stdout(f):
+            help(obj)
+        s = f.getvalue()
+        show(s)
 
 
 @cmd
