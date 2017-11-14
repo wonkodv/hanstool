@@ -86,11 +86,12 @@ def which(exe):
     return None
 
 def execute_disconnected(*args, **kwargs):
-    """Execute a program without any file handles attached."""
+    """Execute a program without any file handles or signals or ... attached."""
     return Env.execute(*args,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         stdin=subprocess.DEVNULL,
+        start_new_session=True,
         **kwargs)
 
 def execute_auto(*args, **kwargs):
