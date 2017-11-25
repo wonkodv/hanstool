@@ -6,11 +6,17 @@ from ctypes import c_wchar, c_bool, byref
 def EnumWindows(cb):
     exc = None
 
+    abort = False
+
     @ctypes.WINFUNCTYPE(c_bool, HWND, LPARAM)
     def _cb(handle,_):
+        nonlocal abort
         try:
             r = cb(handle)
-            return r is None or bool(r)
+            ok = r is None or bool(r)
+            if not ok:
+                abort = True
+            return ok
         except Exception as e:
             nonlocal exc
             exc = e
@@ -18,7 +24,7 @@ def EnumWindows(cb):
     r = ctypes.windll.user32.EnumWindows(_cb, 0)
     if exc:
         raise exc
-    if not r:
+    if not r and not abort:
         raise ctypes.WinError()
 
 def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
@@ -34,8 +40,8 @@ def FindWindow(spec=..., *,parent=None, after=None, cls=None, title=None):
     return w
 
 def GetClassName(wnd):
-    name = (c_wchar * 100)()
-    if not ctypes.windll.user32.GetClassNameW(wnd, name, 100):
+    name = (c_wchar * 1024)()
+    if not ctypes.windll.user32.GetClassNameW(wnd, name, len(name)):
         raise ctypes.WinError()
     return name.value
 
@@ -76,8 +82,8 @@ def GetWindowRect(hwnd):
     return r.left, r.top, r.right - r.left, r.bottom - r.top
 
 def GetWindowText(wnd):
-    text = (c_wchar * 100)()
-    ctypes.windll.user32.GetWindowTextW(wnd, text, 100)
+    text = (c_wchar * 1024)()
+    ctypes.windll.user32.GetWindowTextW(wnd, text, len(text))
     return text.value
 
 def SetWindowText(wnd, text):
@@ -117,9 +123,11 @@ def SetParent(child, parent):
     if not ctypes.windll.user32.SetParent(child, parent):
         raise ctypes.WinError()
 
+_setwindowpos_after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2)
+_setwindowpos_flags = dict(SHOW=0x40,HIDE=0x80,NOACTIVATE=0x10,)
 def SetWindowPos(hwnd, *,after=..., left=..., top=..., width=..., height=..., flags=0):
-    after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2).get(after,after)
-    flags = dict(SHOW=0x40,HIDE=0x80,NOACTIVATE=0x10,).get(flags,flags)
+    after = _setwindowpos_after.get(after,after)
+    flags = _setwindowpos_flags.get(flags,flags)
 
     if left is ... or top is ...:
         flags |= 2
@@ -144,6 +152,20 @@ def WindowFromPoint(p=None):
         p = POINT(*p)
     return ctypes.windll.user32.WindowFromPoint(p)
 
+_getwindow_command = dict(
+    CHILD         =  5,
+    ENABLEDPOPUP  =  6,
+    FIRST         =  0,
+    LAST          =  1,
+    NEXT          =  2,
+    PREV          =  3,
+    OWNER         =  4,
+)
+
+def GetWindow(hwnd, cmd):
+    cmd = _getwindow_command.get(cmd, cmd)
+    return ctypes.windll.user32.GetWindow(hwnd, cmd)
+
 
 class Window:
     def __init__(self, hwnd):
@@ -166,10 +188,9 @@ class Window:
         return cls(WindowFromPoint(p))
 
     @classmethod
-    def enumerate(cls, cb):
-        def _cb(hwnd):
-            return cb(cls(hwnd))
-        EnumWindows(_cb)
+    def get_desktop_window(cls):
+        return cls(ctypes.windll.user32.GetDesktopWindow())
+
 
     @property
     def class_name(self):
@@ -189,7 +210,11 @@ class Window:
 
     @property
     def text(self):
-        return GetWindowText(self.hwnd)
+        t = GetWindowText(self.hwnd)
+        if not t:
+            if not self:
+                raise ctypes.WinError()
+        return t
     title=text
 
     @text.setter
@@ -216,6 +241,50 @@ class Window:
             self.show()
         else:
             self.hide()
+
+    @property
+    def next_sibling(self):
+        w = GetWindow(self.hwnd, "NEXT")
+        if not w:
+            raise ctypes.WinError()
+        return type(self)(w)
+
+    @property
+    def previous_sibling(self):
+        w = GetWindow(self.hwnd, "PREV")
+        if not w:
+            raise ctypes.WinError()
+        return type(self)(w)
+
+    @property
+    def first_child(self):
+        w = GetWindow(self.hwnd, "CHILD")
+        if not w:
+            raise ctypes.WinError()
+        return type(self)(w)
+
+    def __iter__(self):
+        seen = set()
+        try:
+            c = self.first_child
+            yield c
+            seen.add(c)
+            while True:
+                c = c.next_sibling
+                if c in seen:
+                    return  # They inconsiderately formed a loop
+                yield c
+        except OSError:
+            return
+
+    def __repr__(self):
+        if self:
+            return "Window(hwnd={self.hwnd:#X}, text={self.text}, class_name={self.class_name})".format(self=self)
+        else:
+            return "Window(hwnd={self.hwnd:#X}, INVALID)".format(self=self)
+
+    def __format__(self, spec):
+        return format(self.hwnd, spec)
 
     def stay_on_top(self, b):
         if b:

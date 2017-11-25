@@ -19,14 +19,9 @@ if CHECK.os.win:
     def _complete_windowhandle(s):
         @cache_for(5)
         def all_windows():
-            l = []
-            def cb(w):
-                if w.visible:
-                    l.append(w.class_name)
-                    l.append(w.text)
-            Window.enumerate(cb)
-            return sorted(l, key=lambda s:s.lower())
-        return filter_completions_i(s, ("_MOUSE_POS", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
+
+            return sorted([w.title for w in Window.get_desktop_window()]+[w.class_name for w in Window.get_desktop_window()] , key=lambda s:s.lower())
+        return filter_completions_i(s, ("_MOUSE_POS", "_MOUSE_POS_MAIN", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
 
     def _convert_windowhandle(s):
         if s == "_MOUSE_POS":
@@ -184,13 +179,10 @@ if CHECK.os.win:
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
         global _privatewnd
         if not _privatewnd:
-            def cb(w):
-                global _privatewnd
-                if "Firefox (Private" in w.text:
+            for w in Window.get_desktop_window():
+                if "Firefox (Private Browsing)" in w.text:
                     _privatewnd = w
-                    return False
-                return True
-            Window.enumerate(cb)
+                    break
         assert _privatewnd
 
         if _privatewnd.visible:
