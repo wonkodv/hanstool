@@ -3,6 +3,8 @@
 from Env import *
 
 import re
+import threading
+import time
 
 def _complete_fake(string):
     parts = re.split('[^A-Za-z0-9]+', string)
@@ -24,6 +26,24 @@ def test_fake(s:_complete_fake):
     fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
     FAKE_TEXT = s
+
+@cmd
+def record_fake_mouse():
+    """Compile a Fake-script of mouse locations
+
+    record mouse position every time you press F9,
+    until you press F9 twice in a quarter second.
+    """
+
+    s = []
+    with ht3.hotkey.EventHotKey("F9") as hk:
+        for t in hk:
+            if t < 0.25:
+                break
+            mp = get_mouse_pos()
+            s.append("{}/{}".format(*mp))
+    s = ": "+" ".join(s)
+    show(s)
 
 @cmd(attrs=dict(HotKey='F10'))
 def repeat_fake():
