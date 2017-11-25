@@ -24,8 +24,10 @@ if CHECK.os.win:
         return filter_completions_i(s, ("_MOUSE_POS", "_MOUSE_POS_MAIN", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
 
     def _convert_windowhandle(s):
-        if s == "_MOUSE_POS":
+        if s == "_MOUSE_POS_MAIN":
             w = get_window_under_cursor(main=True)
+        elif s == "_MOUSE_POS":
+            w = get_window_under_cursor(main=False)
         elif s == '_FOREGROUND':
             w = Window.foreground()
         elif s == '_WAIT_FOREGROUND':
@@ -139,7 +141,7 @@ if CHECK.os.win:
         return Env._complete_script_names(s)
 
     @cmd(apply_default_param_anotations=True)
-    def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS", name=None):
+    def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS_MAIN", name=None):
         cmdline = command_line_from_hwnd(hwnd)
         if name is None:
             name = hwnd.text
@@ -147,8 +149,8 @@ if CHECK.os.win:
             name = re.sub("[^a-z_0-9]","",name)
         Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
 
-    @cmd
-    def analyze_windows(w:WindowHandle):
+    @cmd(apply_default_param_anotations=True)
+    def analyze_windows(w:WindowHandle="_MOUSE_POS"):
         arr = []
         while(w):
             clas = w.class_name
