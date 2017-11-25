@@ -192,3 +192,16 @@ if CHECK.os.win:
         else:
             _privatewnd.show()
             _privatewnd.to_front()
+
+
+
+    @cmd
+    def tmp(name=None):
+        p = Path("~/tmp").expanduser()
+        if name:
+            p = p/"{:%y%m}-{}".format(datetime.datetime.now(), name)
+            try:
+                p.mkdir(parents=True)
+            except FileExistsError:
+                pass
+        execute_disconnected('explorer {}'.format(shellescape(str(p))))
