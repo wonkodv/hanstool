@@ -201,8 +201,12 @@ class Window:
         return type(self)(GetParent(self.hwnd))
 
     @parent.setter
-    def set_parent(self, parent):
-        SetParent(self.hwnd, parent.hwnd)
+    def parent(self, parent):
+        if parent is None or parent == 0:
+            hp = 0
+        else:
+            hp = parent.hwnd
+        SetParent(self.hwnd, hp)
 
     @property
     def rect(self):
@@ -218,7 +222,7 @@ class Window:
     title=text
 
     @text.setter
-    def _set_text(self, text):
+    def text(self, text):
         return SetWindowText(self.hwnd, text)
 
     @property
