@@ -8,7 +8,7 @@ import unittest
 import ht3.htd
 
 from ht3.env import Env
-from ht3.client import send
+from ht3.client import command
 from unittest.mock import patch
 
 @unittest.skipUnless(os.name == 'posix',"Not on POSIX")
@@ -27,7 +27,7 @@ class TestDaemon(unittest.TestCase):
             while not os.path.exists(sname):
                 time.sleep(0.05)
 
-            send("Test Bar", socket_path=sname)
+            command("Test Bar", socket_path=sname)
 
             ht3.htd.stop()
 

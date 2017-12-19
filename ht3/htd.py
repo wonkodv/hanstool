@@ -10,6 +10,7 @@ import ht3.lib
 
 from ht3.command import run_command
 from ht3.env import Env
+from ht3.complete import complete_command_with_args
 
 
 def handle_socket(sock, addr):
@@ -17,14 +18,22 @@ def handle_socket(sock, addr):
     with sock:
         with sock.makefile("wrb") as sock_file:
             try:
-                s = pickle.load(sock_file)
-                r = run_command(s)
+                cmd, string = pickle.load(sock_file)
+                if cmd == "COMMAND":
+                    r = run_command(string)
+                elif cmd == "COMPLETE":
+                    r = list(complete_command_with_args(string))
+                else:
+                    raise ValueError(cmd)
             except Exception as e:
-                obj = ["Exception",traceback.format_exc()]
-                pickle.dump(obj, sock_file)
+                obj = ["EXCEPTION",e]
+                try:
+                    pickle.dump(obj, sock_file)
+                except:
+                    pass
                 lib.EXCEPTION_HOOK(exception=e)
             else:
-                obj = ["Ok",repr(r)]
+                obj = ["OK", r]
                 pickle.dump(obj, sock_file)
 
 _evt = None
