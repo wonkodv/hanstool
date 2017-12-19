@@ -1,3 +1,4 @@
+import pickle
 import os
 import socket
 import os.path
@@ -6,25 +7,19 @@ import io
 
 SOCKET = os.environ.get('HT3_SOCKET', os.path.expanduser('~/.config/ht3/socket') )
 
-def send(string):
-    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s
-        s.connect(SOCKET)
-        s.send(string.encode('utf-8'))
-        s.send(b"\0")
-        buff = io.BytesIO()
-        b = True
-        while b:
-            b = s.recv(1024)
-            buff.write(b)
-
-    b = bytes(buff)
-    status, _, b = b.partiton(0)
-    text = buff[:-1]
-    text = text.decode("UTF-8")
-    status = status.decode("UTF-8")
-    print(status)
-    print(text)
+def send(string, socket_path=SOCKET):
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as sock:
+        sock.connect(socket_path)
+        with sock.makefile("rwb") as sock_file:
+            pickle.dump(string, sock_file)
+            sock_file.flush()
+            status, result = pickle.load(sock_file)
+    return status, result
 
 if __name__ == '__main__':
-    for s in sys.argv[1:]:
-        send(s)
+    for c in sys.argv[1:]:
+        print(c)
+        s, r = send(c)
+        print (s)
+        print (r)
+

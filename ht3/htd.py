@@ -1,3 +1,5 @@
+import traceback
+import pickle
 import socket
 import os
 import os.path
@@ -12,29 +14,18 @@ from ht3.env import Env
 
 def handle_socket(sock, addr):
     ht3.lib.THREAD_LOCAL.frontentd = "{}({})".format(__name__,addr)
-    buff = io.BytesIO()
-    b=True
     with sock:
-        while b:
+        with sock.makefile("wrb") as sock_file:
             try:
-                b = sock.recv(1024)
-            except socket.timeout:
-                return
-            buff.write(b)
-
-        s = bytes(buff).decode("UTF-8")
-
-        try:
-            r = run_command(s)
-        except Exception as e:
-            sock.send(b"EXCEPTION\0")
-            sock.send(traceback.format_exc().encode("UTF-8"))
-            sock.send(b"\0")
-            lib.EXCEPTION_HOOK(exception=e)
-        else:
-            sock.send(b"OK\0")
-            sock.send(repr(r).encode("UTF-8"))
-            sock.send(b"\0")
+                s = pickle.load(sock_file)
+                r = run_command(s)
+            except Exception as e:
+                obj = ["Exception",traceback.format_exc()]
+                pickle.dump(obj, sock_file)
+                lib.EXCEPTION_HOOK(exception=e)
+            else:
+                obj = ["Ok",repr(r)]
+                pickle.dump(obj, sock_file)
 
 _evt = None
 
@@ -59,7 +50,10 @@ def loop():
                 if _evt.is_set():
                     return
             else:
-                handle_socket(conn, addr)
+                try:
+                    handle_socket(conn, addr)
+                except:
+                    pass
 
 def stop():
     _evt.set()

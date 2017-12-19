@@ -63,6 +63,7 @@ def _show_eval(s:args.Python=""):
     show(r)
     Env['__'].append(r)
     Env['_'] = r
+    return r
 
 @cmd(name=';')
 def _execute_py_expression(s:args.Python):
