@@ -13,16 +13,20 @@ def send(command, string, socket_path=SOCKET):
         with sock.makefile("rwb") as sock_file:
             pickle.dump([command, string], sock_file)
             sock_file.flush()
-            status, result = pickle.load(sock_file)
-    if status != "OK":
-        raise result
-    return result
+            while True:
+                try:
+                    status, result = pickle.load(sock_file)
+                    if status != "OK":
+                        raise result
+                    yield result
+                except EOFError:
+                    return
 
 def complete(*args, **kwargs):
-    return send("COMPLETE", *args, **kwargs)
+    yield from send("COMPLETE", *args, **kwargs)
 
 def command(*args, **kwargs):
-    return send("COMMAND", *args, **kwargs)
+    return next(send("COMMAND", *args, **kwargs))
 
 
 def main(argv):

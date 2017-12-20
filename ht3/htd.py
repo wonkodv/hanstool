@@ -21,8 +21,11 @@ def handle_socket(sock, addr):
                 cmd, string = pickle.load(sock_file)
                 if cmd == "COMMAND":
                     r = run_command(string)
+                    obj = ("OK", r)
+                    pickle.dump(obj, sock_file)
                 elif cmd == "COMPLETE":
-                    r = list(complete_command_with_args(string))
+                    for c in complete_command_with_args(string):
+                        pickle.dump(("OK",c), sock_file)
                 else:
                     raise ValueError(cmd)
             except Exception as e:
@@ -32,9 +35,6 @@ def handle_socket(sock, addr):
                 except:
                     pass
                 lib.EXCEPTION_HOOK(exception=e)
-            else:
-                obj = ["OK", r]
-                pickle.dump(obj, sock_file)
 
 _evt = None
 
