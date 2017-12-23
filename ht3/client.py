@@ -32,8 +32,13 @@ def command(*args, **kwargs):
 def main(argv):
     if len(argv) == 1:
         c = argv[0]
-        r = command(c)
-        print (r)
+        try:
+            r = command(c)
+        except Exception as e:
+            print(e, file=sys.stderr)
+        else:
+            if r is not None:
+                print(r)
     elif len(argv) == 2 and argv[0] == "-c":
         c = argv[1]
         r = complete(c)

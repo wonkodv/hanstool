@@ -33,7 +33,7 @@ def handle_socket(sock, addr):
                 try:
                     pickle.dump(obj, sock_file)
                 except:
-                    pass
+                    lib.EXCEPTION_HOOK(exception=e)
                 lib.EXCEPTION_HOOK(exception=e)
 
 _evt = None
