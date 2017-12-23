@@ -5,7 +5,7 @@ import os.path
 import threading
 
 from .env import Env
-from .command import get_command
+from .command import get_command, COMMAND_EXCEPTION_HOOK
 from .complete import complete_command_with_args
 
 import ht3.lib
@@ -15,6 +15,12 @@ try:
     import readline
 except ImportError:
     readline = None
+
+@COMMAND_EXCEPTION_HOOK.register
+def _command_exception(exception, command):
+    if command.frontend == 'ht3.cli':
+        return True # Don't raise the exception
+
 
 #TODO: resgister with ht3.history.APPEND_HOOK to add to history if not self
 

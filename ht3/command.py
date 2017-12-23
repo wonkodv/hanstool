@@ -46,6 +46,7 @@ class Command():
         self.started = True
 
         self.parent = THREAD_LOCAL.command
+        self.frontend = THREAD_LOCAL.frontend
         try:
             THREAD_LOCAL.command = self
             COMMAND_RUN_HOOK(command=self)

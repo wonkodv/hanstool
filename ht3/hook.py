@@ -1,7 +1,9 @@
 import inspect
 
 class Hook():
-    """Delegate calls to all registered callbacks in reversed order."""
+    """Delegate calls to all registered callbacks in reversed order.
+
+    If at least one handler returns True, the Hook returns True ("handled")"""
     HOOKS = []
 
     def __init__(self, *parameters):
@@ -34,8 +36,9 @@ class Hook():
     def __call__(self, **kwargs):
         handled = False
         for c in reversed(self.callbacks):
-            c(**kwargs)
-            handled = True
+            r = c(**kwargs)
+            if r:
+                handled = True
         return handled
 
 class NoResult(Exception):
