@@ -17,6 +17,8 @@ class TestDaemon(unittest.TestCase):
     @patch('ht3.htd.run_command')
     def test_daemon(self, run_command):
         with tempfile.TemporaryDirectory() as tmpd:
+            run_command.return_value = 4267
+
             sname = tmpd +'/socket'
             Env['SOCKET'] = sname
 
@@ -27,10 +29,12 @@ class TestDaemon(unittest.TestCase):
             while not os.path.exists(sname):
                 time.sleep(0.05)
 
-            command("Test Bar", socket_path=sname)
+            r = command("Test Bar", socket_path=sname)
 
             ht3.htd.stop()
 
             t.join()
+
+        assert r == 4267
 
         run_command.assert_any_call('Test Bar')
