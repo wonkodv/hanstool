@@ -53,9 +53,10 @@ class Command():
             try:
                 result = self.result = self.run()
             except Exception as e:
-                if not COMMAND_EXCEPTION_HOOK(command=self, exception=e):
-                    raise
-                return
+                if self.parent is None:
+                    if COMMAND_EXCEPTION_HOOK(command=self, exception=e):
+                        return
+                raise
             else:
                 COMMAND_FINISHED_HOOK(command=self)
                 return result
