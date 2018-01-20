@@ -191,7 +191,6 @@ class Window:
     def get_desktop_window(cls):
         return cls(ctypes.windll.user32.GetDesktopWindow())
 
-
     @property
     def class_name(self):
         return GetClassName(self.hwnd)
@@ -276,10 +275,19 @@ class Window:
             while True:
                 c = c.next_sibling
                 if c in seen:
-                    return  # They inconsiderately formed a loop
+                    return  # They formed a loop
                 yield c
         except OSError:
             return
+
+    def __eq__(self, other):
+        return self.hwnd == other.hwnd
+
+    def __hash__(self):
+        return hash(self.hwnd)
+
+    def __int__(self):
+        return self.hwnd
 
     def __repr__(self):
         if self:
