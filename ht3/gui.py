@@ -481,7 +481,7 @@ lib.EXCEPTION_HOOK.register(_log_proxy('log_error'))
 command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))
 command.COMMAND_FINISHED_HOOK.register(_log_proxy('log_command_finished'))
 @command.COMMAND_EXCEPTION_HOOK.register
-def _command_exception(exception, command)
+def _command_exception(exception, command):
     _log_proxy('log_error')
     if command.frontend == 'ht3.gui':
         return True # Don't raise exception
