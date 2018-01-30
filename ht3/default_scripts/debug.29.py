@@ -87,6 +87,17 @@ def update_check():
     else:
         show("Git up to date")
 
+def version():
+    v = procio("git -C {} describe --tags".format(str(Path(ht3.__file__).parent.parent)))
+    return v
+
+@cmd(name="version")
+def _version():
+    v = version()
+    show(v)
+
+print("HansTool {}".format(version()))
+
 @cmd
 def threadlist():
     show("\n".join("{0.ident: 10d} {0.name:>10s}".format(t) for t in threading.enumerate()))
