@@ -89,3 +89,5 @@ if CHECK.os.posix:
     def xdg_open(s:Path):
         """Open something with xdg-open."""
         execute_disconnected('xdg-open', s)
+
+    print("\x1b]2;HansTool\x07", end="") # Set Title of Terminal Window
