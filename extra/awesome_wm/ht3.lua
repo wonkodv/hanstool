@@ -8,20 +8,21 @@ ht3.settings = {
     run_exe         = "python -m ht3.client",
     prompt          = "<b>HT:</b> ",
     history_path    = awful.util.getdir("cache") .. "/history_ht3",
-    result_callback = function(s)
+    result_callback = function(command, textbox)
         return function (line)
             naughty.notify {
                 text    = line,
-                title   = s,
+                title   = command,
                 timeout = 3,
             }
+            -- textbox.text = "HT => "..line.." < "
         end
     end,
-    error_callback  = function(s)
+    error_callback  = function(command, textbox)
         return function (line)
             naughty.notify {
                 text    = line,
-                title   = s,
+                title   = command,
                 timeout = 15,
                 fg      = "red",
             }
@@ -69,10 +70,10 @@ function ht3.prompt(textbox)
     awful.prompt.run {
         textbox = textbox,
         prompt  = ht3.settings.prompt,
-        exe_callback = function (s)
-            awful.spawn.with_line_callback(ht3.settings.run_exe .." ".. ht3.shellescape(s), {
-                stdout = ht3.settings.result_callback(s),
-                stderr = ht3.settings.error_callback(s),
+        exe_callback = function (command)
+            awful.spawn.with_line_callback(ht3.settings.run_exe .." ".. ht3.shellescape(command), {
+                stdout = ht3.settings.result_callback(command, textbox),
+                stderr = ht3.settings.error_callback(command, textbox),
             })
         end,
         history_path = ht3.settings.history_path,
