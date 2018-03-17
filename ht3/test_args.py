@@ -37,7 +37,20 @@ class TestBoolParam(unittest.TestCase):
         assert "YES" in list(p.complete("YE"))
         assert "yes" in list(p.complete("y"))
 
+class TestTimeParam(unittest.TestCase):
+    def test_convert(self):
+        p = args.Time
+        assert p.convert("2H1S") == 7201
+        assert p.convert("10H50M30S") == 39030
+        assert p.convert("4M") == 240
+        self.assertAlmostEqual(p.convert("1.2"), 1.2)
 
+    def test_complete(self):
+        p = args.Time
+        assert "1H" in list(p.complete("1"))
+        assert "1M" in list(p.complete("1"))
+        assert "1.0" in list(p.complete("1"))
+        assert {"2H1M","2H1S"} == set(p.complete("2H"))
 
 class TestUnionParam(unittest.TestCase):
     def test_convert(self):

@@ -23,11 +23,11 @@ def txt():
     edit_file(expanduser("~/txt"))
 
 @cmd
-def timer(t:float, event:str="Done"):
+def timer(t:args.Time, event:str="Done"):
     """ timer timer """
     @threaded
     def _():
-        sleep(t*60)
+        sleep(t)
         option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
 def complete_virtualbox(s=None):

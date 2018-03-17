@@ -145,6 +145,60 @@ class Range(Param):
     def __repr__(self):
         return "Parameter in the range: "+repr(self.range)
 
+def _convert_time(string):
+    try:
+        return float(string)
+    except ValueError:
+        pass
+    x = 0
+    h = 0
+    m = 0
+    s = 0
+    for c in string.upper():
+        if c == "H":
+            if s != 0 or m != 0 or h != 0:
+                raise ValueError(string)
+            h = x
+            x = 0
+        elif c == "M":
+            if s != 0 or m != 0:
+                raise ValueError(string)
+            m = x
+            x = 0
+        elif c == "S":
+            if s != 0:
+                raise ValueError(string)
+            s = x
+            x = 0
+        elif c in "0123456789":
+            if s != 0:
+                raise ValueError(string)
+            x = x*10 + int(c)
+        else:
+            raise ValueError(string)
+    return (h*60+m)*60+s
+
+
+def _complete_time(s):
+    if not s:
+        yield from ["1","0.1","3M","1H5M"]
+    else:
+        if any(c not in "0123456789HMS" for c in s):
+            return
+        if s[-1] in "HMS":
+            s = s+"1"
+        p = {"H", "M", "S", ".0"}
+        if "H" in s.upper():
+            p = {"M", "S"}
+        if "M" in s.upper():
+            p = {"S"}
+        if "S" in s.upper():
+            p = {}
+        for x in p:
+            yield s+x
+
+Time = Param(convert=_convert_time, complete=_complete_time, doc="Time, as 1H5M3S or 5.0")
+
 class Option(Param):
     def __init__(self, options, ignore_case=False, sort=False, allow_others=False):
         self.options = options
