@@ -19,7 +19,7 @@ SUBPROCESS_FINISH_HOOK = ht3.hook.Hook("process")
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
-def execute(*args, shell=False, is_split=..., **kwargs):
+def execute(*args, shell=False, is_split=..., env=None, more_env=None, **kwargs):
     """Execute a program."""
     if not all(isinstance(a, str) for a in args):
         raise TypeError("Expecting strings")
@@ -53,8 +53,15 @@ def execute(*args, shell=False, is_split=..., **kwargs):
 
     assert isinstance(args, str) != is_split
 
+    if more_env is not None:
+        if env is not None:
+            raise TypeError("Pass either env or more_env")
+        env = {}
+        env.update(os.environ)
+        env.update(more_env)
+
     try:
-        p = subprocess.Popen(args, shell=shell, **kwargs)
+        p = subprocess.Popen(args, shell=shell, env=env, **kwargs)
     except OSError as e:
         e.args = e.args + (args,shell)
         raise e
