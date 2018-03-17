@@ -68,7 +68,7 @@ def edit_command(c:args.Union(args.Command, args.Python)):
             _, l = inspect.getsourcelines(o)
         except TypeError:
             l = 0
-    p = edit_file(f, l)
+    edit_file(f, l)
 
 @Env
 def _complete_script_names(s):
@@ -117,8 +117,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
 
     with s.open("rt") as f:
         l = len(list(f))
-    p = edit_file(s, l)
-    p.wait()
+    edit_file(s, l)
 
 @cmd
 def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
