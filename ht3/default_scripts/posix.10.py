@@ -51,7 +51,7 @@ if CHECK.os.posix:
             'hfs', 'hpfs',
             'iso9660', 'udf']:
             options += ",uid={:d},gid={:d}".format(os.geteuid(), os.getegid())
-
+        show(f"Mount -t {fstype} {dev} {target} --options {options!s}")
         procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
     def complete_mounted_devices(s):

@@ -51,7 +51,7 @@ def update_check():
         show("Git up to date")
 
 def version():
-    v = procio("git -C {} describe --tags".format(str(Path(ht3.__file__).parent.parent)))
+    v = procio("git -C {} describe --tags".format(str(Path(ht3.__file__).parent.parent))).strip()
     return v
 
 @cmd(name="version")
