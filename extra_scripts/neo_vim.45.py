@@ -4,8 +4,6 @@ import os.path
 import inspect
 import tempfile
 
-NVIM_PATH = r"c:\users\riegel\tools\Neovim\bin\nvim-qt.exe"
-
 if CHECK.os.win32:
     ADDRESS = r"\\.\pipe\nvim-pipe-{}"
 else:
@@ -20,13 +18,34 @@ def nvim(server="HT3", env={}, cwd=None):
     more_env = { "NVIM_LISTEN_ADDRESS":server, }
     more_env.update(env)
     if not s.exists():
-        Env.log("starting Neovim: {} {}".format(more_env, NVIM_PATH))
-        p = execute_disconnected(NVIM_PATH, more_env=more_env)
+        p = Env.get('NVIM','nvim')
+        Env.log("starting Neovim: {} {}".format(more_env, p))
+        p = execute_disconnected(p, more_env=more_env)
     for i in range(500):
+        p = None
         sleep(0.01)
         if s.exists():
             break
-    return neovim.attach("socket", path=server)
+    nvim = neovim.attach("socket", path=server)
+    nvim.PROCESS = p
+    return nvim
+
+@Env.updateable
+@cmd
+def edit_file(file_name:Path, line:int=0, server="HT3"):
+    f = str(file_name)
+    l = int(line)
+
+    inst = nvim(server)
+    inst.command("edit {}".format(file_name))
+    if line:
+        inst.command("normal {}gg".format(line))
+    if CHECK.is_cli_frontend:
+        p = isnt.PROCESS
+        if p:
+            p.wait()
+        else:
+            raise NotImplementedError("Waiting on buffer in external nvim")
 
 @cmd
 def exception_trace(i:int=-1):
@@ -55,4 +74,11 @@ def exception_trace(i:int=-1):
     with tempfile.NamedTemporaryFile('wb', delete=False) as f:
         f.write(s.encode("UTF-8"))
         f.flush()
-        nvim().command(':cfile ' + f.name)
+        n = nvim()
+        n.command(':cfile ' + f.name)
+    if CHECK.is_cli_frontend:
+        p = n.PROCESS
+        if p:
+            p.wait()
+        else:
+            raise NotImplementedError("Waiting on buffer in external nvim")

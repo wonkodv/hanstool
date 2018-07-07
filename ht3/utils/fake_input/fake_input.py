@@ -37,7 +37,8 @@ class Error(Exception):
 
 fake_types = (
     ("WHITESPACE",  r"\s+"),
-    ("MOVEABS",     r"(-?[\d]+)[x/:,](-?[\d]+)"),
+    ("COUNT",       r"(?P<count>\d+)\*"),
+    ("MOVEABS",     r"(-?[\d]+)[/:,](-?[\d]+)"),
     ("COMBO",       r"((?P<mod1>\w+)\+)"
                     r"((?P<mod2>\w+)\+)?"
                     r"((?P<mod3>\w+)\+)?"
@@ -60,7 +61,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
 
     Parses the following mini language:
     *   Whitespaces are ignored
-    *   ``123X456`` moves the mouse to x=123 and y=456, see mouse_move
+    *   ``123/456`` moves the mouse to x=123 and y=456, see mouse_move
     *   ``M1``      Does a Mouse Click at the current mouse position
                     With the left button. 2=Middle, 3=right, 4, 5
     *   ``+M2``     Press but do not release the middle mouse button
@@ -68,7 +69,9 @@ def fake(string, interval=10, restore_mouse_pos=False):
     *   ``'hans@fred.com'``  Type hans' email address. No escaping any char
                     except the closing quote is allowed in the string. You can use
                     single or double quotes for text that contains the other quote.
-    *   ``+Key``    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL,... see KEY_CODES
+    *   ``+Key``    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL, ...
+                    see ht3.keycodes.KEY_CODES or the hexadecimal key code
+                    for example 0x42 for B
     *   ``-A``      Release A
     *   ``A``       Press, then release A
     *   ``Mod1+Mod2+Key``
@@ -78,6 +81,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
     *   ``"Text"`` and ``'Text'``
                     Type text, by querying the current keybord layout for the
                     correct sequence of keystrokes to produce a character.
+    *   ``42*``     Do the next thing 42 times
     Waits for ``interval`` milliseconds between every event. (thus
     twice when pressing and releasing keys/buttons). also before sleeps.
     Example that activates the first window, clicks in it, waits and
@@ -87,19 +91,25 @@ def fake(string, interval=10, restore_mouse_pos=False):
     """
 
     sequence = []
+    count = 1
     def a(f, *a):
-        sequence.append((f, a, m))
+        nonlocal count
+        for _ in range(count):
+            sequence.append((f, a, m))
+        count = 1
 
     logs=[]
     def log(s, *args):
-        logs.append(s%args)
-
+        pass
+        #logs.append(s%args)
 
     for m in fake_re.finditer(string):
         groups = [ x for x in m.groups() if x is not None][1:]
         try:
             if   m.group("WHITESPACE"):
                 pass
+            elif m.group("COUNT"):
+                count = int(m.group("count"))
             elif m.group("MOVEABS"):
                 x,y = groups
                 x = int(x)
@@ -116,7 +126,6 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     a(impl.mouse_up, btn)
                     log("MouseUp b=%d", btn)
             elif m.group("COMBO"):
-                # drop the + sign from modifiers
                 keys = ['mod1','mod2','mod3','mod4','modkey']
                 keys = [m.group(k) for k in keys]
                 keys = [impl.KEY_CODES[k.upper()] for k in keys if k is not None]

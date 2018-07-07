@@ -16,6 +16,13 @@ class Test_fake(unittest.TestCase):
         assert m.group('modkey') == 'A'
 
     def test_re_hexcode(self):
+        s = "0x42"
+        l = list(fake_re.finditer(s))
+        assert len(l) == 1
+        m = l[0]
+        assert not m.group('hkud')
+        assert m.group('hkey') == '42'
+
         s = "+0xEF"
         l = list(fake_re.finditer(s))
         assert len(l) == 1
@@ -43,21 +50,26 @@ class Test_fake(unittest.TestCase):
         s = self.runSequence("""
             +Shift
             A
+            0x42
+            -0xFF
             (100)
             -Shift
             'A\\SD"F'
             "GH'I"
-            1000x2000
+            1000,2000
             01/250
             -2555/-356
             M1
             CTRL+A
-            -0xDC
+            3*-0xDC
             """,0)
         exp = [
             ['kd',k['SHIFT']],
             ['kd',k['A']],
             ['ku',k['A']],
+            ['kd',0x42],
+            ['ku',0x42],
+            ['ku',0xFF],
             ['s', 0.1],
             ['ku',k['SHIFT']],
             ['t', 'A\\SD"F', 0],
@@ -71,6 +83,8 @@ class Test_fake(unittest.TestCase):
             ['kd',k['A']],
             ['ku',k['A']],
             ['ku',k['CTRL']],
+            ['ku', 0xDC],
+            ['ku', 0xDC],
             ['ku', 0xDC],
         ]
         self.assertListEqual(s, exp)
