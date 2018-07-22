@@ -64,15 +64,19 @@ def handle_socket(sock, addr):
                 cmd, string = pickle.load(sock_file)
                 if cmd == "COMMAND":
                     r = run_command(string)
-                    obj = ("OK", r)
-                    pickle.dump(obj, sock_file)
+                    try:
+                        obj = ("OK", "RESULT", r)
+                        pickle.dump(obj, sock_file)
+                    except TypeError:
+                        obj = ("OK", "REPR", repr(r))
+                        pickle.dump(obj, sock_file)
                 elif cmd == "COMPLETE":
                     for c in complete_command_with_args(string):
-                        pickle.dump(("OK",c), sock_file)
+                        pickle.dump(("OK", "COMPLETION",c), sock_file)
                 else:
                     raise ValueError(cmd)
             except SystemExit:
-                obj = ("OK", None)
+                obj = ("OK", "EXIT", None)
                 pickle.dump(obj, sock_file)
                 raise
             except Exception as e:

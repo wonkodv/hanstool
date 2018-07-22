@@ -52,18 +52,24 @@ def send(command, string):
             sock_file.flush()
             while True:
                 try:
-                    status, result = pickle.load(sock_file)
+                    status, typ, result = pickle.load(sock_file)
                     if status != "OK":
                         raise result
-                    yield result
+                    yield typ, result
                 except EOFError:
                     return
 
 def complete(s):
-    yield from send("COMPLETE", s)
+    for t, r in send("COMPLETE", s):
+        if not t == "COMPLETION":
+            raise TypeError("Not a completion", t,r)
+        yield r
 
 def command(s):
-    return next(send("COMMAND", s))
+    t, r = next(send("COMMAND", s))
+    if t != "RESULT":
+        raise TypeError
+    return r
 
 
 def main(argv):
@@ -73,9 +79,11 @@ def main(argv):
             r = command(c)
         except Exception as e:
             print(e, file=sys.stderr)
+            return 1
         else:
             if r is not None:
                 print(r)
+            return 0
     elif len(argv) == 2 and argv[0] == "-c":
         c = argv[1]
         r = complete(c)
