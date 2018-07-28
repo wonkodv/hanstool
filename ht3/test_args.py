@@ -4,6 +4,56 @@ import sys
 from unittest.mock import Mock, patch
 from ht3 import args
 
+
+class TestParamClass(unittest.TestCase):
+    def test_realpc(self):
+        class cls(args.ParamClass):
+            pass
+
+        assert issubclass(cls, args.ParamClass)
+
+    def test_virtualPC(self):
+        class cls:
+            @classmethod
+            def convert(cls, s):
+                return s
+            @classmethod
+            def complete(cls, s):
+                return s
+        assert issubclass(cls, args.ParamClass)
+
+    def test_virtual_no_class_methods(self):
+        class cls:
+            def convert(self, s):
+                return s
+            def complete(self, s):
+                return s
+        assert not issubclass(cls, args.ParamClass)
+
+    def test_virtual_pc_no_complete(self):
+        class cls():
+            @classmethod
+            def convert(cls,s):
+                pass
+        assert not issubclass(cls, args.ParamClass)
+
+    def test_virtual_pc_no_convert(self):
+        class cls():
+            @classmethod
+            def complete(cls,s):
+                pass
+        assert not issubclass(cls, args.ParamClass)
+
+    def test_pc_used(self):
+        class cls:
+            @classmethod
+            def convert(cls, s):
+                return s
+            @classmethod
+            def complete(cls, s):
+                return s
+        assert cls is args._get_param(cls, False)
+
 class TestStrParam(unittest.TestCase):
     def test_convert(self):
         p = args.Str

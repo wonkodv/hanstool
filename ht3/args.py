@@ -15,7 +15,48 @@ _DEFAULT = object()
 class ArgError(Exception):
     pass
 
+class ParamClassMeta(type):
+    """ (virtual) MetaClass of ParamClasses.
+
+    Any class that has convert or complete methods is considered a subclss of ParamClass """
+    def __subclasscheck__(self, other):
+        if super().__subclasscheck__(other):
+            return True
+        if issubclass(other, Param):
+            return False
+        for m in ['convert','complete']:
+            for c in inspect.getmro(other):
+                f = getattr(c, m, None)
+                if inspect.ismethod(f): # classmethods are bound, methods of calsses not
+                    break
+            else:
+                break
+        else:
+            return True
+        return False
+
+class ParamClass(metaclass=ParamClassMeta):
+    """Parameter where the Class is the param type
+
+        class MyParam(ParamClass): pass
+        @cmd
+        def foo(a:MyParam):
+    """
+    @classmethod
+    def convert(cls, s):
+        return s
+
+    @classmethod
+    def complete(cls, s):
+        return []
+
 class Param:
+    """ Parameter where an instance of the class is the param type
+
+        class MyParam(Param): pass
+        @cmd
+        def foo(a:My(some_args)):
+    """
     def __init__(self, convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
         if convert is not _DEFAULT:
             if not callable(convert):
@@ -34,7 +75,7 @@ class Param:
         if doc is not _DEFAULT:
             self.doc = doc
         elif complete is not _DEFAULT or convert is not _DEFAULT:
-            self.doc = "Param(convert={0}, complete={1})".format(self.convert, self.complete)
+            self.doc = "ParamObject(convert={0}, complete={1})".format(self.convert, self.complete)
 
     def _no_completion(self, s):
         return []
@@ -243,6 +284,8 @@ def _get_param(p, var_arg):
             return MultiParam(Str)
         if isinstance(p, Param):
             return MultiParam(p)
+        if issubclass(p, ParamClass):
+            return MultiParam(p)
         if inspect.isclass(p):
             if issubclass(p, MultiParam):
                 raise TypeError("Instantiate your Param Type")
@@ -252,12 +295,18 @@ def _get_param(p, var_arg):
         return p
 
     try:
+        if issubclass(p, ParamClass):
+            return p
+    except TypeError:
+        pass
+
+    try:
         b = issubclass(p, Param)
     except TypeError:
         pass
     else:
         if b:
-            return p() # do here to raise type errors if there are
+            return p() # raise type errors if there are
 
     if isinstance(p, str):
         raise TypeError("Can not convert a String to a Param", p)
@@ -284,19 +333,22 @@ def _get_param(p, var_arg):
     if p is range:
         return Range(p)
 
-    if callable(p):
-        try:
-            n = p.__name__.lower()
-        except AttributeError:
-            pass
+    if inspect.isclass(p):
+        raise TypeError("Classes can not be Argument types.",p,
+                "Exceptions: \n"
+                "* they specify convert and complete as classmethods\n"
+                "* they are subclasses of ParamClass\n"
+                "* they are Subclass of Param and accept an empty constructor")
+
+    if inspect.isfunction(p):
+        n = p.__name__.lower()
+        if 'convert' in n:
+            return Param(convert=p)
+        elif 'complete' in n:
+            return Param(complete=p)
         else:
-            if 'convert' in n:
-                return Param(convert=p)
-            elif 'complete' in n:
-                return Param(complete=p)
-            else:
-                raise TypeError("Can not convert function to param if name does not"
-                    " contain 'convert' or 'complete'", p)
+            raise TypeError("Can not convert function to param if name does not"
+                " contain 'convert' or 'complete'", p)
 
     raise TypeError("Can not Guess Parameter type", p)
 
@@ -395,10 +447,8 @@ class ShellArgParser(BaseArgParser):
 
 
         if pi.multiple:
-            assert isinstance(pi.typ, MultiParam)
             compl = pi.typ.complete(values)
         else:
-            assert isinstance(pi.typ, Param)
             compl = pi.typ.complete(current)
 
         for v in compl:
