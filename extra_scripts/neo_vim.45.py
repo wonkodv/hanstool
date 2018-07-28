@@ -61,13 +61,13 @@ def exception_trace(i:int=-1):
         name = t.tb_next.tb_frame.f_code.co_name
         args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
         if os.path.exists(file):
-            s += "{0}:{1:d}:1:{2}{3}".format(file, line, name, args)+"\n"
+            s += "{0}:{1:d}: {2}{3}".format(file, line, name, args)+"\n"
         t = t.tb_next
 
     file = t.tb_frame.f_code.co_filename
     file = os.path.abspath(file)
     line = t.tb_lineno
-    s += "{0}:{1:d}:1:{2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
+    s += "{0}:{1:d}: {2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
     if isinstance(e, SyntaxError):
         s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
     show(s)
@@ -76,6 +76,7 @@ def exception_trace(i:int=-1):
         f.flush()
         n = nvim()
         n.command(':cfile ' + f.name)
+        n.command(':clast ')
     if CHECK.is_cli_frontend:
         p = n.PROCESS
         if p:
