@@ -101,4 +101,3 @@ if Env.get('DEBUG', False):
     import atexit
     faulthandler.enable(_fault)
     atexit.register(lambda : _fault.close())
-

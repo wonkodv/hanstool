@@ -30,6 +30,17 @@ def timer(t:args.Time, event:str="Done"):
         sleep(t)
         option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
+@cmd
+def measure_interval():
+    @threaded
+    def HotKeyTest():
+        with ht3.hotkey.EventHotKey("F7") as hk:
+            for t in hk:
+                show(f"{hk} {t}")
+                if t < 0.2:
+                    break
+
+
 def complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
     vms = procio("vboxmanage list vms", shell=False, is_split=False)
