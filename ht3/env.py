@@ -41,7 +41,6 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
 
     def put_persistent(self, key, val):
         """Put values into the dict that survives reload."""
-        assert key != 'windows'
         self.persistent_dict[key] = val
         self.dict[key] = val
 
@@ -54,7 +53,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         if not getattr(self,'_finalized'):
             self.__dict__[key] = val
         elif inspect.ismodule(val):
-            self.put(key, val) # importing a sub module
+            self.put(key, val) # importing a script as sub module of Env
         else:
             raise AttributeError("Dont set Attributes on Env")
 

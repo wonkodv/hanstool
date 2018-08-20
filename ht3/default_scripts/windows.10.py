@@ -16,38 +16,6 @@ if CHECK.os.win:
     if sysnative.exists():
         Env['PATH'].append(sysnative)
 
-    def _complete_windowhandle(s):
-        @cache_for(5)
-        def all_windows():
-
-            return sorted([w.title for w in Window.get_desktop_window()]+[w.class_name for w in Window.get_desktop_window()] , key=lambda s:s.lower())
-        return filter_completions_i(s, ("_MOUSE_POS", "_MOUSE_POS_MAIN", "_WAIT_FOREGROUND", "_FOREGROUND"), all_windows())
-
-    def _convert_windowhandle(s):
-        if s == "_MOUSE_POS_MAIN":
-            w = get_window_under_cursor(main=True)
-        elif s == "_MOUSE_POS":
-            w = get_window_under_cursor(main=False)
-        elif s == '_FOREGROUND':
-            w = Window.foreground()
-        elif s == '_WAIT_FOREGROUND':
-            w = org = Window.foreground()
-            while w == org:
-                sleep(0.1)
-                w = Window.foreground()
-        else:
-            w = Window.find(s)
-
-        if w:
-            return w
-        raise ValueError("No window",s)
-
-    WindowHandle = Env['WindowHandle'] = args.Param(
-        convert=_convert_windowhandle,
-        complete=_complete_windowhandle,
-        doc="Window Handle"
-    )
-
     @Env
     @cmd(name='o')
     def shellexecute(s:args.Union(args.Path,args.Executable)):
@@ -85,51 +53,59 @@ if CHECK.os.win:
 
     if CHECK.frontend('ht3.gui'):
         import ht3.gui
+
+        def taskbar_window():
+            w = Window.TOP.find(class_name='Shell_TrayWnd')
+            w = w.find(class_name='ReBarWindow32')
+            w = w.find(class_name='ToolbarWindow32', title='hanstool')
+            return w
+
         @Env
         @cmd
         def PlaceOverTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
+            w = taskbar_window()
+            r = w.rect
 
             @ht3.gui.interact(False)
             def doit(GUI):
-                h = GetTaskBarHandle()
-                if h:
-                    r = GetWindowRect(h)
-                    ht3.gui.cmd_win_set_rect(*r)
-                    Env.log("Set window Rect" + repr(r))
+                ht3.gui.cmd_win_set_rect(*r)
+                Env.log("Set window Rect" + repr(r))
             doit()
 
         @Env
         @cmd
         def DockInTaskbar():
             """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
+            w = taskbar_window()
+            r = w.rect
+
             @ht3.gui.interact(False)
             def foo(GUI):
-                h = GetTaskBarHandle()
-                if not h:
-                    return
                 c = GUI.cmd_win.window.winfo_id()
-                left, top, width, height = GetWindowRect(h)
-                ht3.gui.cmd_win_set_rect(0, 0, width, height)
+                ht3.gui.cmd_win_set_rect(0, 0, r.width, r.height)
 
                 def to_front(*args):
                     ht3.gui.cmd_win_to_front()
 
-                # Hack so after docking, the windows isnt moved arround.
+                # Hack so after docking, the windows isn't moved arround.
                 GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
                 GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
                 GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)
                 GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
 
-                SetParent(c, h)
-            foo()
+                return c
+
+            c = foo()
+            c = Window(c)
+            c.parent = w
 
     @cmd
-    def get_command_line_from_hwnd(hwnd:WindowHandle):
-        show(command_line_from_hwnd(hwnd))
+    def get_command_line_from_hwnd(w:Window):
+        show(command_line_from_hwnd(w))
 
-    def command_line_from_hwnd(hwnd):
-        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format( hwnd.process_id),
+    def command_line_from_wnd(w):
+        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format( w.process_id),
                 errors="backslashreplace",
         )
         lines = [ l for l in o.split("\n") if l ]
@@ -141,59 +117,42 @@ if CHECK.os.win:
         return Env._complete_script_names(s)
 
     @cmd(apply_default_param_anotations=True)
-    def command_from_window(script:_complete_script_names, hwnd:WindowHandle="_MOUSE_POS_MAIN", name=None):
-        cmdline = command_line_from_hwnd(hwnd)
+    def command_from_window(script:_complete_script_names, wnd:Window="_MOUSE_POS_MAIN", name=None):
+        cmdline = command_line_from_wnd(wnd)
         if name is None:
-            name = hwnd.text
+            name = hwnd.title
             name = name.lower()
             name = re.sub("[^a-z_0-9]","",name)
         Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
 
     @cmd(apply_default_param_anotations=True)
-    def analyze_windows(w:WindowHandle="_MOUSE_POS"):
-        arr = []
+    def analyze_windows(w:Window="_MOUSE_POS"):
+        msg = []
+        code = []
         while(w):
-            clas = w.class_name
-            title = w.text
-            rect = w.rect
-            arr.append("{0:6X}\t{1:20s}\t'{2:20s}'\t{3: 4} {4: 4} {5: 4} {6: 4}".format(w, clas, title, *rect))
-            arr.append("    w=Window.find(cls={}, title={})\n    w.set_pos(left={}, top={}, width={}, height={})".format(repr(clas), repr(title), *rect))
-
+            r = w.rect
+            msg.append(f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}")
+            if w.parent:
+                p = 'w'
+            else:
+                p = 'Window.TOP'
+            code.insert(0,f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
             w = w.parent
-        show("\n".join(arr))
-
-    def get_window_under_cursor(main=False):
-        p = get_mouse_pos()
-        w = Window.from_point(p)
-        if main:
-            p = w
-            while p:
-                w = p
-                p = w.parent
-        return w
+        show("\n".join(msg+code))
 
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
 
-    _privatewnd = None
     @cmd(attrs={"HotKey":"SCROLL"})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
-        global _privatewnd
-        if not _privatewnd:
-            for w in Window.get_desktop_window():
-                if "Firefox (Private Browsing)" in w.text:
-                    _privatewnd = w
-                    break
-        assert _privatewnd
+        w = Window.TOP.search_by_title("Firefox \(Private Browsing\)$")
 
-        if _privatewnd.visible:
-            _privatewnd.hide()
+        if w.visible:
+            w.hide()
         else:
-            _privatewnd.show()
-            _privatewnd.to_front()
-
-
+            w.show()
+            w.to_front()
 
     @cmd
     def tmp(name=None):
