@@ -27,6 +27,8 @@ class Window:
     def __init__(self, hwnd):
         if isinstance(hwnd, Window):
             hwnd = hwnd.hwnd
+        if not isinstance(hwnd, int):
+            raise TypeError("expected Int", hwnd)
         self.hwnd=hwnd
 
     @classmethod
@@ -127,13 +129,14 @@ class Window:
         text = (c_wchar * 1024)()
         ctypes.windll.user32.GetWindowTextW(self.hwnd, text, len(text))
         return text.value
-    title = text
 
     @text.setter
     def text(self, text):
         """Set Text or Title of the Window."""
         if not ctypes.windll.user32.SetWindowTextW(self.hwnd, text):
             raise ctypes.WinError()
+
+    title = text
 
     @property
     def thread_id(self):
@@ -210,7 +213,7 @@ class Window:
         OWNER         =  4,
     )
 
-    def _GetWindow(hwnd, cmd):
+    def _GetWindow(self, cmd):
         """ Get a relative Window."""
         cmd = self._getwindow_command.get(cmd, cmd)
         return ctypes.windll.user32.GetWindow(self.hwnd, cmd)
@@ -334,6 +337,8 @@ class Window:
 
         if spec is ...:
             w = ctypes.windll.user32.FindWindowExW(self.hwnd, after.hwnd, class_name, title)
+            if not w:
+                raise KeyError("No Window with title and class", self, class_name, title)
         else:
             if class_name or title:
                 raise TypeError("spec and tile or class_name passed")
@@ -342,7 +347,7 @@ class Window:
             if not w:
                 w = ctypes.windll.user32.FindWindowExW(self.hwnd, after.hwnd, None, spec)
             if not w:
-                raise KeyError("No Window with title or class", spec)
+                raise KeyError("No Window with title or class", self, spec)
         return type(self)(w)
 
     def search_by_title(self, regex):
@@ -372,7 +377,7 @@ class Window:
 
     def __repr__(self):
         if self:
-            return "Window(hwnd={self:#X}, text={self.title}, class_name={self.class_name})".format(self=self)
+            return "Window(hwnd={self:#X}, class_name={self.class_name!r}, text={self.title!r})".format(self=self)
         else:
             return "Window(hwnd={self.hwnd:#X}, INVALID)".format(self=self)
 
