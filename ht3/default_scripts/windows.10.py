@@ -170,3 +170,56 @@ if CHECK.os.win:
             except FileExistsError:
                 pass
         execute_disconnected('explorer {}'.format(shellescape(str(p))))
+
+    @Env
+    def get_uptime():
+        uptime = GetTickCount()
+        boottime = format(datetime.datetime.now()-uptime, "%H:%M")
+        uptime = str(uptime).partition('.')[0]
+        return boottime, uptime
+
+
+    @Env.updateable
+    def tna_text():
+        """Text to overwrite on the TNA.
+
+        Multiline Text needs a thicker Taskbar to work.
+        """
+        boot_time, up_time = get_uptime()
+        now = datetime.datetime.now()
+        return (
+            f"{now:%H:%M} KW{now:%V}\n"
+            f"{now:%Y-%m-%d}\n"
+            f"Boot {boot_time}"
+        )
+
+    @cmd
+    def tna_text_updater():
+        """ Overwrite the text in the Clock of the TNA with `tna_text()`.
+
+        Wind the Clock Window on the TaskBar and draw over it every full minute
+        """
+        @threaded
+        def tna_updater_thread():
+            Env['tna_updater_thread'] = threading.current_thread()
+            while Env['tna_updater_thread'] is threading.current_thread():
+                w = Window.TOP.find(class_name='Shell_TrayWnd').find(class_name='TrayNotifyWnd').find(class_name='TrayClockWClass')
+                dc = ctypes.windll.user32.GetDC(w.hwnd)
+
+                text = tna_text()
+                ctypes.windll.gdi32.SetBkColor(dc, 0xC8D0D4)
+                y = 0
+
+                for i in range(10):
+                    for i,s in enumerate(text.split("\n")):
+                        ctypes.windll.gdi32.TextOutW(dc, 3, 16*i,  s, len(s))
+                    sleep(0.1) # Draw again in case the  Clock Window redraw happend late
+
+                ctypes.windll.user32.ReleaseDC(w.hwnd, dc)
+
+                now = datetime.datetime.now()
+                sleep(60-now.second) # update on the full minute
+
+    @cmd
+    def tna_text_updater_stop():
+            Env['tna_updater_thread'] = None
