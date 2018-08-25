@@ -28,6 +28,7 @@ def nvim(server="HT3", env={}, cwd=None):
             break
     nvim = neovim.attach("socket", path=server)
     nvim.PROCESS = p
+    nvim.command("call rpcnotify(0, 'Gui', 'Foreground')")
     return nvim
 
 @Env.updateable
@@ -59,17 +60,26 @@ def exception_trace(i:int=-1):
         file = os.path.abspath(file)
         line = t.tb_lineno
         name = t.tb_next.tb_frame.f_code.co_name
-        args = inspect.formatargvalues(*inspect.getargvalues(t.tb_next.tb_frame))
+        args = inspect.getargvalues(t.tb_next.tb_frame)
+
+        def  formatvalue (value):
+            try:
+                value = "=" + repr(value)
+            except:
+                value = "=<error in repr of "+repr(type(value))+">"
+        args = inspect.formatargvalues(*args)
+
         if os.path.exists(file):
             s += "{0}:{1:d}: {2}{3}".format(file, line, name, args)+"\n"
         t = t.tb_next
 
     file = t.tb_frame.f_code.co_filename
     file = os.path.abspath(file)
-    line = t.tb_lineno
-    s += "{0}:{1:d}: {2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
-    if isinstance(e, SyntaxError):
-        s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
+    if os.path.exists(file):
+        line = t.tb_lineno
+        s += "{0}:{1:d}: {2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
+        if isinstance(e, SyntaxError):
+            s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
     show(s)
     with tempfile.NamedTemporaryFile('wb', delete=False) as f:
         f.write(s.encode("UTF-8"))

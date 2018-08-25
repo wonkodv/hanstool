@@ -80,7 +80,7 @@ if CHECK.os.win:
             w = taskbar_window()
             r = w.rect
 
-            @ht3.gui.interact(False)
+            @ht3.gui.interact(True)
             def foo(GUI):
                 c = GUI.cmd_win.window.winfo_id()
                 ht3.gui.cmd_win_set_rect(0, 0, r.width, r.height)
@@ -128,7 +128,9 @@ if CHECK.os.win:
     @cmd(apply_default_param_anotations=True)
     def analyze_windows(w:Window="_MOUSE_POS"):
         msg = []
-        code = []
+        long = []
+        short = []
+        Env['w'] = w
         while(w):
             r = w.rect
             msg.append(f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}")
@@ -136,9 +138,13 @@ if CHECK.os.win:
                 p = 'w'
             else:
                 p = 'Window.TOP'
-            code.insert(0,f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
+            long.append(    f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n"
+                            f"    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
+            short.append(f".find(class_name={w.class_name!r}, title={w.title!r})")
             w = w.parent
-        show("\n".join(msg+code))
+        show("\n".join(msg))
+        show("\n".join(reversed(long)))
+        show("\n    w = Window.TOP"+"".join(reversed(short)))
 
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')

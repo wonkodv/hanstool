@@ -26,7 +26,7 @@ def txt():
 def timer(t:args.Time, event:str="Done"):
     """ timer timer """
     @threaded
-    def _():
+    def timer_thread():
         sleep(t)
         option_dialog("Timer", "Timer up ({0})".format(event),"OK")
 
