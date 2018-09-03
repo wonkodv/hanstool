@@ -53,8 +53,5 @@ class Test_check(unittest.TestCase):
 
     def test_py(self):
         assert CHECK.py > '3'
-        assert CHECK.py >= '3.3'
-        assert CHECK.py('3.4') or CHECK.py('3.5') or CHECK.py('3.6')
-        assert CHECK.py == '3.4' or CHECK.py == '3.5' or CHECK.py == '3.6'
-        assert CHECK.py < '4'
-        assert CHECK.py <= '3.6'
+        assert CHECK.py >= '3.5'
+        assert CHECK.py < '5'
