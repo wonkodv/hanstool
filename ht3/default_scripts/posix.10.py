@@ -91,3 +91,11 @@ if CHECK.os.posix:
         execute_disconnected('xdg-open', s)
 
     print("\x1b]2;HansTool\x07", end="") # Set Title of Terminal Window
+
+    if CHECK.frontend('ht3.gui'):
+        import ht3.gui
+
+        @Env
+        @cmd
+        def MoveHtWindow():
+            pass # there is no proper Place

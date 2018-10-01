@@ -49,8 +49,11 @@ def log_alert(message):
     elif isinstance(o, int):
         o = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
     elif inspect.isfunction(o):
-        s, l = inspect.getsourcelines(o)
-        o = "".join("{0:>6d} {1}".format(n,s) for (n,s) in zip(itertools.count(l),s))
+        try:
+            s, l = inspect.getsourcelines(o)
+            o = "".join("{0:>6d} {1}".format(n,s) for (n,s) in zip(itertools.count(l),s))
+        except OSError:
+            o = repr(o)
     else:
         o = pprint.pformat(o)
 

@@ -62,7 +62,7 @@ if CHECK.os.win:
 
         @Env
         @cmd
-        def PlaceOverTaskbar():
+        def MoveHtWindow():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             w = taskbar_window()
             r = w.rect
@@ -152,7 +152,8 @@ if CHECK.os.win:
     @cmd(attrs={"HotKey":"SCROLL"})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
-        w = Window.TOP.search_by_title("Firefox \(Private Browsing\)$")
+
+        w = Window.TOP.search_by_title(r"Firefox \(Private Browsing\)$")
 
         if w.visible:
             w.hide()
