@@ -100,6 +100,9 @@ if CHECK.os.win:
             c = Window(c)
             c.parent = w
 
+        ht3.gui.cmd_win_hide_frame()
+
+
     @cmd
     def get_command_line_from_hwnd(w:Window):
         show(command_line_from_hwnd(w))
@@ -146,6 +149,7 @@ if CHECK.os.win:
         show("\n".join(reversed(long)))
         show("\n    w = Window.TOP"+"".join(reversed(short)))
 
+    @cmd
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
 
@@ -155,6 +159,8 @@ if CHECK.os.win:
         w = Window.TOP.search_by_title("Firefox \(Private Browsing\)$")
 
         if w.visible:
+            if w == Window.get_foreground_window():
+                fake("ALT+TAB")
             w.hide()
         else:
             w.show()

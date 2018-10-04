@@ -35,13 +35,13 @@ class UserInterface():
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.overrideredirect(True)
         self.root.title("root")
         self.log_win = self.MessageWindow(self)
         self.cmd_win = self.CommandWindow(self)
         self.root.after(100, self.cmd_win.to_front)
         self.root.after(400, self.cmd_win.to_front)
         self._thread = threading.current_thread()
+
         if Env.get('DEBUG', False):
             self.__getattribute__ = self._getattr
 
@@ -81,7 +81,6 @@ class UserInterface():
             self.master = ui.root
             #self.window=tk.Toplevel(self.master)
             self.window.title("Command Window")
-            self.window.overrideredirect(True)
             self.window.geometry("100x20+100+20")
 
             self.window.bind("<ButtonPress-3>",self._start_resize_move)
@@ -246,10 +245,11 @@ class UserInterface():
         def _set_text(self, text):
             self.text.delete(0, tk.END)
             self.text.insert(0, text)
-            def sel():
-                self.text.selection_clear()
-                self.text.xview(len(text)-1)
-            self.window.after(0, sel)
+            if text:
+                def sel():
+                    self.text.selection_clear()
+                    self.text.xview(len(text)-1)
+                self.window.after(0, sel)
 
         def _delete_word(self, event):
             pass
@@ -536,6 +536,10 @@ def log_win_to_front(GUI):
 @interact(True)
 def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
+
+@interact(False)
+def cmd_win_hide_frame(GUI):
+    GUI.cmd_win.window.overrideredirect(True)
 
 _globals = globals()
 __all__ = tuple(n for n in _globals if not n in _excluded)
