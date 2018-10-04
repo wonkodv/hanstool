@@ -71,10 +71,8 @@ class UserInterface():
         except Exception as e:
             ht3.lib.EXCEPTION_HOOK(exception=e)
             return False
-
-        cmd()
+        lib.start_thread(cmd, name=f"ht3.gui.ComandRunner({cmd.invocation})")
         return True
-
 
     class CommandWindow():
         def __init__(self, ui):
@@ -377,7 +375,7 @@ class UserInterface():
 # Frontend API
 
 
-q = queue.Queue()
+gui_action_q = queue.Queue()
 tl = threading.local()
 
 Interaction = collections.namedtuple('Interaction','event,function,args,kwargs,result')
@@ -393,7 +391,7 @@ def interact(wait):
                 e = threading.Event()
                 r = []
                 i = Interaction(e,f,args,kwargs,r)
-                q.put(i)
+                gui_action_q.put(i)
                 e.wait()
                 return r[0]
         return wrapper
@@ -406,7 +404,7 @@ def interact(wait):
                 return f(*args, **kwargs)
             except AttributeError:
                 i = Interaction(None,f,args,kwargs,None)
-                q.put_nowait(i)
+                gui_action_q.put_nowait(i)
         return wrapper
     if wait:
         return decorator_wait
@@ -431,7 +429,7 @@ def loop():
         def _drain_q():
             try:
                 while True:
-                    i = q.get_nowait()
+                    i = gui_action_q.get_nowait()
                     r = i.function(*i.args, GUI=gui, **i.kwargs)
                     if i.result is not None:
                         i.result.append(r)
