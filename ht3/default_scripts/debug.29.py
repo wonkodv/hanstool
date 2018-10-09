@@ -63,7 +63,7 @@ print("HansTool {}".format(version()))
 
 @cmd
 def threadlist():
-    show("\n".join("{0.ident: 10d} {0.name:>10s}".format(t) for t in threading.enumerate()))
+    show("\n".join("{0.ident: 10d} {0.name}".format(t) for t in threading.enumerate()))
 
 if Env.get('MAKELEVEL',False):
     @EXCEPTION_HOOK.register

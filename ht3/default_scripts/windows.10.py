@@ -156,7 +156,7 @@ if CHECK.os.win:
     @cmd(attrs={"HotKey":"SCROLL"})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
-        w = Window.TOP.search_by_title("Firefox \(Private Browsing\)$")
+        w = Window.TOP.search_by_title(r"Firefox \(Private Browsing\)$")
 
         if w.visible:
             if w == Window.get_foreground_window():
