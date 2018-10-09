@@ -72,7 +72,7 @@ def edit_command(c:args.Union(args.Command, args.Python)):
 
 @Env
 def _complete_script_names(s):
-    return reversed(list(filter_completions(s, (p.name for p in SCRIPTS))))
+    return reversed(list(filter_completions(s, (m.__name__ for m in SCRIPTS))))
 @Env
 @cmd(name="++")
 def add_command(script:_complete_script_names, name=None, text=None):
@@ -88,7 +88,7 @@ def add_command(script:_complete_script_names, name=None, text=None):
         5. you should restart for the new command to be activated.
 
     """
-    name_path = {p.name: p for p in SCRIPTS}
+    name_path = {m.__name__ for m in SCRIPTS}
 
     try:
         s = name_path[script]
@@ -96,10 +96,9 @@ def add_command(script:_complete_script_names, name=None, text=None):
         if not script.endswith('.py'):
             raise ValueError('The script must be the name of a loaded script or'
                 ' a valid name for a new one')
-        s = SCRIPTS[-1].parent
+        s = Path(SCRIPTS[-1].__file__).parent
         if s.name == 'default_scripts':
-            s = expanduser('~/.config/ht3')
-            s = pathlib.Path(s)
+            s = pathlib.Path('~/.config/ht3').expanduser()
             if not s.exists():
                 show("Creating Directory "+str(s))
                 s.mkdir(parents=True)
@@ -192,46 +191,14 @@ def restart(*more_args):
     else:
         args.append(sys.executable)
     args += ['-m','ht3']
+    args += sys.argv[1:]
     if not '_RESTARTED' in Env.dict:
-        args += ['-e', '_RESTARTED', '1']
-
-    it = iter(sys.argv[1:])
-    for a in it:
-        if a in ['-f', '-s']:
-            args += [a, next(it)]
-        elif a == '-e':
-            k = next(it)
-            v = next(it)
-            if v == '_RESTARTED':
-                v=str(int(v)+1)
-            args += [a, k, v]
-        elif a in ['-r', '-l']:
-            args += [a]
-        elif a == '-x':
-            next(it) # not doing that again
-        elif a == '-c':
-            next(it) # not doing that again
-        else:
-            assert False, "Unknown arg "+a+" in restart"
+        args += ['_RESTARTED=0']
+    args += ['_RESTARTED+=1']
 
     it = iter(more_args)
-    for a in it:
-        if a in ['-f', '-s', '-x']:
-            args += [a, next(it)]
-        elif a == '-e':
-            k = next(it)
-            v = next(it)
-            if v == '_RESTARTED':
-                v=str(int(v)+1)
-            args += [a, k, v]
-        elif a == '-r':
-            args += [a]
-        else:
-            raise ValueError("Unsupported Argument", a)
 
-    print ("\n==================== RESTART ===================\n")
-    #print not show since gui disappears
-
+    show ("\n==================== RESTART ===================\n")
     os.execv(sys.executable, args)
 
 if CHECK.frontend('ht3.gui'):

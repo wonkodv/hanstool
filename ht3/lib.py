@@ -14,6 +14,19 @@ EXCEPTION_HOOK = ht3.hook.Hook("exception")
 DEBUG_HOOK = ht3.hook.Hook("message")
 ALERT_HOOK = ht3.hook.Hook("message")
 
+@EXCEPTION_HOOK.register
+def _exception_hook_fallback(exception):
+    """ If no other handlers are installed, raise Exc. """
+    if len(EXCEPTION_HOOK.callbacks) == 1:
+        raise exception
+
+
+@ALERT_HOOK.register
+def _alert_hook_fallback(message):
+    """ If no other handlers are installed, print. """
+    if len(EXCEPTION_HOOK.callbacks) == 1:
+        print(message)
+
 
 FRONTENDS = []
 FRONTEND_MODULES = []
@@ -61,8 +74,7 @@ def run_frontends():
 
     frontends = tuple(FRONTEND_MODULES) # avoid concurrency if modules load modules
 
-    l = len(frontends)
-    if l == 0:
+    if not frontends:
         raise ValueError("No Frontend Loaded yet")
 
     threads = []

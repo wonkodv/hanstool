@@ -50,7 +50,7 @@ class EnvTest(unittest.TestCase):
     def test_persistent(self):
         e = _Env_class()
         e['key'] = 1
-        e.put_persistent('pkey', 2)
+        e.put_static('pkey', 2)
 
         e._reload()
 
