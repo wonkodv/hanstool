@@ -24,4 +24,4 @@ There is also an integration test using `test_scripts` which defines some
 commands which can be run with the `test` command to test that they were registered
 in the expected way.
 
-    python -m ht3 -s ht3/test_scripts -x test
+    python -m ht3 -s ht3/test_scripts -c test

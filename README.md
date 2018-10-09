@@ -263,46 +263,66 @@ Any packet can be a HT-Fronend. The user chooses which one(s) to load on the com
 *   [Awesome WM Client](./docs/AWESOME.md): A piece of lua that runs `ht3.client`
 *   more are easily implemented, see [Frontends](./docs/FRONTENDS.md)
 
-Command Line
+Command Line Arguments and Startup Behavior
 -----------
 
-You can run ht3 with `python -m ht3`. If installed with `pip`, a script named `ht` is
-added to your `PATH` to do that.
+The initialization and actions of the ht3 can be programmed on the commandline and/or in
+the scripts.  Each argument is either a shorthand that looks like an option, or executed as a python
+statement.
 
-You can pass any number of the following arguments:
-*   `--help`        Display this text
-*   `-e KEY VALUE`  add a variable to the environment
-*   `-s FILE`       Add a script
-*   `-s PATH`       Add a folder full of scripts. Scripts are sorted
-*   `-l`            Sort and load scripts that were added (or the default scripts (see below))
-*   `-f FRONTEND`   load a frontend.
-*   `-x COMMAND`    execute a command
-*   `-r`            (run) Start all frontends loaded so far.
+Initialization Shorthands (and the code they represent):
 
-Arguments are processed in the order they are passed. You should propably put
-them in the order they appear above to put things in the environment, then load
-scripts, then load frontends, then execute some commands and finally start the
-frontends. When processing `-r`, all the frontends that were loaded by previous
-`-f` are started.  Once one interface exits, all others are stopped as well and
-the argument after `-r` is processed.  Multiple `-r` will start the frontends
-multiple times (why would you?).
+    -s SCRIPT   Add one script (not executed yet)       add_scripts(SCRIPT)
+    -s FOLDER   Add all *.py files in FOLDER            add_script(FOLDER)
+    -l          Sort and Load all added scripts         load_scripts()
+    -f FRONTEND Load a frontend (don't start it yet)    load_frontend(FRONTEND)
+    -e KEY VAL  Define Static (survives reload)         put_static(KEY, VAL)
+    -d          add ht3/default_script.py and load all scripts
 
-After processing all passed arguments, the following default actions happen:
+Action Shorthands:
 
-*   If no scripts were added,
-    *   If there is an `Env.SCRIPTS` the scripts from there are added (
-        multiple paths are seperated by `:`)
-    *   else, the `default_scripts` are added and, if exists, the scripts from
-        `~/.config/ht3`
-*   All added, not yet loaded scripts are loaded
-*   If one or more frontends were loaded with `-f` but not run with `-r`,
-    they are run.
-*   If no frontend was loaded with `-f` and no command executed with `-x`, then
-    the `ht3.cli` frontend is loaded and run.
+    -r          Run all loaded Frontends                run_frontends()
+    -c COMMAND  Run a command                           run_command(COMMAD)
+    -x CODE     Execute code
 
-It should usually be enough to just call `ht` without arguments, or with `-f`.
-To do a command immediately, you should call `ht -l -x cmd` to load the default scripts before
-executing the cmd
+Before an Action Shorthand, all added scripts are loaded, `default_script` if none was added. After
+an Action shorthand, no default actions are performed, unless an initialization command follows.
+After Initialization, the following default actions are executed:
+
+    1. ht3/default_script.py is added if no scripts were added
+    2. all added but not loaded scripts are loaded
+    3. if no frontend was added, ht3.cli is added
+    4. frontends are run
+
+Note: the only difference of executing code with -x or without is, that -x counts as an action so
+there will be no default actions.
+
+Frontends are started with -r or `run_frontends`. Execution then stops until the first frontend
+exits which stops all other frontends. Then further commandline arguments are executed and
+possibly, default actions start the frontends again. Just forget its there.
+
+Normal invocations:
+
+*   `ht`:   Load `default_script.py` and the cli
+*   `ht -f ht3.gui -f ht3.hotkey -f ht3.daemon` Load `default_script.py` and some more frontends
+*   `ht -s config.py` Load `config.py` which can then do all kinds of things.
+*   `ht -c some_command` Load `default_script.py` (Default Actions 1 and 2 before Action Shorthands)
+    and run the command `some_command`. Then quit.
+
+Initialization Scripts
+----------------------
+
+If you do not want to configure everything on the commandline, a script can do the initialization,
+by passing `-s initscript.py` to `ht` and calling `add_scripts` and `load_frontend` in the script:
+
+It is probably a good idea to define `_SCRIPT_RELOAD = False` in module scope, so the reload command
+does not add the scripts/frontends again.
+
+By default, `ht3\default_script.py` is used as init script. It loads scripts from:
+
+    - `ht3/default_scripts/`
+    - `~/.config/ht3/`
+    - all paths from `HT3_SCRIPTS` environment variable
 
 Configure Things
 ---------------
@@ -322,17 +342,16 @@ that are called until the first function returns a useful result.
 *   `HISTORY`: a path to a file that contains the latest commands.
 *   `HISTORY_LIMIT`: the number of entries to keep when loading the file
 *   `DEBUG`: set to true to do post mortem pdb debugging. and more logging
-*   `SCRIPTS` If no script is passed on the command line, this variable can specify
-     scripts, seperated by `:` that will be loaded.
 
-String variables can be configured via environment, but require a `HT3_` prefix, for
-example in `.bashrc`:
+The script `ht3\default_scripts\environment.3.py` loads all environment Variables that start with
+`HT3_` into the env, without the prefix.
 
     export HT3_HISTORY=~/.config/ht3/readline_history
     export HT3_DEBUG=1
     export HT3_SCRIPTS=/opt/imported/scripts:~/__config/ht3
 
-Other python objects and strings can be configured in scripts, or on the commandline with -x.
+Thos will allways be string variables. Other python objects can be configured in scripts, or as
+evaluated code on the commandline.
 
 Tipps
 -----

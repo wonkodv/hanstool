@@ -28,7 +28,6 @@ Initialization Shorthands (and the code they represent):
     -f FRONTEND Load a frontend (don't start it yet)    load_frontend(FRONTEND)
     -e KEY VAL  Define Static (survives reload)         put_static(KEY, VAL)
     -d          add ht3/default_script.py and load all scripts
-    CODE        Execute Code in Env (the functins listed above are accessible too)
 
 Action Shorthands:
     -r          Run all loaded Frontends                run_frontends()
