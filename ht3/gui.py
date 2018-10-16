@@ -35,7 +35,6 @@ class UserInterface():
 
     def __init__(self):
         self.root = tk.Tk()
-        self.root.overrideredirect(True)
         self.root.title("root")
         self.log_win = self.MessageWindow(self)
         self.cmd_win = self.CommandWindow(self)
@@ -81,9 +80,7 @@ class UserInterface():
             self.ui = ui
             self.window = ui.root
             self.master = ui.root
-            #self.window=tk.Toplevel(self.master)
             self.window.title("Command Window")
-            self.window.overrideredirect(True)
             self.window.geometry("100x20+100+20")
 
             self.window.bind("<ButtonPress-3>",self._start_resize_move)
@@ -97,6 +94,7 @@ class UserInterface():
             self.text = tk.Entry(self.window, textvariable=self.cmd)
             self.text.pack(fill='both', expand=1)
             self.text.bind("<KeyPress-Return>",self._submit)
+            self.text.bind("<KeyPress-KP_Enter>",self._submit)
             self.text.bind("<Control-KeyPress-W>", self._delete_word) #TODO
             self.text.bind("<Control-KeyPress-U>", self._delete_text) #TODO
             self.text.bind("<KeyPress-Escape>", self._delete_text)
@@ -144,9 +142,9 @@ class UserInterface():
             self._update_color()
 
         def to_front(self):
+            self.text.select_range(0, 'end')
             self.window.deiconify()
             self.text.focus_force()
-            self.text.select_range(0, 'end')
 
         def stay_on_top(self):
             self.window.wm_attributes('-topmost', 1)
