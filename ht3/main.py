@@ -43,6 +43,10 @@ After Initialization, the following default actions are executed:
     4. frontends are run
 """
 
+
+class ArgumentError(ValueError):
+    pass
+
 def load_default_script():
     if not scripts.SCRIPTS:
         if not scripts.ADDED_SCRIPTS:
@@ -52,19 +56,16 @@ def load_default_script():
     while scripts.ADDED_SCRIPTS:
         load_scripts()
 
-def _run_command(s):
-    load_default_script()
-    run_command(s)
-
 POSSIBLE_ARGUMENTS = [
-    [  '-s',  '--add-script',      add_scripts,          1,  0],
-    [  '-l',  '--load-scripts',    load_scripts,         0,  0],
-    [  '-f',  '--load-frontend',   load_frontend,        1,  0],
-    [  '-r',  '--run-frontends',   run_frontends,        0,  1],
-    [  '-d',  '--default-script',  load_default_script,  0,  0],
-    [  '-e',  '--set-env',         Env.put_static,       2,  0],
-    [  '-c',  '--command',         _run_command,         1,  1],
-    [  '-x',  '--execute',         "code",               1,  1],
+    #   short    Long              Function          ParamNo Done/Action
+    [  '-s',  '--add-script',      add_scripts,          1,  False  ],
+    [  '-l',  '--load-scripts',    load_scripts,         0,  False  ],
+    [  '-f',  '--load-frontend',   load_frontend,        1,  False  ],
+    [  '-r',  '--run-frontends',   run_frontends,        0,  True   ],
+    [  '-d',  '--default-script',  load_default_script,  0,  False  ],
+    [  '-e',  '--set-env',         Env.put_static,       2,  False  ],
+    [  '-c',  '--command',         run_command,          1,  True   ],
+    [  '-x',  '--execute',         "code",               1,  True   ],
 ]
 
 def parse(args):
@@ -74,7 +75,7 @@ def parse(args):
             if a == short or a == long:
                 if params:
                     try:
-                        p = [next(arg_iter) for _ in range(params)]
+                        p = tuple(next(arg_iter) for _ in range(params))
                     except StopIteration:
                         raise ArgumentError(f"Expecting a parameter", a)
                 else:
@@ -82,11 +83,18 @@ def parse(args):
                 yield function, p, done
                 break
         else:
-            c = compile(a, "<command line>", "exec")
-            yield 'code', [c], False
+            yield 'code', (a,), False
+
+def precompile(args):
+    for i, (f, p, d) in enumerate(args):
+        if f == 'code':
+            c, = p
+            c = compile(c, f"<command line {i}>", "exec")
+            p = (c,)
+        yield f, p, d
 
 def main(args):
-    args = parse(args)
+    args = precompile(parse(args))
     try:
         args = list(args) # consume to get errors early
     except ArgumentError as e:
@@ -101,6 +109,8 @@ def main(args):
             glob[f.__name__] = f
         done = False
         for f, a, done in args:
+            if done:
+                load_default_script()
             if f == 'code':
                 code, = a
                 exec(code, glob, Env.dict)
