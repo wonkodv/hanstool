@@ -18,9 +18,12 @@ def nvim(server="HT3", env={}, cwd=None):
     more_env = { "NVIM_LISTEN_ADDRESS":server, }
     more_env.update(env)
     if not s.exists():
-        p = Env.get('NVIM','nvim')
+        if CHECK.is_cli_frontend:
+            p = Env.get('NVIM',['nvim'])
+        else:
+            p = Env.get('NVIMGUI',['nvim-qt'])
         Env.log("starting Neovim: {} {}".format(more_env, p))
-        p = execute_disconnected(p, more_env=more_env)
+        p = execute_disconnected(*p, more_env=more_env)
     for i in range(500):
         p = None
         sleep(0.01)
