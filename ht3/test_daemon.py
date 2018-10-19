@@ -7,7 +7,7 @@ import ht3.daemon
 
 from ht3.env import Env
 from ht3.client import command
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 class TestDaemon(unittest.TestCase):
 
@@ -19,6 +19,7 @@ class TestDaemon(unittest.TestCase):
         socket_info_server.return_value = [socket.AF_INET, ('localhost', 42267)]
         run_command.return_value = 4267
 
+        Env['log'] = Mock()
 
         ht3.daemon.start()
         t = threading.Thread(target=ht3.daemon.loop)

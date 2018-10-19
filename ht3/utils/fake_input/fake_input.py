@@ -70,8 +70,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     except the closing quote is allowed in the string. You can use
                     single or double quotes for text that contains the other quote.
     *   ``+Key``    Press Key. valid Keys are A-Z 0-9 SHIFT, CoNTroL, ...
-                    see ht3.keycodes.KEY_CODES or the hexadecimal key code
-                    for example 0x42 for B
+                    see ht3.utils.keycodes.*.KEY_CODES or the hexadecimal key code
+                    for example 0x42 ( for B on windows )
     *   ``-A``      Release A
     *   ``A``       Press, then release A
     *   ``Mod1+Mod2+Key``

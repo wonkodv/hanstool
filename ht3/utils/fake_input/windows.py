@@ -2,7 +2,7 @@
 
 import ctypes
 from ctypes.wintypes import POINT
-from ht3.keycodes import KEY_CODES
+from ht3.utils.keycodes.win32 import KEY_CODES
 import time
 
 
@@ -111,8 +111,9 @@ def key_up(vk, extended=False):
 
 def type_string(s, interval=0):
     if interval:
+        interval = float(interval)/1000
         def i():
-            time.sleep(float(interval)/1000)
+            time.sleep(interval)
     else:
         def i():
             pass

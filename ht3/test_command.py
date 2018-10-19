@@ -68,7 +68,7 @@ class TestCmd(unittest.TestCase):
         run_command('someCommand')
         assert X.name == 'someOtherCommand'
         assert X.parent.name == 'someCommand'
-        assert 'Finished' in repr(X)
+        assert 'result' in repr(X)
 
 
 class Test_get_command(unittest.TestCase):
