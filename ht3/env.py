@@ -27,9 +27,9 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         super().__init__("Env", _Env_class.__doc__) # init as Module
         self._finalized = True # stop attribute setting
 
-        for k in 'file','path','name','package':
+        for k in 'file','path','name','package': # make the Module - properties static
             k = '__{}__'.format(k)
-            self.put_persistent(k, getattr(self,k))
+            self.put_static(k, getattr(self,k))
 
     @property
     def __all__(self):
@@ -39,7 +39,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         self.dict.clear()
         self.dict.update(self.persistent_dict)
 
-    def put_persistent(self, key, val):
+    def put_static(self, key, val):
         """Put values into the dict that survives reload."""
         self.persistent_dict[key] = val
         self.dict[key] = val

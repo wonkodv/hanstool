@@ -11,6 +11,8 @@ class Test_frontends(unittest.TestCase):
         m.i = 0
         m.running = True
         def start():
+            pass
+        def loop():
             while m.running:
                 m.i += 1
 
@@ -18,7 +20,8 @@ class Test_frontends(unittest.TestCase):
             m.running = False
 
         m.__name__ = n
-        m.loop = start
+        m.start = start
+        m.loop = loop
         m.stop = stop
         return m
 
@@ -29,7 +32,6 @@ class Test_frontends(unittest.TestCase):
         fe2 = self.get_fe('fe2')
 
         fe3 = Mock()
-        fe3.stop = lambda:None
         fe3.loop = lambda:time.sleep(0.1)
         fe3.__name__ = 'fe3'
 

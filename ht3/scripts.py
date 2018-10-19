@@ -15,12 +15,12 @@ from . import lib
 SCRIPTS = []
 ADDED_SCRIPTS = []
 
-_SCRIPT_FILE_NAME = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
+_SCRIPT_FILE_NAME_RE = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
 
 def _script_module(path):
     name = path.stem
 
-    m = _SCRIPT_FILE_NAME.fullmatch(name)
+    m = _SCRIPT_FILE_NAME_RE.fullmatch(name)
     if m:
         name = m.group(1)
     else:
@@ -30,7 +30,7 @@ def _script_module(path):
 
 def _script_order_key(p):
     """get a key that sorts scripts"""
-    m = _SCRIPT_FILE_NAME.fullmatch(p.stem)
+    m = _SCRIPT_FILE_NAME_RE.fullmatch(p.stem)
     name = m.group(1)
     idx = m.group(3)
     if idx:
@@ -46,7 +46,8 @@ def add_scripts(path):
         for p in l:
             add_scripts(p)
     elif path.is_file():
-        ADDED_SCRIPTS.append(path)
+        if path not in ADDED_SCRIPTS:
+            ADDED_SCRIPTS.append(path)
     elif not path.exists():
         raise FileNotFoundError(path)
     else:
@@ -56,6 +57,8 @@ def load_scripts():
     """Load added Scripts, sorted d.5.py before c.20.py before b.py before a.101.py."""
 
     l = sorted(ADDED_SCRIPTS, key=_script_order_key)
+    if not l:
+        raise ValueError("No scripts added (or already loaded)")
     ADDED_SCRIPTS.clear()
     for path in l:
         name = _script_module(path)
@@ -65,18 +68,21 @@ def load_scripts():
         assert mod.__name__ == ename
         assert sys.modules[ename] is mod
         assert mod.__file__ == str(path)
-        SCRIPTS.append(path)
-        Env.put(name, mod)
-
+        SCRIPTS.append(mod)
+        if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
+            Env.put(name, mod)
 
 def reload_all():
-    ADDED_SCRIPTS.extend(SCRIPTS)
+    for mod in SCRIPTS:
+        if getattr(mod, '_SCRIPT_RELOAD', True):
+            ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
     SCRIPTS.clear()
     load_scripts()
 
 def check_all_compilable():
     r = True
-    for path in SCRIPTS:
+    for mod in SCRIPTS:
+        path = pathlib.Path(mod.__file__)
         with path.open("rt") as f:
             c = f.read()
         try:

@@ -16,8 +16,7 @@ Env['EXECUTABLE_W_ARGS_COMPLETE_HOOK'] = EXECUTABLE_W_ARGS_COMPLETE_HOOK
 def complete_executable_with_args(string):
     """Complete a executable with its args"""
 
-
-        #TODO deduplicate with ShellArgParser
+    #TODO deduplicate with ShellArgParser
 
     for quote in ['', '"', "'"]:
         try:

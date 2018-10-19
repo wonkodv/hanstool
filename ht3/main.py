@@ -4,94 +4,123 @@ main() is called from ht3.__main__"""
 
 import sys
 import os.path
+import shlex
+
+from collections import deque
+from os.path import expanduser
 
 from . import lib
+from .lib import load_frontend, run_frontends, execute_py_expression
 from .command import run_command
 from .env import Env
+from . import scripts
 from .scripts import load_scripts, add_scripts
+from .check import CHECK
 
+HELP= """The initialization and actions of the ht3 can be programmed on the commandline and/or in
+the scripts.  Each argument is either a shorthand that looks like an option, or executed as a python
+statement.
 
-HELP= """call ht with the following arguments:
-    -s SCRIPT   Add a script
-    -s FOLDER   Add several scripts
-    -l          Load all added unloaded scripts or default scripts
-    -f FRONTEND Load a frontend (dont start it yet)
-    -r          Run all loaded Frontends
-    -e VAR VAL  Set a Variable to a string value in Env
-    -x COMMAND  execute a command
-    -c CODE     execute python code in Env
+Initialization Shorthands (and the code they represent):
+    -s SCRIPT   Add one script (not executed yet)       add_scripts(SCRIPT)
+    -s FOLDER   Add all *.py files in FOLDER            add_script(FOLDER)
+    -l          Sort and Load all added scripts         load_scripts()
+    -f FRONTEND Load a frontend (don't start it yet)    load_frontend(FRONTEND)
+    -e KEY VAL  Define Static (survives reload)         put_static(KEY, VAL)
+    -d          add ht3/default_script.py and load all scripts
+
+Action Shorthands:
+    -r          Run all loaded Frontends                run_frontends()
+    -c COMMAND  Run a command                           run_command(COMMAD)
+    -x CODE     Execute code
+
+Before an Action Shorthand, all added scripts are loaded. After an Action shorthand, no default
+actions are performed, unless an initialization command follows.
+After Initialization, the following default actions are executed:
+    1. ht3/default_script.py is added if no scripts were added
+    2. all added but not loaded scripts are loaded
+    3. if no frontend was added, ht3.cli is added
+    4. frontends are run
 """
 
+
+class ArgumentError(ValueError):
+    pass
+
+def load_default_script():
+    if not scripts.SCRIPTS:
+        if not scripts.ADDED_SCRIPTS:
+            import pkg_resources
+            s = pkg_resources.resource_filename('ht3','default_script.py')
+            add_scripts(s)
+    while scripts.ADDED_SCRIPTS:
+        load_scripts()
+
+POSSIBLE_ARGUMENTS = [
+    #   short    Long              Function          ParamNo Done/Action
+    [  '-s',  '--add-script',      add_scripts,          1,  False  ],
+    [  '-l',  '--load-scripts',    load_scripts,         0,  False  ],
+    [  '-f',  '--load-frontend',   load_frontend,        1,  False  ],
+    [  '-r',  '--run-frontends',   run_frontends,        0,  True   ],
+    [  '-d',  '--default-script',  load_default_script,  0,  False  ],
+    [  '-e',  '--set-env',         Env.put_static,       2,  False  ],
+    [  '-c',  '--command',         run_command,          1,  True   ],
+    [  '-x',  '--execute',         "code",               1,  True   ],
+]
+
+def parse(args):
+    arg_iter = iter(args)
+    for a in arg_iter:
+        for short, long, function, params, done in POSSIBLE_ARGUMENTS:
+            if a == short or a == long:
+                if params:
+                    try:
+                        p = tuple(next(arg_iter) for _ in range(params))
+                    except StopIteration:
+                        raise ArgumentError(f"Expecting a parameter", a)
+                else:
+                    p = ()
+                yield function, p, done
+                break
+        else:
+            yield 'code', (a,), False
+
+def precompile(args):
+    for i, (f, p, d) in enumerate(args):
+        if f == 'code':
+            c, = p
+            c = compile(c, f"<command line {i}>", "exec")
+            p = (c,)
+        yield f, p, d
+
 def main(args):
-    """Run the Hans Tool."""
+    args = precompile(parse(args))
     try:
-        _x = False
-        _f = False
-        _r = False
-        _l = False
-        _s = False
-        arg_iter = iter(args)
+        args = list(args) # consume to get errors early
+    except ArgumentError as e:
+        print (*e.args)
+        print (HELP)
+        return 1
 
-        def add_default_scripts():
-            s = Env.get('HT3_SCRIPTS', False)
-            if s:
-                for p in s.split(':'): #TODO use ; on Win
-                    add_scripts(os.path.expanduser(p))
+    try:
+        # populate "globals" so that Env can act as "locals" and not have those functions in it
+        glob = {}
+        for f in [add_scripts, load_scripts, load_frontend, run_command, run_frontends, Env.put_static]:
+            glob[f.__name__] = f
+        done = False
+        for f, a, done in args:
+            if done:
+                load_default_script()
+            if f == 'code':
+                code, = a
+                exec(code, glob, Env.dict)
             else:
-                import pkg_resources
-                s = pkg_resources.resource_filename(__name__,'default_scripts')
-                add_scripts(s)
-                s = os.path.expanduser('~/.config/ht3')
-                if os.path.exists(s):
-                    add_scripts(s)
-
-        for a in arg_iter:
-            if a == '-s':
-                s = next(arg_iter)
-                s = os.path.expanduser(s)
-                add_scripts(s)
-                _s = True
-                _l = False
-            elif a == '-l':
-                if not _s:
-                    add_default_scripts()
-                load_scripts()
-                _l = True
-            elif a == '-f':
-                f = next(arg_iter)
-                lib.load_frontend(f)
-                _f = True
-            elif a == '-r':
-                lib.run_frontends()
-                _r = True
-            elif a == '-x':
-                s = next(arg_iter)
-                run_command(s)
-                _x = True
-            elif a == '-e':
-                k = next(arg_iter)
-                v = next(arg_iter)
-                Env.put_persistent(k, v)
-            elif a == '-c':
-                c = next(arg_iter)
-                lib.execute_py_expression(c)
-            else:
-                if a not in ['-h','--help','/?','/help']:
-                    print ("Invalid Option: "+a)
-                print (HELP)
-                return 1
-        if not _l:
-            if not _s:
-                add_default_scripts()
-            load_scripts()
-
-        if not (_f or _x):
-            lib.load_frontend('ht3.cli')
-            _f = True
-
-        if not _r and _f:
-            lib.run_frontends()
-        return 0
+                f(*a)
+        if not done:
+            load_default_script()
+            if not lib.FRONTEND_MODULES:
+                load_frontend('ht3.cli')
+            run_frontends()
     except Exception:
         if Env.get('DEBUG',False):
             import traceback
@@ -99,6 +128,3 @@ def main(args):
             import pdb
             pdb.post_mortem()
         raise
-
-if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))

@@ -41,6 +41,7 @@ class UserInterface():
         self.root.after(100, self.cmd_win.to_front)
         self.root.after(400, self.cmd_win.to_front)
         self._thread = threading.current_thread()
+
         if Env.get('DEBUG', False):
             self.__getattribute__ = self._getattr
 
@@ -70,10 +71,8 @@ class UserInterface():
         except Exception as e:
             ht3.lib.EXCEPTION_HOOK(exception=e)
             return False
-
-        cmd()
+        lib.start_thread(cmd, name=f"ht3.gui.ComandRunner({cmd.invocation})")
         return True
-
 
     class CommandWindow():
         def __init__(self, ui):
@@ -246,10 +245,11 @@ class UserInterface():
         def _set_text(self, text):
             self.text.delete(0, tk.END)
             self.text.insert(0, text)
-            def sel():
-                self.text.selection_clear()
-                self.text.xview(len(text)-1)
-            self.window.after(0, sel)
+            if text:
+                def sel():
+                    self.text.selection_clear()
+                    self.text.xview(len(text)-1)
+                self.window.after(0, sel)
 
         def _delete_word(self, event):
             pass
@@ -378,7 +378,7 @@ class UserInterface():
 # Frontend API
 
 
-q = queue.Queue()
+gui_action_q = queue.Queue()
 tl = threading.local()
 
 Interaction = collections.namedtuple('Interaction','event,function,args,kwargs,result')
@@ -394,7 +394,7 @@ def interact(wait):
                 e = threading.Event()
                 r = []
                 i = Interaction(e,f,args,kwargs,r)
-                q.put(i)
+                gui_action_q.put(i)
                 e.wait()
                 return r[0]
         return wrapper
@@ -407,7 +407,7 @@ def interact(wait):
                 return f(*args, **kwargs)
             except AttributeError:
                 i = Interaction(None,f,args,kwargs,None)
-                q.put_nowait(i)
+                gui_action_q.put_nowait(i)
         return wrapper
     if wait:
         return decorator_wait
@@ -432,7 +432,7 @@ def loop():
         def _drain_q():
             try:
                 while True:
-                    i = q.get_nowait()
+                    i = gui_action_q.get_nowait()
                     r = i.function(*i.args, GUI=gui, **i.kwargs)
                     if i.result is not None:
                         i.result.append(r)
@@ -539,6 +539,10 @@ def log_win_to_front(GUI):
 @interact(True)
 def cmd_win_set_rect(left, top, width, height, GUI):
     GUI.cmd_win.set_rect(left, top, width, height)
+
+@interact(False)
+def cmd_win_hide_frame(GUI):
+    GUI.cmd_win.window.overrideredirect(True)
 
 _globals = globals()
 __all__ = tuple(n for n in _globals if not n in _excluded)

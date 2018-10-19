@@ -427,7 +427,7 @@ class ShellArgParser(BaseArgParser):
                 break
         else:
             # raise the error:
-            shelx.split(string)
+            shlex.split(string)
 
         assert values[-1][-1] == '|'
 
@@ -464,13 +464,13 @@ class ShellArgParser(BaseArgParser):
                 else:
                     if v.startswith(current):
                         s = (
-                            prefix + 
+                            prefix +
                             current +
                             '"'+ 
                             v[len(current):].replace('"', r'\"') +
                             '"'
                         )
-                        assert s.startswith(string)
+                        assert s.startswith(string), (s, string)
                         yield s
 
     def describe_params(self):

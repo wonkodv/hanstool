@@ -172,6 +172,7 @@ class TestShellArgParser(unittest.TestCase):
         assert list(p.complete('1 "w')) == ['1 "ws text"']
         assert list(p.complete('1 w')) == ['1 w"s text"']
         assert list(p.complete('1  w')) == ['1  w"s text"']
+        assert list(p.complete('1  ws" "tex')) == ['1  ws" "text']
 
 class TestEnforceArgs(unittest.TestCase):
     def test_basic(self):

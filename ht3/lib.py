@@ -14,9 +14,24 @@ EXCEPTION_HOOK = ht3.hook.Hook("exception")
 DEBUG_HOOK = ht3.hook.Hook("message")
 ALERT_HOOK = ht3.hook.Hook("message")
 
+@EXCEPTION_HOOK.register
+def _exception_hook_fallback(exception):
+    """ If no other handlers are installed, raise Exc. """
+    if len(EXCEPTION_HOOK.callbacks) == 1:
+        raise exception
+
+
+@ALERT_HOOK.register
+def _alert_hook_fallback(message):
+    """ If no other handlers are installed, print. """
+    if len(EXCEPTION_HOOK.callbacks) == 1:
+        print(message)
+
 
 FRONTENDS = []
 FRONTEND_MODULES = []
+_RUNNING_FRONTENDS = None
+_Stop_FrontEnds_Sem = None
 
 THREAD_LOCAL = threading.local()
 THREAD_LOCAL.command = None
@@ -45,111 +60,73 @@ def load_frontend(name):
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
 
-_FrontendWaitEvt = threading.Event()
+def run_frontends():
+    """Run all Frontends.
 
-def _run_fe(fe):
-    name = fe.__name__
-    THREAD_LOCAL.frontend = name
-    THREAD_LOCAL.command = None
-    thread = threading.current_thread()
-    old_thread_name = thread.name
-    if thread is threading.main_thread():
-        thread.name = "MainThread({})".format(name)
-    else:
-        thread.name = "FrontendThread({})".format(name)
-
-    try:
-        fe.loop()
-    except Exception as e:
-        EXCEPTION_HOOK(exception=e)
-    finally:
-        _FrontendWaitEvt.set()
-        thread.name = old_thread_name
-
-def _wait_and_stop_frontends(frontends):
-    check.CHECK.frontends_running = True
-
-    try:
-        _FrontendWaitEvt.wait() # wait till some Frontend's loop() method returns
-    finally:
-        # stop all frontends
-        check.CHECK.frontends_running = False
-        for f in frontends:
-            try:
-                f.stop()
-            except Exception as e:
-                EXCEPTION_HOOK(exception=e)
-
-def _run_1_fe(fe):
-    """Run a single FrontEnd in MainThread."""
-    fe.start()
-
-    # Use an extra thread that notices _FrontendWaitEvt and stops the fe.
-    t = threading.Thread(
-            target=_wait_and_stop_frontends,
-            daemon=True,
-            args=[[fe]],
-            name="Wait and Stop FE")
-    t.start()
-
-    _run_fe(fe)
-
-def _run_many_frontends(frontends):
-    """Run Many Frontends.
-
-    Execute the ``loop`` function of every loaded Frontend in a seperate thread.
-    If any frontend returns from its ``loop()``,``stop()`` of all
-    frontends is called (from a different thread so stop must be threadsafe) afters
-    all threads ``loop()`` functions finished.
-
+    Execute the `loop` function of every loaded Frontend in a seperate thread.
     The first Frontend is run in MainThread (allows e.g. KeyboardInterrupt for CLIs,
     tkinter also likes mainthread, ...)
 
+    The first frontend which returns from its `loop()`, calls `stop()` on all
+    frontends, so stop must be threadsafe. After All frontends returned from their
+    `loop()`, this function returns.
     """
+
+    frontends = tuple(FRONTEND_MODULES) # avoid concurrency if modules load modules
+
+    if not frontends:
+        raise ValueError("No Frontend Loaded yet")
 
     threads = []
 
-    _FrontendWaitEvt.clear()
-
     for fe in frontends:
         fe.start()
+
+    global _RUNNING_FRONTENDS, _Stop_FrontEnds_Sem
+    _RUNNING_FRONTENDS = frontends
+    _Stop_FrontEnds_Sem = threading.Semaphore(1)
+    check.CHECK.frontends_running = True
+
+    def _run_fe(fe):
+        name = fe.__name__
+        THREAD_LOCAL.frontend = name
+        THREAD_LOCAL.command = None
+        thread = threading.current_thread()
+        old_thread_name = thread.name
+        if thread is threading.main_thread():
+            thread.name = "MainThread({})".format(name)
+        else:
+            thread.name = "FrontendThread({})".format(name)
+
+        try:
+            fe.loop()
+        except Exception as e:
+            EXCEPTION_HOOK(exception=e)
+        finally:
+            stop_frontends()
+            thread.name = old_thread_name
 
     for fe in frontends[1:]:
         t = threading.Thread(target=_run_fe, args=[fe], name=fe.__name__)
         t.start()
         threads.append(t)
 
-    t = threading.Thread(
-            target=_wait_and_stop_frontends,
-            daemon=True,
-            args=[frontends],
-            name="Wait and Stop FEs")
-    t.start()
-
     _run_fe(frontends[0])
+    check.CHECK.frontends_running = False
 
-    # wait for all other frontends to finish.
     for t in threads:
         t.join()
 
-def run_frontends():
-    """
-    Start all loaded frontends.
-
-    """
-    frontends = tuple(FRONTEND_MODULES) # avoid concurrency if modules load modules
-
-    l = len(frontends)
-    if l == 0:
-        raise ValueError("No Frontend Loaded yet")
-
-    if l == 1:
-        _run_1_fe(frontends[0])
-    else:
-        _run_many_frontends(frontends)
+    _Stop_FrontEnds_Sem  = None
+    _RUNNING_FRONTENDS = None
 
 def stop_frontends():
-    _FrontendWaitEvt.set()
+    if _Stop_FrontEnds_Sem.acquire(False): # the first to return stops all
+        for f in _RUNNING_FRONTENDS:
+            try:
+                f.stop()
+            except Exception as e:
+                EXCEPTION_HOOK(exception=e)
 
 def execute_py_expression(s):
     """Execute a python expression"""
