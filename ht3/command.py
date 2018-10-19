@@ -1,6 +1,7 @@
 """Register commands."""
 import functools
 import inspect
+import textwrap
 import traceback
 
 from .lib import THREAD_LOCAL, start_thread
@@ -68,11 +69,11 @@ class Command():
     def __repr__(self):
         if not self.started:
             state = "New"
+            return "Command(name={0.name}, invocation={0.invocation})".format(self)
         elif not self.finished:
-            state = "Running"
+            return "Command(name={0.name}, invocation={0.invocation}, running)".format(self)
         else:
-            state = "Finished"
-        return "Command(name={0.name}, invocation={0.invocation}, state={1})".format(self, state)
+            return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(self, textwrap.shorten(repr(self.result),30))
 
     def __str__(self):
         if self.invocation.startswith(self.name):

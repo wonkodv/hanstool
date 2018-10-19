@@ -80,7 +80,7 @@ def handle_socket(sock, addr):
                 pickle.dump(obj, sock_file)
                 raise
             except Exception as e:
-                obj = ["EXCEPTION",e]
+                obj = ("EXCEPTION", e, None)
                 try:
                     pickle.dump(obj, sock_file)
                 except Exception as e:
@@ -97,6 +97,7 @@ def loop():
     typ, adr = socket_info()
     with socket.socket(typ, socket.SOCK_STREAM) as sock:
         sock.bind(adr)
+        Env.log(f"ht3.daemon: Listening on {adr}")
         sock.settimeout(0.5)
         sock.listen(0)
         while True:

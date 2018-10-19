@@ -4,7 +4,11 @@ import socket
 import os.path
 import sys
 import io
+import argparse
+import traceback
 
+class RemoteException(Exception):
+    pass
 
 def socket_info():
     """Parse Address from DAEMON_ADDRESS as ipv4, ipv6 or socket
@@ -52,44 +56,52 @@ def send(command, string):
             sock_file.flush()
             while True:
                 try:
-                    status, typ, result = pickle.load(sock_file)
-                    if status != "OK":
-                        raise result
-                    yield typ, result
+                    yield pickle.load(sock_file)
                 except EOFError:
                     return
 
 def complete(s):
-    for t, r in send("COMPLETE", s):
-        if not t == "COMPLETION":
-            raise TypeError("Not a completion", t,r)
-        yield r
+    for s, t, r in send("COMPLETE", s):
+        if s != "OK" or t != "COMPLETION":
+            raise TypeError(s, t,r)
+        elif s == 'EXCEPTION':
+            raise RemoteException(t)
+        else:
+            yield r
 
 def command(s):
-    t, r = next(send("COMMAND", s))
-    if t != "RESULT":
-        raise TypeError
-    return r
+    s, t, r = next(send("COMMAND", s))
+    if s == "OK" and (t == "RESULT" or t == "REPR"):
+        return r
+    elif s == 'EXCEPTION':
+        raise RemoteException(t)
+    else:
+        raise TypeError(s,t,r)
 
 
-def main(argv):
-    if len(argv) == 1:
-        c = argv[0]
-        try:
-            r = command(c)
-        except Exception as e:
-            print(e, file=sys.stderr)
-            return 1
+def main(options):
+    try:
+        if options.complete:
+            r = complete(options.command)
+            for l in r:
+                print (l)
         else:
+            r = command(options.command)
             if r is not None:
                 print(r)
-            return 0
-    elif len(argv) == 2 and argv[0] == "-c":
-        c = argv[1]
-        r = complete(c)
-        for l in r:
-            print (l)
+    except RemoteException as e:
+        print(e.args[0], file=sys.stderr)
+    except Exception as e:
+        if options.quiet:
+            print(e, file=sys.stderr)
+        else:
+            traceback.print_exc()
+        return 1
 
 if __name__ == '__main__':
-    sys.exit(main(sys.argv[1:]))
-
+    p = argparse.ArgumentParser(description="Client for ht3.daemon")
+    p.add_argument("-c", "--complete", action='store_true')
+    p.add_argument("-q", "--quiet", action='store_true')
+    p.add_argument("command")
+    o = p.parse_args()
+    sys.exit(main(o))
