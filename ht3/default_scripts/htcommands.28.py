@@ -72,7 +72,7 @@ def edit_command(c:args.Union(args.Command, args.Python)):
 
 @Env
 def _complete_script_names(s):
-    return reversed(list(filter_completions(s, (m.__name__ for m in SCRIPTS))))
+    return (Path(m.__file__).name for m in reversed(SCRIPTS))
 @Env
 @cmd(name="++")
 def add_command(script:_complete_script_names, name=None, text=None):
@@ -88,29 +88,32 @@ def add_command(script:_complete_script_names, name=None, text=None):
         5. you should restart for the new command to be activated.
 
     """
-    name_path = {m.__name__ for m in SCRIPTS}
-
-    try:
-        s = name_path[script]
-    except KeyError:
+    for m in SCRIPTS:
+        s = Path(m.__file__)
+        if s.name == script:
+            break
+    else:
         if not script.endswith('.py'):
             raise ValueError('The script must be the name of a loaded script or'
                 ' a valid name for a new one')
-        s = Path(SCRIPTS[-1].__file__).parent
+        s = s.parent # parent of last loaded script
         if s.name == 'default_scripts':
             s = pathlib.Path('~/.config/ht3').expanduser()
             if not s.exists():
                 show("Creating Directory "+str(s))
                 s.mkdir(parents=True)
         s = s / script
-        assert not s.exists() # s should have matched above.
-        show("New Script "+str(s))
-        with s.open('wt') as f:
-            f.write('"""" A new Script """\n\nfrom Env import *\n\n')
+        if s.exists():
+            show(f"Script already exists: {s}")
+        else:
+            show(f"New Script {s}")
+            with s.open('wt') as f:
+                f.write('"""" A new Script """\n\nfrom Env import *\n\n')
 
     if name:
         with s.open("ta") as f:
-            f.write("\n@cmd"
+            f.write("\n"
+                    "\n@cmd"
                     "\ndef "+name+"():"
                     "\n    "+ (text if text else 'pass'))
 
