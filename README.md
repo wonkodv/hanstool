@@ -214,7 +214,7 @@ in `~/.config/ht3`
 
 ### Extra scripts
 
-The extra scripts in `/extra_scripts` are not loaded by default, as they are very specific.
+More scripts can be found in [ht3-extra-scripts](../ht3-extra-scripts).
 
 
 Some Default Commands
@@ -258,9 +258,8 @@ Any packet can be a HT-Fronend. The user chooses which one(s) to load on the com
     Systemwide hotkeys for some commands (specify the hotkey in
     `@cmd(attrs=dict(HotKey="Ctrl+F5"))` Currently only on windows
 *   `ht3.htd`: a Daemon that listens on a socket for commands.
-    Commands can be sent with `python -m ht3.client "command"
-    Only on UNIX.
-*   [Awesome WM Client](./docs/AWESOME.md): A piece of lua that runs `ht3.client`
+    Commands can be sent with [ht3-client](../ht3-client).
+*   [Awesome WM Client](../ht3-client/awesome_wm/AWESOME.md): A piece of lua that runs `ht3.client`
 *   more are easily implemented, see [Frontends](./docs/FRONTENDS.md)
 
 Command Line Arguments and Startup Behavior
