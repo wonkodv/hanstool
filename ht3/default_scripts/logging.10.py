@@ -36,7 +36,7 @@ def log_subprocess_finished(process):
 
 @DEBUG_HOOK.register
 def log_debug(message):
-    if Env.get('DEBUG',0):
+    if not CHECK.frontend('ht3.cli') or Env.get('DEBUG',0):
         log_alert(message)
 
 @ALERT_HOOK.register

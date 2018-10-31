@@ -92,6 +92,15 @@ if CHECK.os.posix:
 
     print("\x1b]2;HansTool\x07", end="") # Set Title of Terminal Window
 
+
+    @Env
+    def get_clipboard(s):
+        return procio("xclip","-out",'-selection','clipboard')
+
+    @Env
+    def set_clipboard(s):
+        procio("xclip","-in",'-selection','clipboard', input=str(s))
+
     if CHECK.frontend('ht3.gui'):
         import ht3.gui
 
