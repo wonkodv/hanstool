@@ -71,17 +71,20 @@ POSSIBLE_ARGUMENTS = [
 def parse(args):
     arg_iter = iter(args)
     for a in arg_iter:
-        for short, long, function, params, done in POSSIBLE_ARGUMENTS:
-            if a == short or a == long:
-                if params:
-                    try:
-                        p = tuple(next(arg_iter) for _ in range(params))
-                    except StopIteration:
-                        raise ArgumentError(f"Expecting a parameter", a)
-                else:
-                    p = ()
-                yield function, p, done
-                break
+        if a.startswith('-'):
+            for short, long, function, params, done in POSSIBLE_ARGUMENTS:
+                if a == short or a == long:
+                    if params:
+                        try:
+                            p = tuple(next(arg_iter) for _ in range(params))
+                        except StopIteration:
+                            raise ArgumentError(f"Expecting a parameter", a)
+                    else:
+                        p = ()
+                    yield function, p, done
+                    break
+            else:
+                raise ArgumentError(f"Invalid option {a}")
         else:
             yield 'code', (a,), False
 
