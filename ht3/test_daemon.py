@@ -3,16 +3,16 @@ import threading
 import time
 import unittest
 
+import ht3client
 import ht3.daemon
 
 from ht3.env import Env
-from ht3.client import command
 from unittest.mock import patch, Mock
 
 class TestDaemon(unittest.TestCase):
 
     @patch('ht3.daemon.socket_info')
-    @patch('ht3.client.socket_info')
+    @patch('ht3client.socket_info')
     @patch('ht3.daemon.run_command')
     def test_daemon(self, run_command, socket_info_client, socket_info_server):
         socket_info_client.return_value = [socket.AF_INET, ('localhost', 42267)]
@@ -27,7 +27,7 @@ class TestDaemon(unittest.TestCase):
 
         time.sleep(0.05)
 
-        r = command("Test Bar")
+        r = ht3client.command("Test Bar")
 
         ht3.daemon.stop()
 
