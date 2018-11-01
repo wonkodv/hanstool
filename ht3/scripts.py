@@ -47,7 +47,8 @@ def add_scripts(path):
             add_scripts(p)
     elif path.is_file():
         if path not in ADDED_SCRIPTS:
-            ADDED_SCRIPTS.append(path)
+            if not any(path.samefile(Path(m.__file__)) for m in SCRIPTS):
+                ADDED_SCRIPTS.append(path)
     elif not path.exists():
         raise FileNotFoundError(path)
     else:
@@ -59,7 +60,6 @@ def load_scripts():
     l = sorted(ADDED_SCRIPTS, key=_script_order_key)
     if not l:
         raise ValueError("No scripts added (or already loaded)")
-    ADDED_SCRIPTS.clear()
     for path in l:
         name = _script_module(path)
         ename = 'Env.' + name
@@ -68,6 +68,7 @@ def load_scripts():
         assert mod.__name__ == ename
         assert sys.modules[ename] is mod
         assert mod.__file__ == str(path)
+        ADDED_SCRIPTS.remove(path)
         SCRIPTS.append(mod)
         if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
             Env.put(name, mod)
