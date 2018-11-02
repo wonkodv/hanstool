@@ -8,32 +8,38 @@ import tempfile
 
 if CHECK.os.win32:
     ADDRESS = r"\\.\pipe\nvim-pipe-{}"
+    DEFAULT_NVIMGUI = 'nvim-qt'
 else:
     ADDRESS = "~/.config/nvim/socket-{}"
+    DEFAULT_NVIMGUI = ('xterm','-e','nvim')
 
 
-@Env
 @cmd
 def nvim(server="HT3", env={}, cwd=None):
-    server = ADDRESS.format(server)
-    s = Path(server)
-    more_env = { "NVIM_LISTEN_ADDRESS":server, }
-    more_env.update(env)
-    if not s.exists():
+    socket = Path(ADDRESS.format(server)).expanduser()
+    if not socket.parent.is_dir():
+        socket.parent.mkdir(parents=True)
+    if not socket.exists():
         if CHECK.is_cli_frontend:
-            p = Env.get('NVIM',('nvim',))
+            args = Env.get('NVIM','nvim')
         else:
-            p = Env.get('NVIMGUI',('nvim-qt',))
-        if isinstance(p, str):
-            p = (p,)
-        Env.log("starting Neovim: {} {}".format(more_env, p))
-        p = execute_disconnected(*p, more_env=more_env)
-    for i in range(500):
+            args = Env.get('NVIMGUI', DEFAULT_NVIMGUI)
+        if isinstance(args,str):
+            args = (args,)
+        args = *args, '--listen', str(socket)
+
+        p = execute_disconnected(*args, more_env=env)
+
+        for i in range(50):
+            if socket.exists():
+                break
+            sleep(0.1)
+        else:
+            raise FileNotFoundError(f"Socket File not created by nvim. ARGS:{args} {p}")
+    else:
         p = None
-        sleep(0.01)
-        if s.exists():
-            break
-    nvim = neovim.attach("socket", path=server)
+
+    nvim = neovim.attach("socket", path=socket)
     nvim.PROCESS = p
     nvim.command("call rpcnotify(0, 'Gui', 'Foreground')")
     return nvim
