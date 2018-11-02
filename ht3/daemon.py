@@ -62,44 +62,48 @@ def handle_socket(sock, addr):
         with sock.makefile("wrb") as sock_file:
             try:
                 while True:
-                    cmd, string = pickle.load(sock_file)
-                    if cmd == "COMMAND":
-                        r = run_command(string)
+                    try:
+                        sock_file.flush()
+                        cmd, string = pickle.load(sock_file)
+                        if cmd == "COMMAND":
+                            try:
+                                r = run_command(string)
+                                obj = ("OK", "RESULT", r)
+                                pickle.dump(obj, sock_file)
+                            except TypeError:
+                                obj = ("OK", "REPR", repr(r))
+                                pickle.dump(obj, sock_file)
+                        elif cmd == "COMPLETE":
+                            for c in complete_command_with_args(string):
+                                obj = ("OK", "COMPLETION", c)
+                                pickle.dump(obj, sock_file)
+                            obj = ("OK", "COMPLETION-DONE", None)
+                            pickle.dump(obj, sock_file)
+                        elif cmd == "PING":
+                            obj = ("OK", "PONG", None)
+                            pickle.dump(obj, sock_file)
+                        elif cmd == "DONE":
+                            return
+                        else:
+                            raise ValueError(cmd)
+                    except SystemExit:
+                        obj = ("OK", "EXIT", None)
+                        pickle.dump(obj, sock_file)
+                        raise
+                    except Exception as e:
+                        obj = ("EXCEPTION", e, None)
                         try:
-                            obj = ("OK", "RESULT", r)
                             pickle.dump(obj, sock_file)
-                        except TypeError:
-                            obj = ("OK", "REPR", repr(r))
-                            pickle.dump(obj, sock_file)
-                    elif cmd == "COMPLETE":
-                        for c in complete_command_with_args(string):
-                            obj = ("OK", "COMPLETION", c)
-                            pickle.dump(obj, sock_file)
-                        obj = ("OK", "COMPLETION-DONE", None)
-                        pickle.dump(obj, sock_file)
-                    elif cmd == "PING":
-                        obj = ("OK", "PONG", None)
-                        pickle.dump(obj, sock_file)
-                    elif cmd == "DONE":
-                        return
-                    else:
-                        raise ValueError(cmd)
-                    sock_file.flush()
-            except SystemExit:
-                obj = ("OK", "EXIT", None)
-                pickle.dump(obj, sock_file)
-                raise
+                        except Exception as e:
+                            pass
+                        try:
+                            lib.EXCEPTION_HOOK(exception=e)
+                        except:
+                            pass
             except BrokenPipeError:
                 pass
             except socket.timeout:
                 pass
-            except Exception as e:
-                obj = ("EXCEPTION", e, None)
-                try:
-                    pickle.dump(obj, sock_file)
-                except Exception as e:
-                    pass
-                lib.EXCEPTION_HOOK(exception=e)
 
 _evt = None
 
