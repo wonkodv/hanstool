@@ -12,11 +12,11 @@ from unittest.mock import patch, Mock
 class TestDaemon(unittest.TestCase):
 
     @patch('ht3.daemon.socket_info')
-    @patch('ht3client.socket_info')
     @patch('ht3.daemon.run_command')
-    def test_daemon(self, run_command, socket_info_client, socket_info_server):
-        socket_info_client.return_value = [socket.AF_INET, ('localhost', 42267)]
-        socket_info_server.return_value = [socket.AF_INET, ('localhost', 42267)]
+    def test_daemon(self, run_command, socket_info_server):
+        socket_info = [socket.AF_INET, ('localhost', 42267)]
+        socket_info_server.return_value = socket_info
+
         run_command.return_value = 4267
 
         Env['log'] = Mock()
@@ -27,7 +27,8 @@ class TestDaemon(unittest.TestCase):
 
         time.sleep(0.05)
 
-        r = ht3client.command("Test Bar")
+        with ht3client.HT3Client(*socket_info) as htc:
+            r = htc.command("Test Bar")
 
         ht3.daemon.stop()
 
