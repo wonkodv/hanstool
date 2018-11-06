@@ -25,8 +25,13 @@ class Persistence:
 
     def set(self,key,val):
         self.load()
-        self.dict[key] = val
-        self.save()
+        try:
+            if self.dict[key] == val:
+                return
+        except KeyError:
+            self.dict[key] = val
+            self.save()
+
     __setitem__ = set
 
     def __getitem__(self, key):
@@ -39,5 +44,6 @@ class Persistence:
         except KeyError:
             return default
 
+Per = Persistence()
 
-Env['Per'] = Persistence()
+Env['Per'] = Per
