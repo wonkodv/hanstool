@@ -63,7 +63,13 @@ def edit_command(c:args.Union(args.Command, args.Python)):
     else:
         o = evaluate_py_expression(c)
         o = inspect.unwrap(o) # unwrap @Env.updateable functions
-        f = inspect.getsourcefile(o)
+        try:
+            f = inspect.getsourcefile(o)
+        except TypeError as e:
+            try:
+                f = inspect.getsourcefile(type(o))
+            except TypeError:
+                raise e
         try:
             _, l = inspect.getsourcelines(o)
         except TypeError:

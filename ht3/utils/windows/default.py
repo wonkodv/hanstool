@@ -2,7 +2,7 @@
 import ctypes
 import datetime
 
-from ht3.keycodes import KEY_CODES
+from ht3.utils.keycodes.win32 import KEY_CODES
 
 def GetTickCount():
     return datetime.timedelta(milliseconds=ctypes.windll.kernel32.GetTickCount())
