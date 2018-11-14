@@ -1,8 +1,4 @@
-"""use NeoVim as default editor.
-
-Odd name to avoid na conflicts with neovim module or nvim command.
-"""
-
+"""Launch and control Neovim"""
 
 from Env import Env, cmd, CHECK, sleep, execute_disconnected, Path, EXCEPTIONS, show
 import neovim
@@ -25,9 +21,11 @@ def nvim(server="HT3", env={}, cwd=None):
     more_env.update(env)
     if not s.exists():
         if CHECK.is_cli_frontend:
-            p = Env.get('NVIM',['nvim'])
+            p = Env.get('NVIM',('nvim',))
         else:
-            p = Env.get('NVIMGUI',['nvim-qt'])
+            p = Env.get('NVIMGUI',('nvim-qt',))
+        if isinstance(p, str):
+            p = (p,)
         Env.log("starting Neovim: {} {}".format(more_env, p))
         p = execute_disconnected(*p, more_env=more_env)
     for i in range(500):
