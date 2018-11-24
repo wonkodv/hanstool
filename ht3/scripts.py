@@ -79,6 +79,8 @@ def reload_all():
     for mod in SCRIPTS:
         if getattr(mod, '_SCRIPT_RELOAD', True):
             ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
+        if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
+            delattr(Env, mod.__name__.lstrip("Env."))
     SCRIPTS.clear()
     load_scripts()
 
