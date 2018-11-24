@@ -143,7 +143,6 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     except ImportError:
         _RELOADED = 0
 
-    log("\n==================== RELOAD ===================\n")
     if not ht3.scripts.check_all_compilable():
         return
 
@@ -159,6 +158,8 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
                 h.callbacks.remove(c) # remove hooks from scripts
 
     COMMANDS.clear()
+
+    log("\n==================== RELOAD ===================\n")
 
     for module in modules:
         if module == 'ENV':

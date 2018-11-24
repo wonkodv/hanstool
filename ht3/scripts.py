@@ -76,13 +76,18 @@ def load_scripts():
             Env.put(name, mod)
 
 def reload_all():
-    for mod in SCRIPTS:
-        if getattr(mod, '_SCRIPT_RELOAD', True):
-            ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
-        if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
-            delattr(Env, mod.__name__.lstrip("Env."))
-    SCRIPTS.clear()
-    load_scripts()
+    try:
+        for mod in SCRIPTS:
+            if getattr(mod, '_SCRIPT_RELOAD', True):
+                ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
+            if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
+                delattr(Env, mod.__name__[4:])
+        SCRIPTS.clear()
+        load_scripts()
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise
 
 def check_all_compilable():
     r = True

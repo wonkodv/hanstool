@@ -72,6 +72,12 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         except KeyError:
             raise AttributeError(key) from None
 
+    def __delattr__(self, key):
+        if inspect.ismodule(self[key]):
+            del self.dict[key]
+        else:
+            raise AttributeError("Dont delete Attributes on Env")
+
     def update(self, *args):
         self.dict.update(*args)
 
