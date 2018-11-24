@@ -5,6 +5,7 @@ from Env import *
 import re
 import threading
 import time
+import os
 
 def _complete_fake(string):
     parts = re.split('[^A-Za-z0-9]+', string)
@@ -96,3 +97,8 @@ class PythonFallback(ht3.command.Command):
             return PythonFallback(command_string)
         except SyntaxError:
             pass
+
+
+@cmd
+def cd(p:Path):
+    os.chdir(p)
