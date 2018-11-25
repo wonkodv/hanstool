@@ -38,6 +38,9 @@ class Command():
     finished = False
     parent = None
 
+    result = None
+    exception = None
+
     def __init__(self, invocation):
         self.invocation = invocation
         self.name = type(self).__name__
@@ -54,6 +57,7 @@ class Command():
             try:
                 result = self.result = self.run()
             except Exception as e:
+                self.exception = e
                 if self.parent is None:
                     if COMMAND_EXCEPTION_HOOK(command=self, exception=e):
                         return
@@ -73,7 +77,10 @@ class Command():
         elif not self.finished:
             return "Command(name={0.name}, invocation={0.invocation}, running)".format(self)
         else:
-            return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(self, textwrap.shorten(repr(self.result),30))
+            if self.exception:
+                return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(self)
+            else:
+                return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(self, textwrap.shorten(repr(self.result),30))
 
     def __str__(self):
         if self.invocation.startswith(self.name):
