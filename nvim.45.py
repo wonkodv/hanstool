@@ -8,17 +8,17 @@ import tempfile
 
 if CHECK.os.win32:
     ADDRESS = r"\\.\pipe\nvim-pipe-{}"
-    DEFAULT_NVIMGUI = 'nvim-qt'
+    DEFAULT_NVIMGUI = ('nvim-qt', '--')
 else:
     ADDRESS = "~/.config/nvim/socket-{}"
     DEFAULT_NVIMGUI = ('xterm','-e','nvim')
 
-
 @cmd
 def nvim(server="HT3", env={}, cwd=None):
     socket = Path(ADDRESS.format(server)).expanduser()
-    if not socket.parent.is_dir():
-        socket.parent.mkdir(parents=True)
+    if not CHECK.os.win32:
+        if not socket.parent.is_dir():
+            socket.parent.mkdir(parents=True)
     if not socket.exists():
         if CHECK.is_cli_frontend:
             args = Env.get('NVIM','nvim')
@@ -39,7 +39,7 @@ def nvim(server="HT3", env={}, cwd=None):
     else:
         p = None
 
-    nvim = neovim.attach("socket", path=socket)
+    nvim = neovim.attach("socket", path=str(socket))
     nvim.PROCESS = p
     nvim.command("call rpcnotify(0, 'Gui', 'Foreground')")
     return nvim
