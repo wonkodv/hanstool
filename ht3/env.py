@@ -120,10 +120,10 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
 
 
     def __str__(self):
-        return "Env: " + ", ".join(self.dict)
+        return "Env"
 
     def __repr__(self):
-        return str(self.dict)
+        return "Env"
 
 
 Env = _Env_class()

@@ -85,7 +85,7 @@ class PythonFallback(ht3.command.Command):
             self.show = False
 
     def run(self):
-        r = eval(self.c, Env.dict)
+        r = eval(self.c, {}, Env.dict)
         if self.show:
             show(r)
             Env['__'].append(r)

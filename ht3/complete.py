@@ -16,7 +16,6 @@ __all__ = (
     'complete_command_args',
     'complete_commands',
     'complete_command_with_args',
-    '_get_attributes_rec',
     'complete_py',
     'complete_path',
 )
@@ -82,49 +81,6 @@ def complete_command_with_args(string):
     else:
         return complete_command_args(string)
 
-def _get_attributes_rec(obj):
-    values = set()
-
-    try:
-        for a in sorted(obj.__all__):
-            if a not in values:
-                yield a
-                values.add(a)
-    except AttributeError:
-        pass
-
-    try:
-        for a in sorted(obj.__slots__):
-            if a not in values:
-                yield a
-                values.add(a)
-    except AttributeError:
-        pass
-
-    try:
-        for a in sorted(obj.__dict__):
-            if a not in values:
-                yield a
-                values.add(a)
-    except AttributeError:
-        pass
-
-    try:
-        if not isinstance(obj, type):
-            for c in type(obj).__mro__:
-                for a in _get_attributes_rec(c):
-                    if a not in values:
-                        yield a
-                        values.add(a)
-    except AttributeError:
-        pass
-
-    for v in sorted(dir(obj), key=lambda s: (1 if s and s[0]!='_' else 2, s)):
-        if a not in values:
-            yield a
-            values.add(a)
-
-
 _COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
 
 def complete_py(string):
@@ -145,7 +101,9 @@ def complete_py(string):
         except (KeyError, AttributeError):
             return [] # when the string contains illegal keys/attributes
 
-        values = _get_attributes_rec(val)
+        values = set(dir(val))
+        for p in inspect.getmro(type(val)):
+            values.update(dir(p))
 
     prefix = string[:len(string)-len(pl)]
 

@@ -187,10 +187,10 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
 @cmd
 def restart(*more_args):
     """Restart ht.
-    
-        Check if all loaded Scripts can be compiled and then restart the python
-        programm using sys.executable, "-m ht3" and args, where args is all
-        -f, -s and -r args, NOT -x.
+
+    Check if all loaded Scripts can be compiled and then restart the python
+    programm using sys.executable, "-m ht3" and args, where args is all
+    args without --command. a _RESTARTED counter is incremented.
     """
     if not ht3.scripts.check_all_compilable():
         return
@@ -200,13 +200,43 @@ def restart(*more_args):
         args.append('"' + sys.executable + '"')
     else:
         args.append(sys.executable)
-    args += ['-m','ht3']
-    args += sys.argv[1:]
-    if not '_RESTARTED' in Env.dict:
-        args += ['_RESTARTED=0']
-    args += ['_RESTARTED+=1']
 
-    it = iter(more_args)
+    args += ['-m','ht3']
+
+    arg_iter = iter(sys.argv[1:])
+
+    # Copy from ht3.main.parse. Filters "command" arguments
+    for a in arg_iter:
+        if a.startswith('-'):
+            for short, long, function, params, done in ht3.main.POSSIBLE_ARGUMENTS:
+                if a == short or a == long:
+                    if params:
+                        try:
+                            p = tuple(next(arg_iter) for _ in range(params))
+                        except StopIteration:
+                            raise ArgumentError(f"Expecting a parameter", a)
+                    else:
+                        p = ()
+                    if not (
+                            long == "--command"
+                            or
+                            (long == "--set-env" and p[0] == "_RESTARTED")
+                        ):
+                        args.append(a)
+                        args.extend(p)
+                    break
+            else:
+                raise ArgumentError(f"Invalid option {a}")
+        else:
+            args.append(a)
+
+    args.extend(more_args)
+
+    r = Env.get("_RESTARTED", 0)
+    r = int(r)
+    r += 1
+    args.extend(("--set-env","_RESTARTED",f"{r}"))
+
 
     show ("\n==================== RESTART ===================\n")
     os.execv(sys.executable, args)

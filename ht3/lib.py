@@ -131,13 +131,13 @@ def stop_frontends():
 def execute_py_expression(s):
     """Execute a python expression"""
     c = compile(s, "<input>", "exec")
-    return eval(c, Env.dict)
+    return exec(c, {}, Env.dict)
 
 
 def evaluate_py_expression(s):
     """Evaluate a python expression"""
     c = compile(s, "<input>", "eval")
-    r = eval(c, Env.dict)
+    r = eval(c, {}, Env.dict)
     return r
 
 def threaded(f=None,**kwargs):

@@ -116,7 +116,8 @@ def main(args):
                 load_default_script()
             if f == 'code':
                 code, = a
-                exec(code, glob, Env.dict)
+                exec(code, glob, Env.persistent_dict)
+                Env._reload()
             else:
                 f(*a)
         if not done:
