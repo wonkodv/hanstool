@@ -297,7 +297,7 @@ class Window:
     def restore(self):
         self._ShowWindow("RESTORE")
 
-    def enumerate(self, cb=None):
+    def enumerate(self, cb):
         """Execute cb on every Child Window.
 
         the child window is passed to the callback.

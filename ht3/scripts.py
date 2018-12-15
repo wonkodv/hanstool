@@ -47,7 +47,7 @@ def add_scripts(path):
             add_scripts(p)
     elif path.is_file():
         if path not in ADDED_SCRIPTS:
-            if not any(path.samefile(Path(m.__file__)) for m in SCRIPTS):
+            if not any(path.samefile(pathlib.Path(m.__file__)) for m in SCRIPTS):
                 ADDED_SCRIPTS.append(path)
     elif not path.exists():
         raise FileNotFoundError(path)

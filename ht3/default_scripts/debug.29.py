@@ -1,8 +1,10 @@
 from Env import *
 
+import dis
 import ht3.command
 import importlib
 import inspect
+import io
 import os.path
 import pdb
 import sys
@@ -18,6 +20,13 @@ def debug(string:args.Union(args.Command, args.Python)):
     p.rcLines.append("c")
     p.set_trace()
     cmd()
+
+@cmd
+def disassemble(s:args.Python):
+    o = evaluate_py_expression(s.lstrip())
+    b = io.StringIO()
+    dis.dis(o, file=b)
+    show(b.getvalue())
 
 @cmd
 def py():

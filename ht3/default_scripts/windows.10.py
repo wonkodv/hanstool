@@ -120,10 +120,10 @@ if CHECK.os.win:
         return Env._complete_script_names(s)
 
     @cmd(apply_default_param_anotations=True)
-    def command_from_window(script:_complete_script_names, wnd:Window="_MOUSE_POS_MAIN", name=None):
+    def command_from_window(script:_complete_script_names, name=None, wnd:Window="_MOUSE_POS_MAIN"):
         cmdline = command_line_from_wnd(wnd)
         if name is None:
-            name = hwnd.title
+            name = wnd.title
             name = name.lower()
             name = re.sub("[^a-z_0-9]","",name)
         Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
