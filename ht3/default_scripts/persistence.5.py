@@ -29,8 +29,9 @@ class Persistence:
             if self.dict[key] == val:
                 return
         except KeyError:
-            self.dict[key] = val
-            self.save()
+            pass
+        self.dict[key] = val
+        self.save()
 
     __setitem__ = set
 
