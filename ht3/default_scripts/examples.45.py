@@ -67,7 +67,7 @@ def rand(low:int=0, high:int=0xFFFFFFFF):
     show(r)
 
 @cmd
-def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True, other:bool=True):
+def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True, other:bool=False):
     ll = set(string.ascii_lowercase)
     ul = set(string.ascii_uppercase)
     no = set(string.digits)
