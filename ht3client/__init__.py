@@ -13,7 +13,7 @@ import io
 import argparse
 import traceback
 
-ARG_PARSER = argparse.ArgumentParser(description="Client for ht3.daemon")
+ARG_PARSER = argparse.ArgumentParser(description="Client for ht3.daemon", prog=__name__)
 ARG_PARSER.add_argument("-u", "--socket",    help="Path to the UNIX Socket ht3.daemon listens on")
 ARG_PARSER.add_argument("-s", "--server",    help="Path to the UNIX Socket ht3.daemon listens on")
 ARG_PARSER.add_argument("-p", "--port",      help="Port on Server that ht3.daemon listens to")
@@ -30,16 +30,16 @@ class RemoteException(Exception):
 
 class HT3Client():
     def __init__(self, typ, adr):
-        self.sock = socket.socket(typ, socket.SOCK_STREAM)
+        self._typ = typ
         self._adr = adr
 
     def connect(self):
-        self.sock.connect(self._adr)
-        self.sock_file = self.sock.makefile("rwb")
+        sock = socket.socket(self._typ, socket.SOCK_STREAM)
+        sock.connect(self._adr)
+        self.sock_file = sock.makefile("rwb")
 
     def disconnect(self):
         self.sock_file.close()
-        self.sock.close()
 
     def __enter__(self):
         self.connect()
@@ -74,48 +74,54 @@ class HT3Client():
                 raise TypeError(t,r)
 
     def command(self, s):
-        t, r = next(self._send("COMMAND", s))
-        if t in ("RESULT", "REPR", "EXIT"):
-            return r
-        raise TypeError(s,t,r)
+        for t, r in self._send("COMMAND", s):
+            if t in ("RESULT", "REPR", "EXIT"):
+                return r
+            raise TypeError(s,t,r)
+        return None
 
     def ping(self):
-        t, r = next(self._send("PING"))
+        t, r = next(self._send("PING", None))
         if t == "PONG":
             return
         raise TypeError(s,t,r)
 
 def repl(*socket_info):
-    with HT3Client(*socket_info) as htc:
-        try:
-            import readline
-        except ImportError:
-            pass
-        else:
-            completion_cache=[]
-            def rl_complete(text, n):
-                if n == 0:
-                    completion_cache.clear()
-                    try:
+    htc = HT3Client(*socket_info)
+    with htc:
+        htc.ping()
+
+    try:
+        import readline
+    except ImportError:
+        pass
+    else:
+        completion_cache=[]
+        def rl_complete(text, n):
+            if n == 0:
+                completion_cache.clear()
+                try:
+                    with htc:
                         comp = htc.complete(text)
-                    except Exception as e:
-                        print(e)
-                        return
-                    completion_cache.extend(comp)
-                if n < len(completion_cache):
-                    s = completion_cache[n]
-                    return s
-            readline.set_completer(rl_complete)
-            readline.set_completer_delims('') # complete with the whole line
-            readline.parse_and_bind('tab: complete')
+                        completion_cache.extend(comp)
+                except BaseException as e:
+                    print(e)
+                    return
+            if n < len(completion_cache):
+                s = completion_cache[n]
+                return s
+        readline.set_completer(rl_complete)
+        readline.set_completer_delims('') # complete with the whole line
+        readline.parse_and_bind('tab: complete')
 
         try:
             while True:
                 try:
                     s = input("HT3: ")
                     if s:
-                        r = htc.command(s)
-                        print(repr(r))
+                        with htc:
+                            r = htc.command(s)
+                        print(r)
                 except RemoteException as e:
                     print(e.args[0])
                 except KeyboardInterrupt:
