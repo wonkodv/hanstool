@@ -99,7 +99,10 @@ if CHECK.os.posix:
 
     @Env
     def set_clipboard(s):
-        procio("xclip","-in",'-selection','clipboard', input=str(s))
+        p = Env['_xclip'] = execute_pipes("xclip","-in",'-selection','clipboard',
+                universal_newlines=True)
+        p.stdin.write(s)
+        p.stdin.close()
 
     if CHECK.frontend('ht3.gui'):
         import ht3.gui

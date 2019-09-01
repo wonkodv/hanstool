@@ -18,11 +18,13 @@ class OptionDialog(tk.Tk):
         self.default = def_option
         b = self.default_button = self._option(def_option)
         b.default = tk.ACTIVE
-        b.focus_force()
         for o in more_options:
             self._option(o)
 
         self.buttons.pack(padx=5, pady=5)
+
+        self.resizable(False, False)
+        b.focus_force()
 
         if timeout > 0:
             self._timer()

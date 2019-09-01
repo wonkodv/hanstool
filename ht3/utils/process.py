@@ -101,6 +101,14 @@ def execute_disconnected(*args, **kwargs):
         start_new_session=True,
         **kwargs)
 
+def execute_pipes(*args, **kwargs):
+    """Execute a program without any file handles or signals or ... attached."""
+    return Env.execute(*args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        **kwargs)
+
 def execute_auto(*args, **kwargs):
     """Execute a program, in foreground if on CLI, else in background."""
     if CHECK.is_cli_frontend:

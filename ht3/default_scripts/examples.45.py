@@ -67,11 +67,12 @@ def rand(low:int=0, high:int=0xFFFFFFFF):
     show(r)
 
 @cmd
-def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True, other:bool=False):
+def password(length:int=16, lower:bool=True, upper:bool=True, numbers:bool=True, common_symbols:bool=True, other:bool=False):
     ll = set(string.ascii_lowercase)
     ul = set(string.ascii_uppercase)
     no = set(string.digits)
-    ot = set(string.printable) - ll - ul - no
+    ss = set("+=-_@%")
+    ot = set(string.printable) - ll - ul - no - ss
 
     pwchars = set()
     if lower:
@@ -80,6 +81,8 @@ def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True,
         pwchars = pwchars | ul
     if numbers:
         pwchars = pwchars | no
+    if common_symbols:
+        pwchars = pwchars | ss
     if other:
         pwchars = pwchars | ot
 
@@ -94,8 +97,8 @@ def password(length:int=12, lower:bool=True, upper:bool=True, numbers:bool=True,
         if numbers:
             if not any(c in no for c in pwd):
                 continue
-        if other:
-            if not any(c in ot for c in pwd):
+        if other or common_symbols:
+            if not any(c in (ot|ss) for c in pwd):
                 continue
         set_clipboard("".join(pwd))
         return
