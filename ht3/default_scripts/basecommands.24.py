@@ -61,6 +61,8 @@ Env['_'] = None
 def _show_eval(s:args.Python=""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
+    if inspect.isgenerator(r):
+        r = list(itertools.islice(r, 1000))
     show(r)
     Env['__'].append(r)
     Env['_'] = r

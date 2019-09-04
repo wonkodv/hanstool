@@ -354,6 +354,8 @@ class UserInterface():
                 t = type(e)
                 tb = e.__traceback__
                 self.log("".join(traceback.format_exception(t, e, tb)))
+                for a in e.args:
+                    self.log_debug(message=a, frontend=frontend)
             self.to_front()
 
         def log_subprocess(self, frontend, process):

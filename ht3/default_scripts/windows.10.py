@@ -103,9 +103,9 @@ if CHECK.os.win:
         ht3.gui.cmd_win_hide_frame()
 
 
-    @cmd
-    def get_command_line_from_hwnd(w:Window):
-        show(command_line_from_hwnd(w))
+    @cmd(apply_default_param_anotations=True)
+    def get_command_line_from_wnd(wnd:Window="_MOUSE_POS_MAIN"):
+        show(command_line_from_wnd(wnd))
 
     def command_line_from_wnd(w):
         o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format( w.process_id),
@@ -159,13 +159,16 @@ if CHECK.os.win:
 
         w = Window.TOP.search_by_title(r"Firefox \(Private Browsing\)$")
 
-        if w.visible:
-            if w == Window.get_foreground_window():
-                fake("ALT+TAB")
-            w.hide()
-        else:
-            w.show()
-            w.to_front()
+        if w:
+            if w.visible:
+                if w == Window.get_foreground_window():
+                    fake("ALT+TAB")
+                w.hide()
+            else:
+                w.show()
+                w.to_front()
+#        else:
+#            execute_disconnected("C:/Program Files/Mozilla Firefox/Firefox.exe", "-private")
 
     @cmd
     def tmp(name=None):

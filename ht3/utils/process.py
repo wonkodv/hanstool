@@ -154,9 +154,8 @@ def _complete_executable(s):
 
     if p.is_absolute() or '/' in s:
         for c in p.parent.glob(p.name+'*'):
-            if c.is_file():
-                if os.access(str(c), os.F_OK | os.X_OK):
-                    yield str(c)
+            if c.is_dir() or (c.is_file() and os.access(c, os.F_OK | os.X_OK)): # dirs and readable, exwecutable files
+                yield str(c)
     else:
         for p in os.get_exec_path():
             p = pathlib.Path(p)

@@ -78,12 +78,12 @@ class Window:
         elif s == "_MOUSE_POS":
             w = cls.get_window_from_point()
         elif s == '_FOREGROUND':
-            w = cls.foreground()
+            w = cls.get_foreground_window()
         elif s == '_WAIT_FOREGROUND':
-            w = org = cls.foreground()
+            w = org = cls.get_foreground_window()
             while w == org:
                 time.sleep(0.1)
-                w = cls.foreground()
+                w = cls.get_foreground_window()
         else:
             w = cls.TOP.find(s)
         if w:

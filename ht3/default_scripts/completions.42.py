@@ -20,6 +20,8 @@ def complete_executable_with_args(string):
 
     #TODO deduplicate with ShellArgParser
 
+    # Example 1: dir C:/Program" Files/"
+
     for quote in ['', '"', "'"]:
         try:
             parts = shlex.split(string+quote+'|') # pipe for cursor pos
@@ -31,36 +33,26 @@ def complete_executable_with_args(string):
         # raise the error:
         shelx.split(string)
 
+    # Ex1   dir
+    #       C:/Program files/|
+
     assert parts[-1][-1] == '|'
 
     current = parts[-1][:-1]
     parts[-1] = current
 
-    #TODO: Does not work if string is `foo b"a"r` because current is `bar` not `b"a"r`
-    prefix = string[:len(string)-len(current+quote)]
-
     for v in EXECUTABLE_W_ARGS_COMPLETE_HOOK(parts=parts):
         v = str(v)
+        if not v.startswith(current):
+            continue
+        v = v[len(current):]
         if shlex._find_unsafe(v) is None:
-            s = prefix + v + quote
-            if s.startswith(string):
-                yield s
+            yield string + v + quote
         else:
             if quote:
-                s = prefix + v.replace(quote, "\\"+quote) + quote
-                if s.startswith(string):
-                    yield s
+                yield string + v.replace(quote, "\\"+quote) + quote
             else:
-                if v.startswith(current):
-                    s = (
-                        prefix +
-                        current +
-                        '"'+
-                        v[len(current):].replace('"', r'\"') +
-                        '"'
-                    )
-                    assert s.startswith(string), (s, string)
-                    yield s
+                yield string + '"' + v.replace('"', r'\"') + '"'
 
 args.ExecutableWithArgs = args.Param(complete=complete_executable_with_args, doc="ExecutableWithArgs")
 
