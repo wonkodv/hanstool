@@ -437,12 +437,12 @@ class ShellArgParser(BaseArgParser):
         prefix = string[:len(string)-len(current)]
 
 
-        if len(values)+1 <= len(param_info):
+        if len(values) < len(param_info):
             pi = param_info[len(values)]
         else:
             pi = param_info[-1]
             if not pi.multiple:
-                raise ArgError("Too many arguments",i,len(self.params))
+                raise ArgError("Too many arguments", len(values), len(param_info))
             values = values[len(param_info):] + [current]
 
 
