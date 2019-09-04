@@ -16,10 +16,10 @@ else:
 @cmd
 def nvim(server="HT3", env={}, cwd=None):
     socket = Path(ADDRESS.format(server)).expanduser()
-    if not CHECK.os.win32:
-        if not socket.parent.is_dir():
-            socket.parent.mkdir(parents=True)
     if not socket.exists():
+        if CHECK.os.posix:
+            if not socket.parent.is_dir():
+                socket.parent.mkdir(parents=True)
         if CHECK.is_cli_frontend:
             args = Env.get('NVIM','nvim')
         else:
