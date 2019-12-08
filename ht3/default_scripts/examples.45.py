@@ -1,7 +1,7 @@
 """Soome example commands and configuration."""
 
 from Env import *
-
+import re
 import random
 import subprocess
 import string
@@ -103,3 +103,41 @@ def password(length:int=16, lower:bool=True, upper:bool=True, numbers:bool=True,
         set_clipboard("".join(pwd))
         return
     raise ValueError("can not match all categories", "".join(sorted(pwd)), "".join(sorted(pwchars)))
+
+class PaSinkInput(args.Param):
+    def get_sink_inputs(self):
+        s = procio("pactl list sink-inputs")
+        return re.findall(r'Sink Input #(\d+)(?:\n\t.*)*application.process.binary = "([^"]+)"', s)
+
+    def complete(self, s):
+        for id, name in self.get_sink_inputs():
+            yield name
+
+    def convert(self, s):
+        for id, name in self.get_sink_inputs():
+            if name == s:
+                return id
+        return s
+
+class PaSink(args.Param):
+    def get_sink(self):
+        s = procio("pactl list sinks")
+        return re.findall(r'Sink #(\d+)(?:\n\t.*)*device.description = "([^"]+)"', s)
+
+    def complete(self, s):
+        for id, name in self.get_sink():
+            yield name
+
+    def convert(self, s):
+        sinks = [(id, name) for (id,name) in self.get_sink() if s.lower() in name.lower()]
+        if len(sinks) > 1:
+            raise ValueError("Search term too generic", s, sinks)
+        if len(sinks) == 1:
+            return sinks[0][0]
+        return s
+@cmd
+def audio_move(sink_input:PaSinkInput(), sink:PaSink()):
+    """Change which Sink a Pulse Audio Client uses"""
+
+    cmd = f"pactl move-sink-input {sink_input} {sink}"
+    show(cmd + ": " + procio(cmd))
