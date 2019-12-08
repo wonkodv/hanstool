@@ -56,9 +56,21 @@ class ResultHook(Hook):
 class GeneratorHook(Hook):
     """Yields elements of registered callbacks.
 
-    If a function raises a StopIteration with as value that hs non-False boolean,
-    no other callbacks are called. can be done with `return True` inside a
-    generator."""
+    When iterating over the result of a called registered function raises
+    a StopIteration with a value that is true-ish, no other callbacks
+    are called. This is NOT achived by returning a list or tuple
+    as Generator:
+        def foo():
+            yield 1
+            yield 2
+            return True
+
+    as Iterator
+        class Iter:
+            def __next__(self):
+                if self.exausted():
+                    raise StopIteration(True)
+    """
 
     def __call__(self, **kwargs):
         for c in reversed(self.callbacks):
