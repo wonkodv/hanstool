@@ -43,15 +43,16 @@ if CHECK.os.posix:
             target.mkdir(parents=True)
 
         fstype = procio("lsblk", "-ln", "-oFSTYPE", str(dev)).strip()
-        options = "rw,nosuid,nodev,noexec,nosuid,relatime,fmask=113,dmask=002"
         if fstype == 'ext4':
-            pass
+            options = "rw,nosuid,nodev,relatime"
         elif fstype in[
             'fat', 'vfat', 'umsdos', 'msdos','ntfs',
-            'hfs', 'hpfs',
-            'iso9660', 'udf']:
-            options += ",uid={:d},gid={:d}".format(os.geteuid(), os.getegid())
-        show(f"Mount -t {fstype} {dev} {target} --options {options!s}")
+            'hfs', 'hpfs', 'udf']:
+            options = "rw,nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(os.geteuid(), os.getegid())
+        elif fstype == 'iso9660':
+            options = "nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(os.geteuid(), os.getegid())
+
+        show(f"mount -t {fstype} {dev} {target} --options {options}")
         procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
     def complete_mounted_devices(s):
