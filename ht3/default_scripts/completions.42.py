@@ -1,8 +1,10 @@
 """Completion hook for executables with args.
 
-The string is shlex.split and passed as `parts`.
-functions should yield completed versions of `parts[-1],
-The completers that are 
+One function can be registered for every executable
+(Path(parts[0]).name.lower()) using the exe_completer decorator. A function is passed
+the string parts of shlex.split. parts[0] is the exe, parts[1] the 1st argument if any.
+Functions should yield completed versions of `parts[-1]` and return True if this
+is all, or nothing if File-Completion should be tried.
 """
 from Env import *
 
@@ -141,7 +143,7 @@ def specific_completions(parts):
 def exe_completer(e):
     assert not callable(e)
     def deco(f):
-        SPECIFIC_COMPLETERS[e] = f
+        SPECIFIC_COMPLETERS[e.lower()] = f
     return deco
 
 

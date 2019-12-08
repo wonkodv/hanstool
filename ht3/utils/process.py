@@ -143,6 +143,9 @@ def procio(*args, input=None, timeout=None, **kwargs):
     return out
 
 def complete_executable(s):
+    return sorted(_complete_executable(s))
+
+def _complete_executable(s):
     s = shlex.split(s)
     if len(s) != 1:
         return
