@@ -54,6 +54,7 @@ class Command():
         try:
             THREAD_LOCAL.command = self
             COMMAND_RUN_HOOK(command=self)
+            __STACK_FRAMES__ = inspect.stack(0)
             try:
                 result = self.result = self.run()
             except Exception as e:
@@ -64,6 +65,7 @@ class Command():
                 raise
             else:
                 COMMAND_FINISHED_HOOK(command=self)
+                del __STACK_FRAMES__
                 return result
             finally:
                 self.finished = True

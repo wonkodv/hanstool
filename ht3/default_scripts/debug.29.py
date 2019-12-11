@@ -101,6 +101,27 @@ if Env.get('MAKELEVEL',False):
             s += "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(exception)
         print(s)
 
+
+@cmd
+def debug_exception():
+    def a(x):
+        b(x+1)
+
+    def b(y):
+        raise Exception("arg1","arg2","arg3", y)
+
+    try:
+        a(10)
+    except Exception as e:
+        try:
+            a(20)
+        except Exception as e2:
+            try:
+                raise e2 from e
+            except:
+                raise ValueError(42)
+
+
 if Env.get('DEBUG', False):
     import warnings
     warnings.simplefilter("error")

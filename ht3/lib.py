@@ -5,6 +5,7 @@ import importlib
 import threading
 
 import ht3.hook
+import inspect
 
 from .env import Env
 from . import check
@@ -170,7 +171,10 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
         kwargs = dict()
     fe = THREAD_LOCAL.frontend
     cmd = THREAD_LOCAL.command
-    def target():
+
+    stack = inspect.stack(0)
+    def target(stack):
+        __STACK_FRAMES__ = stack
         THREAD_LOCAL.frontend = fe
         THREAD_LOCAL.command = cmd
         try:
@@ -180,6 +184,9 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
             stop_frontends()
         except Exception as e:
             on_exception(e)
-    t = threading.Thread(target=target, name=name)
+        # Let go of stack if there were no exceptions
+        del stack
+    t = threading.Thread(target=target, name=name, args=(stack,))
     t.start()
+    del stack
     return t
