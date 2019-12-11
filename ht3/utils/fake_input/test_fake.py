@@ -1,7 +1,6 @@
 import unittest
 from unittest.mock import patch
-
-from .fake_input import fake, KEY_CODES, fake_re
+from .fake_input import fake, fake_re, impl
 
 class Test_fake(unittest.TestCase):
 
@@ -41,12 +40,12 @@ class Test_fake(unittest.TestCase):
                 fake_in.key_down =      lambda k    : s.append(["kd", k])
                 fake_in.key_up =        lambda k    : s.append(["ku", k])
                 fake_in.type_string =   lambda t,i  : s.append(["t", t, i])
-                fake_in.KEY_CODES =     KEY_CODES
+                fake_in.KEY_CODES =     impl.KEY_CODES
                 fake(string, interval)
         return s
 
     def test_all(self):
-        k = KEY_CODES
+        k = impl.KEY_CODES
         s = self.runSequence("""
             +Shift
             A

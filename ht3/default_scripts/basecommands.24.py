@@ -8,7 +8,7 @@ import time
 import os
 
 def _complete_fake(string):
-    parts = re.split('[^A-Za-z0-9]+', string)
+    parts = re.split('[^A-Za-z0-9_]+', string)
     if len(parts) > 0:
         p = parts[-1]
     else:

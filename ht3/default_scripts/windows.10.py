@@ -25,7 +25,9 @@ if CHECK.os.win:
         if r > 32:
             return
         else:
-            raise OSError("ShellExecute returned an error: %d" % r)
+            e = ctypes.WinError()
+            e.filename = s
+            raise e
 
     @cmd(name="%")
     def explore_command(cmd:args.Command):
@@ -153,7 +155,7 @@ if CHECK.os.win:
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
 
-    @cmd(attrs={"HotKey":"SCROLL"})
+    @cmd(attrs={'HotKey':'F7'})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 

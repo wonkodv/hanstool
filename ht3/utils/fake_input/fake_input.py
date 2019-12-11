@@ -32,6 +32,8 @@ __all__ = (
     'key_up'
 )
 
+KEY_CODES = impl.KEY_CODES
+
 class Error(Exception):
     pass
 
@@ -128,7 +130,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
             elif m.group("COMBO"):
                 keys = ['mod1','mod2','mod3','mod4','modkey']
                 keys = [m.group(k) for k in keys]
-                keys = [impl.KEY_CODES[k.upper()] for k in keys if k is not None]
+                keys = [KEY_CODES[k.upper()] for k in keys if k is not None]
                 for key in keys:
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
@@ -138,7 +140,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
             elif m.group("KEY"):
                 ud = m.group('kud')
                 key= m.group('key')
-                key= impl.KEY_CODES[key.upper()]
+                key= KEY_CODES[key.upper()]
                 if ud != '-':
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
