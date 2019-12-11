@@ -66,40 +66,77 @@ def exception_trace(i:int=-1):
     """Open the traceback of the latest exception in nvim."""
 
     e = EXCEPTIONS[i]
-    t = e.__traceback__
-    s = ""
-    while(t.tb_next):
-        file = t.tb_frame.f_code.co_filename
-        file = os.path.abspath(file)
-        line = t.tb_lineno
-        name = t.tb_next.tb_frame.f_code.co_name
-        args = inspect.getargvalues(t.tb_next.tb_frame)
 
-        def  formatvalue (value):
-            try:
-                value = "=" + repr(value)
-            except:
-                value = "=<error in repr of "+repr(type(value))+">"
-        args = inspect.formatargvalues(*args)
+    lines = []
+    seen = set()
 
-        if os.path.exists(file):
-            s += "{0}:{1:d}: {2}{3}".format(file, line, name, args)+"\n"
-        t = t.tb_next
+    def ff(frames, exc):
+        frames = tuple(frames)
+        for i, f in enumerate(frames):
+            locls = f.frame.f_locals
+            for name, value in sorted(locls.items()):
+                try:
+                    value = repr(value)
+                except:
+                    value = repr(type(value))+"()"
+                lines.append(f'    {name} = {value}')
 
-    file = t.tb_frame.f_code.co_filename
-    file = os.path.abspath(file)
-    if os.path.exists(file):
-        line = t.tb_lineno
-        s += "{0}:{1:d}: {2}: {3:s}".format(file, line, type(e).__name__, str(e.args))
+            file = os.path.abspath(f.filename)
+            line = f.lineno
+
+            if i:
+                name = frames[i-1].function
+                args = inspect.getargvalues(frames[i-1].frame)
+                try:
+                    args = inspect.formatargvalues(*args)
+                except:
+                    args = "<{} Arguments>".format(len(args))
+            elif exc:
+                name = type(exc).__name__
+                args = str(exc.args)
+            else:
+                name = " ?? "
+                args=""
+
+            #if os.path.exists(file):
+            lines.append(f"{file}:{line:d}: {name}{args}")
+
+            stk = locls.get("__STACK_FRAMES__")
+            if stk and id(stk) not in seen:
+                seen.add(id(stk))
+                lines.append("following __STACK_FRAMES__")
+                ff(stk, None)
+                break
+
+    def f(e):
+        t = e.__traceback__
+        frames = inspect.getinnerframes(t)
+
         if isinstance(e, SyntaxError):
-            s+= "\n{0.filename}:{0.lineno:d}:{0.offset:d}: {0.msg}".format(e)
+            lines.append(f"{e.filename}:{e.lineno:d}:{e.offset:d}: {e.msg}")
+
+        if e.__cause__:
+            f(e.__cause__)
+            lines.append("Caused")
+        if e.__context__:
+            f(e.__context__)
+            lines.append("Lead to")
+
+        l = len(lines)
+        ff(reversed(frames), e)
+        return l
+
+    l = f(EXCEPTIONS[i])
+
+    s = "\n".join(lines)
     show(s)
+
     with tempfile.NamedTemporaryFile('wb', delete=False) as f:
         f.write(s.encode("UTF-8"))
         f.flush()
         n = nvim()
-        n.command(':cfile ' + f.name)
-        n.command(':clast ')
+        n.command(f':cfile {f.name}')
+        n.command(f':{l}cc ')
     if CHECK.is_cli_frontend:
         p = n.PROCESS
         if p:
