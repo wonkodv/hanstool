@@ -146,42 +146,50 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     if not ht3.scripts.check_all_compilable():
         return
 
+    debug = log.__wrapped__
+
+    # disable and delete hotkeys
     if CHECK.frontend('ht3.hotkey'):
+        debug("Reload: Disable all hotkeys")
         ht3.hotkey.disable_all_hotkeys() # let hotkeys and old functions be deleted
         l = list(ht3.hotkey.HotKey.HOTKEYS.values())
         ht3.hotkey.HotKey.HOTKEYS.clear() # Remove all hotkeys from the cache
         assert not any(hk.active for hk in l)
 
+    # remove hooks defined in scripts
     for h in ht3.hook.Hook.HOOKS:
         for c in list(h.callbacks):
             if c.__module__.startswith("Env."):
-                h.callbacks.remove(c) # remove hooks from scripts
+                debug(f"Reload: Remove Hook {c.__name__} defined in script {c.__module__}")
+                h.callbacks.remove(c)
 
+    debug("Reload: Clear commands")
     COMMANDS.clear()
 
-    log("\n==================== RELOAD ===================\n")
-
+    debug("Reload: Modules")
     for module in modules:
         if module == 'ENV':
-            log("Env")
+            debug("Reload: ENV")
             Env._reload()
         else:
-            log(module)
+            debug(f"Reload: module {module}")
             m = importlib.import_module(module)
             importlib.reload(m)
+
+    debug("Reload: ===== Cleanup Done, Begin reloading =====")
+
 
     Env['_RELOADED'] = _RELOADED + 1
 
     try:
+        debug("Reload: Scripts")
         reload_all()
     finally:
         if CHECK.frontend('ht3.hotkey'):
+            debug("Reload: Hotkeys")
             ht3.hotkey.reload_hotkeys()
-        if CHECK.frontend('ht3.gui'):
-            # Somehow reload messes up tkinter's update schedule
-            sleep(0.1)
-            ht3.gui.cmd_win_to_front()
-    log("\n== Done ==\n")
+
+    debug("Reload: ===== Done =====")
 
 
 @cmd

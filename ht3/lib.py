@@ -54,10 +54,16 @@ check.CHECK.is_cli_frontend = check.Value(_is_cli_frontend)
 
 def load_frontend(name):
     """Load a the frontend with qualified name: ``name``"""
+
+    if name in FRONTENDS:
+        raise TypeError("Frontend already loaded", name)
+
     mod = importlib.import_module(name)
-    assert callable(mod.start)
-    assert callable(mod.loop)
-    assert callable(mod.stop)
+
+    for m in "start", "loop", "stop":
+        if not callable(getattr(mod, m)):
+            raise TypeError("Frontend is missing a function", m, name, mod,)
+
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
 
