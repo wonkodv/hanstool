@@ -81,7 +81,12 @@ def reload_all():
             if getattr(mod, '_SCRIPT_RELOAD', True):
                 ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
             if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
-                delattr(Env, mod.__name__[4:])
+                try:
+                    delattr(Env, mod.__name__[4:])
+                except KeyError:
+                    pass # was already removed from Env
+            if Env.get(mod.__name__[4:], None) == mod:
+                del Env[mod.__name__[4:]]
         SCRIPTS.clear()
         load_scripts()
     except Exception as e:
