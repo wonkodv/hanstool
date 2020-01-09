@@ -57,10 +57,8 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         else:
             raise AttributeError("Dont set Attributes on Env")
 
-    def get(self, key, default=_DEFAULT):
+    def get(self, key, default=None):
         v = self.dict.get(key, default)
-        if v == _DEFAULT:
-            raise KeyError(key)
         return v
 
     def __getitem__(self, key):
@@ -112,7 +110,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         name = func.__name__
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
-            w = self.get(name)
+            w = self[name]
             f = inspect.unwrap(w)
             return f(*args, **kwargs)
         self.put(name, wrapper)
