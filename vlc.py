@@ -61,7 +61,7 @@ def current_song():
     b = request("/requests/status.json")
     s = b.decode("utf-8")
     o = json.loads(s)
-    s = "{0[artist]} - {0[title]}".format(o['information']['category']['meta'])
+    s = "{artist} - {album}.{track_number} - {title}".format(**o['information']['category']['meta'])
     set_clipboard(s)
     show(s)
 
