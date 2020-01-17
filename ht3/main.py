@@ -56,6 +56,13 @@ def load_default_script():
     while scripts.ADDED_SCRIPTS:
         load_scripts()
 
+def put_env(k, v):
+    try:
+        v = int(v)
+    except ValueError:
+        pass
+    Env.put_static(k,v)
+
 POSSIBLE_ARGUMENTS = [
     #   short    Long              Function          ParamNo Done/Action
     [  '-s',  '--add-script',      add_scripts,          1,  False  ],
@@ -63,7 +70,7 @@ POSSIBLE_ARGUMENTS = [
     [  '-f',  '--load-frontend',   load_frontend,        1,  False  ],
     [  '-r',  '--run-frontends',   run_frontends,        0,  True   ],
     [  '-d',  '--default-script',  load_default_script,  0,  False  ],
-    [  '-e',  '--set-env',         Env.put_static,       2,  False  ],
+    [  '-e',  '--set-env',         put_env,       2,  False  ],
     [  '-c',  '--command',         run_command,          1,  True   ],
     [  '-x',  '--execute',         "code",               1,  True   ],
 ]

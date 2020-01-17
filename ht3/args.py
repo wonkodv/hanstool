@@ -463,14 +463,23 @@ class ShellArgParser(BaseArgParser):
                         yield s
                 else:
                     if v.startswith(current):
+                        rem = v[len(current):]
+                        quoted = rem.replace('"', r'\"')
                         s = (
                             prefix +
                             current +
-                            '"'+ 
-                            v[len(current):].replace('"', r'\"') +
+                            '"'+
+                            quoted +
                             '"'
                         )
-                        assert s.startswith(string), (s, string)
+                        assert s.startswith(string), f"""
+                                s       {s},
+                                string  {string},
+                                prefix  {prefix},
+                                current {current},
+                                v       {v},
+                                rem     {rem},
+                                quoted  {quoted}"""
                         yield s
 
     def describe_params(self):

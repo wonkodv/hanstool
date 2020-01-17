@@ -9,6 +9,7 @@ import os.path
 import pdb
 import sys
 import tempfile
+import traceback
 
 @cmd
 def debug(string:args.Union(args.Command, args.Python)):
@@ -60,15 +61,19 @@ def update_check():
         show("Git up to date")
 
 def version():
-    v = procio("git -C {} describe --tags".format(str(Path(ht3.__file__).parent.parent))).strip()
-    return v
+    try:
+        p = Path(ht3.__file__).parent.parent
+        v = procio(f"git -C {p} describe --tags")
+        return v.strip()
+    except:
+        return "version unknown (depends on git describe)"
 
 @cmd(name="version")
 def _version():
     v = version()
     show(v)
 
-print("HansTool {}".format(version()))
+print("HansTool {} on Python {}".format(version(), sys.version))
 
 @cmd
 def threadlist():
@@ -103,7 +108,8 @@ if Env.get('MAKELEVEL',False):
 
 
 @cmd
-def debug_exception():
+def raise_exception():
+    """Raise an exception with a nice and complicated Traceback / Cause list."""
     def a(x):
         b(x+1)
 
@@ -123,11 +129,16 @@ def debug_exception():
 
 
 if Env.get('DEBUG', False):
-    import warnings
-    warnings.simplefilter("error")
+    @DEBUG_HOOK.register
+    def trace_log(message):
+        print()
+        traceback.print_stack()
+        print("Debug Message")
+        print(message)
 
-    _fault = open("faults", "wt")
-    import faulthandler
-    import atexit
-    faulthandler.enable(_fault)
-    atexit.register(lambda : _fault.close())
+    @ALERT_HOOK.register
+    def trace_alert(message):
+        print()
+        traceback.print_stack()
+        print("Debug Message")
+        print(message)

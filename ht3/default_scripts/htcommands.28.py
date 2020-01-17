@@ -146,7 +146,7 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     if not ht3.scripts.check_all_compilable():
         return
 
-    debug = log.__wrapped__
+    debug = print
 
     # disable and delete hotkeys
     if CHECK.frontend('ht3.hotkey'):
@@ -189,7 +189,7 @@ def reload(*modules:args.Union(["ENV"], args.Option(sys.modules, sort=True))):
             debug("Reload: Hotkeys")
             ht3.hotkey.reload_hotkeys()
 
-    debug("Reload: ===== Done =====")
+    log("Reload: ===== Done =====")
 
 
 @cmd

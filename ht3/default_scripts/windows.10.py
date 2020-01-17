@@ -160,7 +160,7 @@ if CHECK.os.win:
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 
         w = Window.TOP.search_by_title(r"Firefox \(Private Browsing\)$")
-
+        log(w)
         if w:
             if w.visible:
                 if w == Window.get_foreground_window():

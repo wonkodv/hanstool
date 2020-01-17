@@ -8,6 +8,6 @@ for k, v in os.environ.items():
     if k[:4] == 'HT3_':
         Env[k[4:]] = v
 
-Env['PATH'] = [Path(p) for p in os.get_exec_path()]
+PATH = Env['PATH'] = [Path(p) for p in os.get_exec_path()]
 
 
