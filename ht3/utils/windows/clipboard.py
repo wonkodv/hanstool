@@ -1,25 +1,99 @@
-import ctypes
+from ctypes import (
+        cdll, windll,
+        FormatError,
+        memmove,
+        c_wchar_p, c_size_t, c_void_p
+    )
+from ctypes.wintypes import UINT, BOOL, DWORD
+
+def expect_nonzero(result, func, args):
+    if not result:
+        e = GetLastError()
+        if e:
+            s = FormatError(e)
+            raise OSError(result, e, s, args)
+    return args
+
+CloseClipboard = windll.user32.CloseClipboard
+CloseClipboard.argtypes = []
+CloseClipboard.errcheck = expect_nonzero
+CloseClipboard.restype = BOOL
+EmptyClipboard = windll.user32.EmptyClipboard
+EmptyClipboard.argtypes = []
+EmptyClipboard.errcheck = expect_nonzero
+EmptyClipboard.restype = BOOL
+GetClipboardData = windll.user32.GetClipboardData
+GetClipboardData.argtypes = [UINT]
+GetClipboardData.restype = c_void_p
+GetLastError = windll.kernel32.GetLastError
+GetLastError.argtypes=[]
+GetLastError.restype=DWORD
+GlobalAlloc = windll.kernel32.GlobalAlloc
+GlobalAlloc.argtypes = [UINT, c_size_t]
+GlobalAlloc.restype = c_void_p
+GlobalLock = windll.kernel32.GlobalLock
+GlobalLock.argtypes = [c_void_p]
+GlobalLock.errcheck = expect_nonzero
+GlobalLock.restype = c_void_p
+GlobalSize = windll.kernel32.GlobalSize
+GlobalSize.argtypes = [c_void_p]
+GlobalSize.restype = c_size_t
+GlobalUnlock = windll.kernel32.GlobalUnlock
+GlobalUnlock.argtypes = [c_void_p]
+GlobalUnlock.errcheck = expect_nonzero
+GlobalUnlock.restype = BOOL
+OpenClipboard = windll.user32.OpenClipboard
+OpenClipboard.argtypes = [UINT]
+OpenClipboard.errcheck = expect_nonzero
+OpenClipboard.restype = BOOL
+SetClipboardData = windll.user32.SetClipboardData
+SetClipboardData.argtypes = [UINT, c_void_p]
+SetClipboardData.errcheck = expect_nonzero
+SetClipboardData.restype = c_void_p
 
 def get_clipboard():
-    ctypes.windll.user32.OpenClipboard(0)
-    if ctypes.windll.user32.IsClipboardFormatAvailable(13):
-        data = ctypes.windll.user32.GetClipboardData(13)
-        data_locked = ctypes.windll.kernel32.GlobalLock(data)
-        text = ctypes.c_wchar_p(data_locked).value
-        ctypes.windll.kernel32.GlobalUnlock(data_locked)
-    else:
-        text = None
-    ctypes.windll.user32.CloseClipboard()
+    OpenClipboard(0)
+    try:
+        data = GetClipboardData(13)
+        if data:
+            data_locked = GlobalLock(data)
+            try:
+                text = c_wchar_p(data_locked).value
+            finally:
+                GlobalUnlock(data_locked)
+        else:
+            text = None
+    finally:
+        CloseClipboard()
     return text
 
 def set_clipboard(text):
     text = str(text)
-    ctypes.windll.user32.OpenClipboard(0)
-    ctypes.windll.user32.EmptyClipboard()
-    hCd = ctypes.windll.kernel32.GlobalAlloc(0x2000, len(text.encode('utf-16-le')) + 2)
-    pchData = ctypes.windll.kernel32.GlobalLock(hCd)
-    ctypes.cdll.msvcrt.wcscpy(ctypes.c_wchar_p(pchData), text)
-    ctypes.windll.kernel32.GlobalUnlock(hCd)
-    ctypes.windll.user32.SetClipboardData(13, hCd)
+    e = text.encode('utf-16-le')
+    text_len = len(e)
 
-    ctypes.windll.user32.CloseClipboard()
+    hCd = GlobalAlloc(0x2, text_len + 2)
+    try:
+        l = GlobalSize(hCd);
+        if l <= len(e):
+            raise OSError(f"Allocated MemBlock {hCd!r} smaller than requested: {l}")
+        pchData = GlobalLock(hCd)
+
+        memmove(c_wchar_p(pchData), c_wchar_p(text), text_len)
+        try:
+            OpenClipboard(0)
+            EmptyClipboard()
+            SetClipboardData(13, hCd)
+        finally:
+            CloseClipboard()
+    finally:
+        GlobalUnlock(hCd)
+
+__all__ = ('get_clipboard', 'set_clipboard')
+
+if __name__ == '__main__':
+    import sys
+    if sys.argv[1:] in ( [], ['-o']):
+        print(get_clipboard())
+    else:
+        set_clipboard(" ".join(sys.argv[1:]))

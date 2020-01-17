@@ -67,12 +67,11 @@ if CHECK.os.win:
         def MoveHtWindow():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             w = taskbar_window()
-            r = w.rect
+            l,t,r,b = w.rect
 
             @ht3.gui.interact(False)
             def doit(GUI):
-                ht3.gui.cmd_win_set_rect(*r)
-                Env.log("Set window Rect" + repr(r))
+                ht3.gui.cmd_win_set_rect(l+2, t, r-4, b)
             doit()
 
         @Env
