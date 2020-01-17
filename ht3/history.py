@@ -1,6 +1,7 @@
-import pathlib
-import os.path
 import collections
+import functools
+import pathlib
+
 import ht3.hook
 from ht3.env import Env
 
@@ -11,15 +12,12 @@ APPEND_HOOK = ht3.hook.Hook("command_string")
 
 HISTORY = None
 
+
 def get_history_file():
     p = Env.get('HISTORY', HISTORY_FILE_DEFAULT)
-    p = str(p) # in case it's a Path
-    p = os.path.expanduser(p)
-    p = pathlib.Path(p)
+    p = pathlib.Path(p).expanduser()
     if not p.parent.exists():
         p.parent.mkdir(parents=True)
-    global get_history_file
-    get_history_file = lambda:p
     return p
 
 def get_history():
@@ -30,7 +28,6 @@ def get_history():
         except FileNotFoundError:
             HISTORY = []
     return HISTORY
-
 
 def load_history():
     """Load the history from file, enforce Limit."""
@@ -52,6 +49,4 @@ def append_history(*cmd):
         APPEND_HOOK(command_string=c)
     with get_history_file().open("at") as f:
         f.write("\n".join(cmd) + "\n")
-
-
 
