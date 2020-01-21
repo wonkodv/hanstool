@@ -37,6 +37,9 @@ def nvim(server="HT3", env={}, cwd=None):
         else:
             raise FileNotFoundError(f"Socket File not created by nvim. ARGS:{args} {p}")
     else:
+        if not socket.is_socket():
+            raise OSError(f"Expected {socket} to be a socket")
+        show(f"Attaching to {socket}")
         p = None
 
     nvim = neovim.attach("socket", path=str(socket))
@@ -55,7 +58,7 @@ def edit_file(file_name:Path, line:int=0, server="HT3"):
     if line:
         inst.command("normal {}gg".format(line))
     if CHECK.is_cli_frontend:
-        p = isnt.PROCESS
+        p = inst.PROCESS
         if p:
             p.wait()
         else:
