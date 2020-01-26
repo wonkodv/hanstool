@@ -128,17 +128,18 @@ def raise_exception():
                 raise ValueError(42)
 
 
-if Env.get('DEBUG', False):
-    @DEBUG_HOOK.register
-    def trace_log(message):
+@DEBUG_HOOK.register
+def trace_log(message):
+    if Env.get('DEBUG', False):
         print()
         traceback.print_stack()
         print("Debug Message")
         print(message)
 
-    @ALERT_HOOK.register
-    def trace_alert(message):
+@ALERT_HOOK.register
+def trace_alert(message):
+    if Env.get('DEBUG', False):
         print()
         traceback.print_stack()
-        print("Debug Message")
+        print("Alert Message")
         print(message)
