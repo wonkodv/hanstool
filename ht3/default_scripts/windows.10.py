@@ -234,3 +234,48 @@ if CHECK.os.win:
     @cmd
     def tna_text_updater_stop():
             Env['tna_updater_thread'] = None
+
+    @cmd
+    @Env
+    def set_mouse_speed(x:int):
+        assert 1 <= x <= 20
+        SPI_SETMOUSESPEED = 0x71
+        SPIF_SENDCHANGE = 2
+        r = windll.user32.SystemParametersInfoW(
+            SPI_SETMOUSESPEED,
+            0,
+            x,
+            SPIF_SENDCHANGE
+            )
+        if r == 0:
+            raise OSError("SystemParametersInfo failed")
+
+    @Env
+    def get_mouse_speed():
+        SPI_GETMOUSESPEED = 0x70
+        i = ctypes.c_int(42)
+        p = ctypes.byref(i)
+        r = windll.user32.SystemParametersInfoW(
+            SPI_GETMOUSESPEED,
+            0,
+            p,
+            0
+            )
+        if r == 0:
+            raise OSError("SystemParametersInfo failed")
+        return i.value
+
+    @Env
+    def waitforprocessidle(p, timeout):
+        import ctypes
+        hp = windll.kernel32.OpenProcess(0x00100000, 0, p.pid)
+        if hp == 0:
+            raise ctypes.WinError()
+        e = windll.user32.WaitForInputIdle(p._handle, timeout)
+        if e == 0:
+            return True
+        elif e == 0x102:
+            return False
+        else:
+            show("Process Handle: %X, error: %X"% (hp, e))
+            raise ctypes.WinError()

@@ -7,3 +7,4 @@ if CHECK.os.win:
     from .hwnds import *
     from .process import *
     from .clipboard import *
+    from .functions import *

@@ -1,6 +1,7 @@
 """Show the MessageBox."""
 import ctypes
 from functools import reduce
+from .functions import MessageBoxW
 
 _MessageBoxFlags={
     # Buttons
@@ -70,5 +71,5 @@ def MessageBox(title, text, flags):
     except ValueError:
         s = flags.split(" ")
         flags = reduce(lambda x,y: x|y, (_MessageBoxFlags[x.strip().upper()] for x in s))
-    x = ctypes.windll.user32.MessageBoxW(0, text, title, flags)
+    x = MessageBoxW(0, text, title, flags)
     return _MessageBoxResults[x]
