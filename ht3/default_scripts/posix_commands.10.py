@@ -53,7 +53,7 @@ if CHECK.os.posix:
             options = "nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(os.geteuid(), os.getegid())
 
         show(f"mount -t {fstype} {dev} {target} --options {options}")
-        procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
+        return procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
 
     def complete_mounted_devices(s):
         with open('/proc/mounts') as f:
@@ -86,6 +86,7 @@ if CHECK.os.posix:
         show(procio("lsblk", "--output",
             "name,mountpoint,ro,fstype,size,label,partlabel,model"))
 
+    @Env
     @cmd(name='o')
     def xdg_open(s:Path):
         """Open something with xdg-open."""
