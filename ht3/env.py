@@ -2,11 +2,12 @@
 
 _DEFAULT = object()
 
-import types
-import sys
-import inspect
-import functools
 import collections.abc
+import functools
+import importlib
+import inspect
+import sys
+import types
 
 class _Env_class(types.ModuleType, collections.abc.Mapping):
     """Common Env to be used by scripts
@@ -58,11 +59,19 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
             raise AttributeError("Dont set Attributes on Env")
 
     def get(self, key, default=None):
-        v = self.dict.get(key, default)
-        return v
+        try:
+            return self[key]
+        except KeyError:
+            return default
 
     def __getitem__(self, key):
-        return self.dict[key]
+        try:
+            return self.dict[key]
+        except KeyError as ke:
+            try:
+                return importlib.import_module(key)
+            except ImportError as ie:
+                raise ke from None
 
     def __getattr__(self, key):
         try:

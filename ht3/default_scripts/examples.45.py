@@ -5,6 +5,7 @@ import re
 import random
 import subprocess
 import string
+import datetime
 
 
 if CHECK.frontend('ht3.cli'):
@@ -25,6 +26,9 @@ def txt():
 @cmd
 def timer(t:args.Time, event:str="Done"):
     """ timer timer """
+
+    t2 = datetime.datetime.now() + datetime.timedelta(seconds=t)
+    show(f"Reminding you of {event} at {t2}")
     @threaded
     def timer_thread():
         sleep(t)

@@ -314,7 +314,7 @@ def _get_param(p, var_arg):
     if isinstance(p, collections.abc.Sequence):
         if (any(isinstance(e, (Param, MultiParam)) for e in p) or
                 not any(isinstance(e, str) for e in p)): # allow ['a','1',2] use only a and 1
-            raise TypeError("Give a list of allowed strings")
+            raise TypeError("Give a list of allowed strings", p)
 
         return Option(p)
 

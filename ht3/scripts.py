@@ -71,8 +71,8 @@ def load_scripts():
         ADDED_SCRIPTS.remove(path)
         SCRIPTS.append(mod)
         if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
-            if name in Env:
-                raise ImportError("Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False")
+            if Env.get(name):
+                raise ImportError(f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False")
             Env.put(name, mod)
 
 def reload_all():

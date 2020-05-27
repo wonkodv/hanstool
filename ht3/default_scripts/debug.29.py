@@ -79,6 +79,11 @@ print("HansTool {} on Python {}".format(version(), sys.version))
 def threadlist():
     show("\n".join("{0.ident: 10d} {0.name}".format(t) for t in threading.enumerate()))
 
+@cmd
+def processlist():
+    import psutil
+    show( "\n".join("{: 10d} {}".format(p.pid, p.name()) for p in psutil.Process().children(recursive=True)))
+
 if Env.get('MAKELEVEL',False):
     @EXCEPTION_HOOK.register
     def _format_exceptions_liek_make(exception):
