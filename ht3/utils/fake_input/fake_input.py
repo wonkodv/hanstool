@@ -94,6 +94,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
 
     sequence = []
     count = 1
+    mouse_needs_restore = False
     def a(f, *a):
         nonlocal count
         for _ in range(count):
@@ -113,6 +114,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
             elif m.group("COUNT"):
                 count = int(m.group("count"))
             elif m.group("MOVEABS"):
+                mouse_needs_restore = True
                 x,y = groups
                 x = int(x)
                 y = int(y)
@@ -170,6 +172,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
                 raise ValueError("Invalid Token", m.group(0))
         except KeyError:
             raise Error("Invalid fake-sequence", m)
+
+    restore_mouse_pos = restore_mouse_pos and mouse_needs_restore
 
     if restore_mouse_pos:
         mp = get_mouse_pos()

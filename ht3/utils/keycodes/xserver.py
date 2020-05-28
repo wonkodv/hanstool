@@ -31,6 +31,7 @@ KEY_CODES = {
     'BRACKETLEFT':      34,
     'BRACKETRIGHT':     35,
     'RETURN':           36,
+    'ENTER':            36,
     'CONTROL_L':        37,
     'CONTROL':          37,
     'A':                38,
