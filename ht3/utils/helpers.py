@@ -19,9 +19,9 @@ def cmd_func(name, func, *args, **kwargs):
     see `functools.partial`."""
     cmdf = functools.partial(func, *args, **kwargs)
     register_command(cmdf,
-        name=name,
-        doc='executes\n'+" ".join(shlex.quote(x) for x in args),
-        origin_stacked=3)
+                     name=name,
+                     doc='executes\n' + " ".join(shlex.quote(x) for x in args),
+                     origin_stacked=3)
 
     # be careful, black magic ahead!
     stack = inspect.stack()
@@ -41,9 +41,11 @@ def cache_for(t):
             return complicated_semi_time_dependant_stuff(with_args)
     """
     float(t)
+
     def deco(f):
         updated = 0
         cache = None
+
         @functools.wraps(f)
         def wrapper():
             nonlocal cache
@@ -56,4 +58,5 @@ def cache_for(t):
         return wrapper
     return deco
 
-__all__  = 'cmd_func', 'cache_for'
+
+__all__ = 'cmd_func', 'cache_for'

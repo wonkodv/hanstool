@@ -5,13 +5,16 @@ from unittest.mock import patch, Mock
 
 from ht3 import lib
 
+
 class Test_frontends(unittest.TestCase):
     def get_fe(self, n):
         m = Mock()
         m.i = 0
         m.running = True
+
         def start():
             pass
+
         def loop():
             while m.running:
                 m.i += 1
@@ -32,7 +35,7 @@ class Test_frontends(unittest.TestCase):
         fe2 = self.get_fe('fe2')
 
         fe3 = Mock()
-        fe3.loop = lambda:time.sleep(0.1)
+        fe3.loop = lambda: time.sleep(0.1)
         fe3.__name__ = 'fe3'
 
         importMock.side_effect = [fe1, fe2, fe3]
@@ -45,4 +48,3 @@ class Test_frontends(unittest.TestCase):
 
         self.assertGreater(fe1.i, 100)
         self.assertGreater(fe2.i, 100)
-

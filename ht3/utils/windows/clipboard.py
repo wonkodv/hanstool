@@ -1,10 +1,11 @@
 from ctypes import (
-        cdll, windll,
-        FormatError,
-        memmove,
-        c_wchar_p, c_size_t, c_void_p
-    )
+    cdll, windll,
+    FormatError,
+    memmove,
+    c_wchar_p, c_size_t, c_void_p
+)
 from ctypes.wintypes import UINT, BOOL, DWORD
+
 
 def expect_nonzero(result, func, args):
     if not result:
@@ -13,6 +14,7 @@ def expect_nonzero(result, func, args):
             s = FormatError(e)
             raise OSError(result, e, s, args)
     return args
+
 
 CloseClipboard = windll.user32.CloseClipboard
 CloseClipboard.argtypes = []
@@ -26,8 +28,8 @@ GetClipboardData = windll.user32.GetClipboardData
 GetClipboardData.argtypes = [UINT]
 GetClipboardData.restype = c_void_p
 GetLastError = windll.kernel32.GetLastError
-GetLastError.argtypes=[]
-GetLastError.restype=DWORD
+GetLastError.argtypes = []
+GetLastError.restype = DWORD
 GlobalAlloc = windll.kernel32.GlobalAlloc
 GlobalAlloc.argtypes = [UINT, c_size_t]
 GlobalAlloc.restype = c_void_p
@@ -51,6 +53,7 @@ SetClipboardData.argtypes = [UINT, c_void_p]
 SetClipboardData.errcheck = expect_nonzero
 SetClipboardData.restype = c_void_p
 
+
 def get_clipboard():
     OpenClipboard(0)
     try:
@@ -67,6 +70,7 @@ def get_clipboard():
         CloseClipboard()
     return text
 
+
 def set_clipboard(text):
     text = str(text)
     e = text.encode('utf-16-le')
@@ -74,9 +78,10 @@ def set_clipboard(text):
 
     hCd = GlobalAlloc(0x2, text_len + 2)
     try:
-        l = GlobalSize(hCd);
+        l = GlobalSize(hCd)
         if l <= len(e):
-            raise OSError(f"Allocated MemBlock {hCd!r} smaller than requested: {l}")
+            raise OSError(
+                f"Allocated MemBlock {hCd!r} smaller than requested: {l}")
         pchData = GlobalLock(hCd)
 
         memmove(c_wchar_p(pchData), c_wchar_p(text), text_len)
@@ -89,11 +94,12 @@ def set_clipboard(text):
     finally:
         GlobalUnlock(hCd)
 
+
 __all__ = ('get_clipboard', 'set_clipboard')
 
 if __name__ == '__main__':
     import sys
-    if sys.argv[1:] in ( [], ['-o']):
+    if sys.argv[1:] in ([], ['-o']):
         print(get_clipboard())
     else:
         set_clipboard(" ".join(sys.argv[1:]))

@@ -1,13 +1,13 @@
 """The `Env` object, access point to the unified namespace."""
 
+import types
+import sys
+import inspect
+import importlib
+import functools
+import collections.abc
 _DEFAULT = object()
 
-import collections.abc
-import functools
-import importlib
-import inspect
-import sys
-import types
 
 class _Env_class(types.ModuleType, collections.abc.Mapping):
     """Common Env to be used by scripts
@@ -25,12 +25,12 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         self.__name__ = "Env"
         self.__path__ = []
         self.__file__ = __file__
-        super().__init__("Env", _Env_class.__doc__) # init as Module
-        self._finalized = True # stop attribute setting
+        super().__init__("Env", _Env_class.__doc__)  # init as Module
+        self._finalized = True  # stop attribute setting
 
-        for k in 'file','path','name','package': # make the Module - properties static
+        for k in 'file', 'path', 'name', 'package':  # make the Module - properties static
             k = '__{}__'.format(k)
-            self.put_static(k, getattr(self,k))
+            self.put_static(k, getattr(self, k))
 
     @property
     def __all__(self):
@@ -51,10 +51,10 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
     __setitem__ = put
 
     def __setattr__(self, key, val):
-        if not getattr(self,'_finalized'):
+        if not getattr(self, '_finalized'):
             self.__dict__[key] = val
         elif inspect.ismodule(val):
-            self.put(key, val) # importing a script as sub module of Env
+            self.put(key, val)  # importing a script as sub module of Env
         else:
             raise AttributeError("Dont set Attributes on Env")
 
@@ -117,6 +117,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
             assert x() == 2
         """
         name = func.__name__
+
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
             w = self[name]
@@ -124,7 +125,6 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
             return f(*args, **kwargs)
         self.put(name, wrapper)
         return wrapper
-
 
     def __str__(self):
         return "Env"

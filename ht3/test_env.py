@@ -2,13 +2,14 @@ import unittest
 
 from ht3.env import _Env_class, Env
 
+
 class EnvTest(unittest.TestCase):
     def test_asDict(self):
         e = _Env_class()
         e['key'] = 1
-        e['key2']= 2
-        self.assertEqual(e['key'],1)
-        self.assertEqual(e['key2'],2)
+        e['key2'] = 2
+        self.assertEqual(e['key'], 1)
+        self.assertEqual(e['key2'], 2)
 
     def test_iter(self):
         e = _Env_class()
@@ -57,7 +58,6 @@ class EnvTest(unittest.TestCase):
         assert 'key' not in e
         assert e['pkey'] == 2
 
-
     def test_env_module(self):
         Env['X'] = 42
         Env['Y'] = 36
@@ -68,7 +68,6 @@ class EnvTest(unittest.TestCase):
             return X
 
         assert _() == 42
-
 
     def test_decorator(self):
         e = _Env_class()
@@ -86,7 +85,8 @@ class EnvTest(unittest.TestCase):
         def a():
             return 1
 
-        # this is not a but a wrapper that does e['a']() (without the recursion)
+        # this is not a but a wrapper that does e['a']() (without the
+        # recursion)
         ref1 = e['a']
 
         assert a is ref1
@@ -98,7 +98,7 @@ class EnvTest(unittest.TestCase):
 
         ref2 = e['a']
 
-        assert ref1() == 2 # looks up the newest func from e
-        assert ref2() == 2 # looks up the newest func from e
+        assert ref1() == 2  # looks up the newest func from e
+        assert ref2() == 2  # looks up the newest func from e
         assert a() == 2
-        assert ref1 is not ref2 # different wrappers with the same effect
+        assert ref1 is not ref2  # different wrappers with the same effect

@@ -5,6 +5,7 @@ import functools
 
 __all__ = ('CHECK', )
 
+
 class Group:
     def __init__(self, collection):
         self.collection = collection
@@ -20,6 +21,7 @@ class Group:
 
     def __repr__(self):
         return repr(self.collection)
+
 
 @functools.total_ordering
 class Value:
@@ -48,6 +50,7 @@ class Value:
     def __repr__(self):
         return repr(self.call())
 
+
 class Check:
     pass
 
@@ -55,7 +58,7 @@ class Check:
 CHECK = Check()
 
 
-## OS
+# OS
 
 OS = set()
 OS.add(os.name)
@@ -68,8 +71,8 @@ if os.name == 'nt':
 CHECK.os = Group(OS)
 
 
-## Py
+# Py
 
-CHECK.py = Value(lambda :"{0.major}.{0.minor}".format(sys.version_info))
+CHECK.py = Value(lambda: "{0.major}.{0.minor}".format(sys.version_info))
 
-## frontend and current_frontend are inserted by ht3.lib
+# frontend and current_frontend are inserted by ht3.lib

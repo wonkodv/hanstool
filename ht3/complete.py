@@ -22,6 +22,7 @@ __all__ = (
 
 SCOPE = ChainMap(Env, __builtins__)
 
+
 def filter_completions_i(s, *prop):
     """Filter out proposals that don't start with ``s`` ignoring case.
 
@@ -34,9 +35,9 @@ def filter_completions_i(s, *prop):
         upper = s[-1].isupper()
         lower = s[-1].islower()
     else:
-        us=s
-        upper=False
-        lower=False
+        us = s
+        upper = False
+        lower = False
 
     for it in prop:
         for p in it:
@@ -48,8 +49,9 @@ def filter_completions_i(s, *prop):
                     elif lower:
                         yield s + p[l:].lower()
                     else:
-                        yield s+p[l:]
+                        yield s + p[l:]
                     already_yielded.add(up)
+
 
 def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``."""
@@ -63,15 +65,23 @@ def filter_completions(s, *prop):
                     yield p
                     already_yielded.add(p)
 
+
 def complete_command_args(string):
     cmd, sep, args = ht3.command.parse_command(string)
     if not sep:
         raise ValueError()
     c = ht3.command.COMMANDS[cmd]
-    return (cmd + sep + a for a in filter_completions(args, c.arg_parser.complete(args)))
+    return (
+        cmd +
+        sep +
+        a for a in filter_completions(
+            args,
+            c.arg_parser.complete(args)))
+
 
 def complete_commands(string):
     return sorted(filter_completions(string, ht3.command.COMMANDS.keys()))
+
 
 def complete_command_with_args(string):
     p_space = string.find(' ')
@@ -81,7 +91,9 @@ def complete_command_with_args(string):
     else:
         return complete_command_args(string)
 
+
 _COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
+
 
 def complete_py(string):
     s = _COMPLETE_PY_SEPERATOR.split(string)
@@ -99,19 +111,20 @@ def complete_py(string):
             for p in parts[1:-1]:
                 val = getattr(val, p)
         except (KeyError, AttributeError):
-            return [] # when the string contains illegal keys/attributes
+            return []  # when the string contains illegal keys/attributes
 
         values = set(dir(val))
         for p in inspect.getmro(type(val)):
             values.update(dir(p))
 
-    prefix = string[:len(string)-len(pl)]
+    prefix = string[:len(string) - len(pl)]
 
     values = filter_completions(pl, values)
-    values = sorted(values, key=lambda s:s and s[0] == '_')
+    values = sorted(values, key=lambda s: s and s[0] == '_')
     values = (prefix + x for x in values)
 
     return values
+
 
 def complete_path(s):
     if not s:
@@ -125,9 +138,7 @@ def complete_path(s):
         p = p
     else:
         stem = s[:-len(p.name)]
-        mask = p.name+'*'
+        mask = p.name + '*'
         p = p.parent
     for e in p.glob(mask):
         yield stem + e.name
-
-

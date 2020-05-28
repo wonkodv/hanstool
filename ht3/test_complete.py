@@ -10,16 +10,22 @@ class Test_Completion(unittest.TestCase):
     def test_command_completion(self):
         c1 = Mock()
         c1.arg_parser.complete = lambda s: ["arg1", "a2"]
-        c1.name='c1'
+        c1.name = 'c1'
         c2 = Mock()
-        c2.name='c2'
+        c2.name = 'c2'
 
-        with patch("ht3.command.COMMANDS", {'c1':c1, 'c2': c2}):
+        with patch("ht3.command.COMMANDS", {'c1': c1, 'c2': c2}):
             self.assertListEqual(list(complete_commands('c')), ['c1', 'c2'])
             self.assertListEqual(list(complete_commands('c1')), ['c1'])
-            self.assertListEqual(list(complete_command_args('c1 ')), ['c1 arg1', 'c1 a2'])
-            self.assertListEqual(list(complete_command_args('c1 a')), ['c1 arg1', 'c1 a2'])
-            self.assertListEqual(list(complete_command_args('c1 ar')), ['c1 arg1'])
+            self.assertListEqual(
+                list(complete_command_args('c1 ')),
+                ['c1 arg1', 'c1 a2'])
+            self.assertListEqual(
+                list(complete_command_args('c1 a')),
+                ['c1 arg1', 'c1 a2'])
+            self.assertListEqual(
+                list(complete_command_args('c1 ar')),
+                ['c1 arg1'])
 
     def test_py_completion(self):
         with patch("ht3.complete.SCOPE", {'one': 1, 'two': 2, 'three': 3, 'text': 'text'}):
@@ -46,7 +52,8 @@ class Test_Completion(unittest.TestCase):
             assert 'text three' in c
 
             c = f('text o')
-            self.assertListEqual(c, ['text one']) # Is a command, not py, dont py complete
+            # Is a command, not py, dont py complete
+            self.assertListEqual(c, ['text one'])
 
             c = f('text.')
             self.assertIn('text.startswith', c)
@@ -82,11 +89,10 @@ class Test_Completion(unittest.TestCase):
         c.arg_parser.complete = compl
         c.name = 'c'
 
-        with patch("ht3.command.COMMANDS", {'c':c}):
+        with patch("ht3.command.COMMANDS", {'c': c}):
             l = complete_command_args('c b')
 
         assert next(l) == 'c b'
-
 
     def test_complete_path_dir_slash(self):
         l = list(complete_path('ht'))
@@ -97,16 +103,15 @@ class Test_Completion(unittest.TestCase):
         assert 'ht3/complete.py' in l
 
     def test_complete_path_dir_slash(self):
-        a = str(pathlib.Path(__file__).parent.absolute()).replace('\\','/')
-        l = list(complete_path(a+'/comple'))
-        assert a+'/complete.py' in l
-
-
+        a = str(pathlib.Path(__file__).parent.absolute()).replace('\\', '/')
+        l = list(complete_path(a + '/comple'))
+        assert a + '/complete.py' in l
 
     def test_filter_completions(self):
         def src0():
             yield 'FOO'
             yield 'bar'
+
         def src1():
             yield 'FOO'
             yield 'Foo'
@@ -128,6 +133,7 @@ class Test_Completion(unittest.TestCase):
         def src0():
             yield 'FOO'
             yield 'b:aR'
+
         def src1():
             yield 'FOO'
             yield 'Foo'

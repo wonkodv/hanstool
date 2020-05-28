@@ -28,22 +28,26 @@ def watch(subprocess, callback):
 def _watch_thread():
     l = []
     wait = LONG_SLEEP
+
     def _done(p, c):
         r = p.poll()
         if r is None:
             return False
         c(p)
         return True
-    while 1:
+    while True:
         try:
             x = PROCESS_QUEUE.get(timeout=wait)
         except queue.Empty:
-            wait = min(LONG_SLEEP, 2*wait)
+            wait = min(LONG_SLEEP, 2 * wait)
         else:
             wait = SHORT_SLEEP
             l.append(x)
         l = [x for x in l if not _done(*x)]
 
 
-WATCH_THREAD = threading.Thread(target=_watch_thread, name='ProcessWatch', daemon=True)
+WATCH_THREAD = threading.Thread(
+    target=_watch_thread,
+    name='ProcessWatch',
+    daemon=True)
 WATCH_THREAD.start()

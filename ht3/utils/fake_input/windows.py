@@ -22,36 +22,37 @@ mouse_event = ctypes.windll.user32.mouse_event
 keybd_event = ctypes.windll.user32.keybd_event
 keyscan = ctypes.windll.user32.VkKeyScanW
 
-EXTENDED_KEYS=set(KEY_CODES[k] for k in (
-        'UP',
-        'DOWN',
-        'LEFT',
-        'RIGHT',
-        'HOME',
-        'END',
-        'PRIOR',
-        'NEXT',
-        'INSERT',
-        'DELETE'
-    )
+EXTENDED_KEYS = set(KEY_CODES[k] for k in (
+    'UP',
+    'DOWN',
+    'LEFT',
+    'RIGHT',
+    'HOME',
+    'END',
+    'PRIOR',
+    'NEXT',
+    'INSERT',
+    'DELETE'
+)
 )
 
-KEYEVENTF_EXTENDEDKEY   = 0x0001
-KEYEVENTF_KEYUP         = 0x0002
+KEYEVENTF_EXTENDEDKEY = 0x0001
+KEYEVENTF_KEYUP = 0x0002
 
-MOUSEEVENTF_ABSOLUTE    = 0x8000
-MOUSEEVENTF_LEFTDOWN    = 0x0002
-MOUSEEVENTF_LEFTUP      = 0x0004
-MOUSEEVENTF_MIDDLEDOWN  = 0x0020
-MOUSEEVENTF_MIDDLEUP    = 0x0040
-MOUSEEVENTF_MOVE        = 0x0001
-MOUSEEVENTF_RIGHTDOWN   = 0x0008
-MOUSEEVENTF_RIGHTUP     = 0x0010
-MOUSEEVENTF_WHEEL       = 0x0800
-MOUSEEVENTF_XDOWN       = 0x0080
-MOUSEEVENTF_XUP         = 0x0100
-MOUSEEVENTF_WHEEL       = 0x0800
-MOUSEEVENTF_HWHEEL      = 0x01000
+MOUSEEVENTF_ABSOLUTE = 0x8000
+MOUSEEVENTF_LEFTDOWN = 0x0002
+MOUSEEVENTF_LEFTUP = 0x0004
+MOUSEEVENTF_MIDDLEDOWN = 0x0020
+MOUSEEVENTF_MIDDLEUP = 0x0040
+MOUSEEVENTF_MOVE = 0x0001
+MOUSEEVENTF_RIGHTDOWN = 0x0008
+MOUSEEVENTF_RIGHTUP = 0x0010
+MOUSEEVENTF_WHEEL = 0x0800
+MOUSEEVENTF_XDOWN = 0x0080
+MOUSEEVENTF_XUP = 0x0100
+MOUSEEVENTF_WHEEL = 0x0800
+MOUSEEVENTF_HWHEEL = 0x01000
+
 
 def get_mouse_pos():
     p = POINT()
@@ -59,16 +60,20 @@ def get_mouse_pos():
         raise ctypes.WinError()
     return p.x, p.y
 
+
 def mouse_move(x, y):
     ctypes.windll.user32.SetCursorPos(x, y)
+
 
 def mouse_down(b):
     f, d = _btn(b, False)
     mouse_event(f, 0, 0, d, 0)
 
+
 def mouse_up(b):
     f, d = _btn(b, True)
     mouse_event(f, 0, 0, d, 0)
+
 
 def mouse_wheel(x, y=0):
     if x:
@@ -90,12 +95,13 @@ def _btn(b, up):
         f = MOUSEEVENTF_RIGHTDOWN
     else:
         f = MOUSEEVENTF_XDOWN
-        d = b-2
+        d = b - 2
 
     if up:
         f = f << 1
 
     return f, d
+
 
 def key_down(vk):
     f = 0
@@ -103,15 +109,18 @@ def key_down(vk):
         f |= KEYEVENTF_EXTENDEDKEY
     keybd_event(vk, 42, f, 0)
 
+
 def key_up(vk, extended=False):
     f = KEYEVENTF_KEYUP
     if vk in EXTENDED_KEYS:
         f |= KEYEVENTF_EXTENDEDKEY
     keybd_event(vk, 42, f, 0)
 
+
 def type_string(s, interval=0):
     if interval:
-        interval = float(interval)/1000
+        interval = float(interval) / 1000
+
         def i():
             time.sleep(interval)
     else:
@@ -119,8 +128,10 @@ def type_string(s, interval=0):
             pass
     for c in s:
         x = keyscan(ord(c))
-        if x & 0x8000: # 'negative'
-            raise OSError("Can not get keycodes on current keyboard layout for character \\u{0:04X}: {1}".format(ord(c), c))
+        if x & 0x8000:  # 'negative'
+            raise OSError(
+                "Can not get keycodes on current keyboard layout for character \\u{0:04X}: {1}".format(
+                    ord(c), c))
 
         if x & 0x100:
             i()
@@ -135,9 +146,9 @@ def type_string(s, interval=0):
             i()
             raise NotImplementedError("What is a Hankaku Key?")
         i()
-        key_down(x&0xff)
+        key_down(x & 0xff)
         i()
-        key_up(x&0xff)
+        key_up(x & 0xff)
         if x & 0x800:
             i()
             raise NotImplementedError("What is a Hankaku Key?")

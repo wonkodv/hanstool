@@ -1,6 +1,7 @@
 from pathlib import Path
 from .scripts import _script_module, _script_order_key
 
+
 def test_name():
     assert _script_module(Path('/a/b/foo_bar.20.py')) == "foo_bar"
     assert _script_module(Path('/a/b/foo_bar.py')) == "foo_bar"
@@ -11,6 +12,7 @@ def test_name():
         assert True
     else:
         assert False
+
 
 def test_order_key():
     a = Path('/a.py')
@@ -27,7 +29,5 @@ def test_order_key():
     assert k(d) == (4, 'd')
     assert k(f) == (105, 'f')
 
-    s = sorted([a,b,c,d,e,f], key=_script_order_key)
-    assert s == [d,b,a,c,e,f]
-
-
+    s = sorted([a, b, c, d, e, f], key=_script_order_key)
+    assert s == [d, b, a, c, e, f]

@@ -13,7 +13,6 @@ if CHECK.os.win:
     def explorer_select(f):
         execute_disconnected('explorer /select,"{}"'.format(str(Path(f))))
 
-
     # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
     # lots of useful tools there.
 
@@ -23,7 +22,7 @@ if CHECK.os.win:
 
     @Env
     @cmd(name='o')
-    def shellexecute(s:args.Union(args.Path,args.Executable)):
+    def shellexecute(s: args.Union(args.Path, args.Executable)):
         """Shell Execute, windows's all purpose opening function for files and programms."""
         s = str(s)
         r = windll.shell32.ShellExecuteW(0, "open", s, None, "", 1)
@@ -35,7 +34,7 @@ if CHECK.os.win:
             raise e
 
     @cmd(name="%")
-    def explore_command(cmd:args.Command):
+    def explore_command(cmd: args.Command):
         """Show the directory or file used in the target command's source in explorer."""
 
         w = COMMANDS[cmd].target
@@ -50,11 +49,11 @@ if CHECK.os.win:
             p = Path(s)
             if p.exists():
                 if p.is_dir():
-                    log("Directory: "+str(p))
+                    log("Directory: " + str(p))
                     arg = str(p)
                 else:
-                    log("File: "+str(p))
-                    arg="/select," + shellescape(str(p))
+                    log("File: " + str(p))
+                    arg = "/select," + shellescape(str(p))
                 execute_disconnected('explorer ' + arg)
                 return
 
@@ -72,11 +71,11 @@ if CHECK.os.win:
         def MoveHtWindow():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             w = taskbar_window()
-            l,t,r,b = w.rect
+            l, t, r, b = w.rect
 
             @ht3.gui.interact(False)
             def doit(GUI):
-                ht3.gui.cmd_win_set_rect(l+2, t, r-4, b)
+                ht3.gui.cmd_win_set_rect(l + 2, t, r - 4, b)
             doit()
 
         @Env
@@ -97,8 +96,8 @@ if CHECK.os.win:
                 # Hack so after docking, the windows isn't moved arround.
                 GUI.cmd_win.window.bind("<ButtonPress-3>", to_front)
                 GUI.cmd_win.window.bind("<ButtonPress-1>", to_front)
-                GUI.cmd_win.window.bind("<B1-Motion>", lambda *a:None)
-                GUI.cmd_win.window.bind("<B3-Motion>", lambda *a:None)
+                GUI.cmd_win.window.bind("<B1-Motion>", lambda *a: None)
+                GUI.cmd_win.window.bind("<B3-Motion>", lambda *a: None)
 
                 return c
 
@@ -108,16 +107,15 @@ if CHECK.os.win:
 
         ht3.gui.cmd_win_hide_frame()
 
-
     @cmd(apply_default_param_anotations=True)
-    def get_command_line_from_wnd(wnd:Window="_MOUSE_POS_MAIN"):
+    def get_command_line_from_wnd(wnd: Window = "_MOUSE_POS_MAIN"):
         show(command_line_from_wnd(wnd))
 
     def command_line_from_wnd(w):
-        o = procio("WMIC path win32_process WHERE processid={:d} GET commandline".format( w.process_id),
-                errors="backslashreplace",
-        )
-        lines = [ l for l in o.split("\n") if l ]
+        o = procio(
+            "WMIC path win32_process WHERE processid={:d} GET commandline".format(
+                w.process_id), errors="backslashreplace", )
+        lines = [l for l in o.split("\n") if l]
         assert lines[0].strip() == 'CommandLine'
         assert len(lines) == 2
         return lines[1]
@@ -126,40 +124,52 @@ if CHECK.os.win:
         return Env._complete_script_names(s)
 
     @cmd(apply_default_param_anotations=True)
-    def command_from_window(script:_complete_script_names, name=None, wnd:Window="_MOUSE_POS_MAIN"):
+    def command_from_window(
+            script: _complete_script_names,
+            name=None,
+            wnd: Window = "_MOUSE_POS_MAIN"):
         cmdline = command_line_from_wnd(wnd)
         if name is None:
             name = wnd.title
             name = name.lower()
-            name = re.sub("[^a-z_0-9]","",name)
-        Env.add_command(script, name=name, text="execute_disconnected(r'{}', is_split=False)".format(cmdline.replace("'", r"\'")))
+            name = re.sub("[^a-z_0-9]", "", name)
+        Env.add_command(
+            script,
+            name=name,
+            text="execute_disconnected(r'{}', is_split=False)".format(
+                cmdline.replace(
+                    "'",
+                    r"\'")))
 
     @cmd(apply_default_param_anotations=True)
-    def analyze_windows(w:Window="_MOUSE_POS"):
+    def analyze_windows(w: Window = "_MOUSE_POS"):
         msg = []
         long = []
         short = []
         Env['w'] = w
         while(w):
             r = w.rect
-            msg.append(f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}")
+            msg.append(
+                f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}")
             if w.parent:
                 p = 'w'
             else:
                 p = 'Window.TOP'
-            long.append(    f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n"
-                            f"    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
-            short.append(f".find(class_name={w.class_name!r}, title={w.title!r})")
+            long.append(
+                f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n"
+                f"    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
+            short.append(
+                f".find(class_name={w.class_name!r}, title={w.title!r})")
             w = w.parent
         show("\n".join(msg))
         show("\n".join(reversed(long)))
-        show("\n    w = Window.TOP"+"".join(reversed(short)))
+        show("\n    w = Window.TOP" + "".join(reversed(short)))
 
     @cmd
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
 
-    @cmd(attrs={'HotKey':'F7'})
+    @cmd(attrs={'HotKey': 'F7'})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 
@@ -177,7 +187,7 @@ if CHECK.os.win:
     def tmp(name=None):
         p = Path("~/tmp").expanduser()
         if name:
-            p = p/"{:%y%m}-{}".format(datetime.datetime.now(), name)
+            p = p / "{:%y%m}-{}".format(datetime.datetime.now(), name)
             try:
                 p.mkdir(parents=True)
             except FileExistsError:
@@ -187,10 +197,9 @@ if CHECK.os.win:
     @Env
     def get_uptime():
         uptime = GetTickCount()
-        boottime = format(datetime.datetime.now()-uptime, "%H:%M")
+        boottime = format(datetime.datetime.now() - uptime, "%H:%M")
         uptime = str(uptime).partition('.')[0]
         return boottime, uptime
-
 
     @Env.updateable
     def tna_text():
@@ -216,7 +225,10 @@ if CHECK.os.win:
         def tna_updater_thread():
             Env['tna_updater_thread'] = threading.current_thread()
             while Env['tna_updater_thread'] is threading.current_thread():
-                w = Window.TOP.find(class_name='Shell_TrayWnd').find(class_name='TrayNotifyWnd').find(class_name='TrayClockWClass')
+                w = Window.TOP.find(
+                    class_name='Shell_TrayWnd').find(
+                    class_name='TrayNotifyWnd').find(
+                    class_name='TrayClockWClass')
                 dc = ctypes.windll.user32.GetDC(w.hwnd)
 
                 text = tna_text()
@@ -224,22 +236,23 @@ if CHECK.os.win:
                 y = 0
 
                 for i in range(10):
-                    for i,s in enumerate(text.split("\n")):
-                        ctypes.windll.gdi32.TextOutW(dc, 3, 16*i,  s, len(s))
-                    sleep(0.1) # Draw again in case the  Clock Window redraw happend late
+                    for i, s in enumerate(text.split("\n")):
+                        ctypes.windll.gdi32.TextOutW(dc, 3, 16 * i, s, len(s))
+                    # Draw again in case the  Clock Window redraw happend late
+                    sleep(0.1)
 
                 ctypes.windll.user32.ReleaseDC(w.hwnd, dc)
 
                 now = datetime.datetime.now()
-                sleep(60-now.second) # update on the full minute
+                sleep(60 - now.second)  # update on the full minute
 
     @cmd
     def tna_text_updater_stop():
-            Env['tna_updater_thread'] = None
+        Env['tna_updater_thread'] = None
 
     @cmd
     @Env
-    def set_mouse_speed(x:int):
+    def set_mouse_speed(x: int):
         assert 1 <= x <= 20
         SPI_SETMOUSESPEED = 0x71
         SPIF_SENDCHANGE = 2
@@ -248,7 +261,7 @@ if CHECK.os.win:
             0,
             x,
             SPIF_SENDCHANGE
-            )
+        )
         if r == 0:
             raise OSError("SystemParametersInfo failed")
 
@@ -262,7 +275,7 @@ if CHECK.os.win:
             0,
             p,
             0
-            )
+        )
         if r == 0:
             raise OSError("SystemParametersInfo failed")
         return i.value
@@ -279,5 +292,5 @@ if CHECK.os.win:
         elif e == 0x102:
             return False
         else:
-            show("Process Handle: %X, error: %X"% (hp, e))
+            show("Process Handle: %X, error: %X" % (hp, e))
             raise ctypes.WinError()

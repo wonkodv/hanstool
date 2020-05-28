@@ -14,17 +14,18 @@ import ht3.hook
 EXECUTABLE_W_ARGS_COMPLETE_HOOK = ht3.hook.GeneratorHook("parts")
 Env['EXECUTABLE_W_ARGS_COMPLETE_HOOK'] = EXECUTABLE_W_ARGS_COMPLETE_HOOK
 
+
 @Env.updateable
 def complete_executable_with_args(string):
     """Complete a executable with its args"""
 
-    #TODO deduplicate with ShellArgParser
+    # TODO deduplicate with ShellArgParser
 
     # Example 1: dir C:/Program" Files/"
 
     for quote in ['', '"', "'"]:
         try:
-            parts = shlex.split(string+quote+'|') # pipe for cursor pos
+            parts = shlex.split(string + quote + '|')  # pipe for cursor pos
         except ValueError:
             continue
         else:
@@ -50,11 +51,15 @@ def complete_executable_with_args(string):
             yield string + v + quote
         else:
             if quote:
-                yield string + v.replace(quote, "\\"+quote) + quote
+                yield string + v.replace(quote, "\\" + quote) + quote
             else:
                 yield string + '"' + v.replace('"', r'\"') + '"'
 
-args.ExecutableWithArgs = args.Param(complete=complete_executable_with_args, doc="ExecutableWithArgs")
+
+args.ExecutableWithArgs = args.Param(
+    complete=complete_executable_with_args,
+    doc="ExecutableWithArgs")
+
 
 @EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
 def _complete_executeble_wo_args(parts):
@@ -62,11 +67,13 @@ def _complete_executeble_wo_args(parts):
         return
     yield from complete_executable(parts[0])
 
+
 @EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
 def _complete_w_file(parts):
     if len(parts) > 0:
         return complete_path(parts[-1])
     return []
+
 
 if which('bash') and False:
 
@@ -78,25 +85,25 @@ if which('bash') and False:
         if len(parts) < 2:
             return
         t = procio("bash -c " +
-                shellescape("""
+                   shellescape("""
                     [ -f /etc/bash_completion ] && source /etc/bash_completion ;
                     [ -f /usr/share/bash-completion/bash_completion ] && source /usr/share/bash-completion/bash_completion ;
                     complete -p """ + shellescape(parts[0])),
-                shell=False,
-                is_split=False)
+                   shell=False,
+                   is_split=False)
 
         function = t.partition(" -F ")[3].partition(" ")[0]
 
         print(function)
 
-        exe         = shellescape(parts[0])
-        COMP_WORDS  = shlex.join(parts)
-        COMP_LINE   = shellescape(COMP_WORDS)
-        COMP_POINT  = len(COMP_LINE)
-        COMP_CWORD  = len(parts) - 1
+        exe = shellescape(parts[0])
+        COMP_WORDS = shlex.join(parts)
+        COMP_LINE = shellescape(COMP_WORDS)
+        COMP_POINT = len(COMP_LINE)
+        COMP_CWORD = len(parts) - 1
 
         t = procio("bash -c " +
-                shellescape("""
+                   shellescape("""
                     [ -f /etc/bash_completion ] && source /etc/bash_completion ;
                     [ -f /usr/share/bash-completion/bash_completion ] && source /usr/share/bash-completion/bash_completion ;
                     _completion_loader {}
@@ -107,19 +114,20 @@ if which('bash') and False:
                     {}
                     printf '%s\n' "${COMPREPLY[@]}"
                     """.format(
-                        exe,
-                        COMP_WORDS,
-                        COMP_LINE,
-                        COMP_POINT,
-                        COMP_CWORD,
-                        function
-                        )),
-                shell=False,
-                is_split=False)
+                       exe,
+                       COMP_WORDS,
+                       COMP_LINE,
+                       COMP_POINT,
+                       COMP_CWORD,
+                       function
+                   )),
+                   shell=False,
+                   is_split=False)
         print(t)
 
 SPECIFIC_COMPLETERS = {}
 Env['SPECIFIC_COMPLETERS'] = SPECIFIC_COMPLETERS
+
 
 @EXECUTABLE_W_ARGS_COMPLETE_HOOK.register
 def specific_completions(parts):
@@ -131,11 +139,11 @@ def specific_completions(parts):
         return ()
     return c(parts)
 
+
 @Env
 def exe_completer(e):
     assert not callable(e)
+
     def deco(f):
         SPECIFIC_COMPLETERS[e.lower()] = f
     return deco
-
-

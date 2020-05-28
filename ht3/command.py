@@ -18,8 +18,10 @@ COMMAND_NOT_FOUND_HOOK = ht3.hook.ResultHook("command_string")
 
 _DEFAULT = object()
 
+
 class NoCommandError(Exception):
     pass
+
 
 class Command():
     """Base class of commands.
@@ -75,24 +77,29 @@ class Command():
     def __repr__(self):
         if not self.started:
             state = "New"
-            return "Command(name={0.name}, invocation={0.invocation})".format(self)
+            return "Command(name={0.name}, invocation={0.invocation})".format(
+                self)
         elif not self.finished:
-            return "Command(name={0.name}, invocation={0.invocation}, running)".format(self)
+            return "Command(name={0.name}, invocation={0.invocation}, running)".format(
+                self)
         else:
             if self.exception:
-                return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(self)
+                return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(
+                    self)
             else:
-                return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(self, textwrap.shorten(repr(self.result),30))
+                return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(
+                    self, textwrap.shorten(repr(self.result), 30))
 
     def __str__(self):
         if self.invocation.startswith(self.name):
             return self.invocation
         return self.invocation + " => " + self.name
 
+
 class NamedFunctionCommand(Command):
     """Command that has a Function, Name and gets an argument string."""
 
-    target = None # to be overwritten by subclasses
+    target = None  # to be overwritten by subclasses
 
     def __init__(self, invocation, arg_string):
         super().__init__(invocation)
@@ -110,19 +117,19 @@ class NamedFunctionCommand(Command):
     def parse(self, s):
         return self.arg_parser.convert(s)
 
+
 def register_command(func, *,
-                origin_stacked,
-                name=_DEFAULT,
-                args='auto',
-                apply_default_param_anotations=False,
-                doc=_DEFAULT,
-                attrs=_DEFAULT):
+                     origin_stacked,
+                     name=_DEFAULT,
+                     args='auto',
+                     apply_default_param_anotations=False,
+                     doc=_DEFAULT,
+                     attrs=_DEFAULT):
     """ Register a function as Command """
 
     origin = traceback.extract_stack()
     origin = origin[-origin_stacked]
     origin = origin[0:2]
-
 
     arg_parser = ht3.args.ArgParser(func, args, apply_default_param_anotations)
 
@@ -144,7 +151,7 @@ def register_command(func, *,
         "\n",
         "\n",
         "Invoked as '%s'" % name,
-        (", calls %s\n" % func_name ) if func_name != name else "",
+        (", calls %s\n" % func_name) if func_name != name else "",
         "\n",
         arg_parser.describe_params(), "\n",
         "Defined in:\n\t%s:%d" % origin
@@ -162,6 +169,7 @@ def register_command(func, *,
     COMMANDS[name] = cmd
 
     func.command = cmd
+
 
 def cmd(func=None, **kwargs):
     """Decorate a function to become a command
@@ -181,14 +189,17 @@ def cmd(func=None, **kwargs):
         register_command(func=func, origin_stacked=3, **kwargs)
     return func
 
+
 def parse_command(string):
     return string.partition(' ')
+
 
 def get_registered_command(string):
     cmd, sep, args = parse_command(string)
     if cmd in COMMANDS:
         return COMMANDS[cmd](string, args)
     raise NoCommandError(cmd, sep, args) from None
+
 
 def get_command(string):
     if THREAD_LOCAL.command is None:
@@ -204,6 +215,7 @@ def get_command(string):
     assert isinstance(cmd, Command), "{} should be a Command".format(cmd)
 
     return cmd
+
 
 def run_command(string):
     return get_command(string)()

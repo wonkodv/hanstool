@@ -2,8 +2,9 @@
 
 from Env import *
 
+
 @cmd
-def test(silent:args.Bool=False):
+def test(silent: args.Bool = False):
     test_assertions_enabled()
     test_script_order()
     test_script_module()
@@ -12,12 +13,12 @@ def test(silent:args.Bool=False):
     test_names()
 
     if not silent:
-        print ("Test OK")
+        print("Test OK")
 
     return "Integration Tests ran"
 
 
-#### Assertions
+# Assertions
 
 def test_assertions_enabled():
     try:
@@ -27,7 +28,8 @@ def test_assertions_enabled():
     else:
         raise Exception("Who runs a Test suite with Assertions disabled?")
 
-#### Script Order
+# Script Order
+
 
 def test_script_order():
     # The scripts were ordered.
@@ -51,15 +53,18 @@ def test_script_module():
     assert mod.test_script_module is test_script_module
     test_script_module.__module__ == 'Env.test'
 
-#### @cmd
+# @cmd
+
 
 @cmd
 def decorator_noargs_dummy():
     pass
 
+
 @cmd()
 def decorator_args_dummy():
     pass
+
 
 def test_decorator():
     # decorative decorator decorated correctly
@@ -67,25 +72,29 @@ def test_decorator():
     assert COMMANDS['decorator_args_dummy'].target is decorator_args_dummy
 
 
-#### Args
+# Args
 
 ARG_TEST = []
+
+
 @cmd
 def shellargtest(*args):
     ARG_TEST.append(args)
 
+
 @cmd
-def autoargtest(i:int, b:bool, *arr:args.Union(int,float,bool,str)):
+def autoargtest(i: int, b: bool, *arr: args.Union(int, float, bool, str)):
     ARG_TEST.append(i)
     ARG_TEST.append(b)
     ARG_TEST.append(arr)
+
 
 def test_argument_parsing():
     ARG_TEST.clear()
     run_command("""shellargtest 1 "2" '3'""")
     run_command("""shellargtest""")
     run_command("""shellargtest "a b c d" """)
-    assert ARG_TEST == [('1','2','3'), (), ('a b c d',)]
+    assert ARG_TEST == [('1', '2', '3'), (), ('a b c d',)]
     ARG_TEST.clear()
     run_command("""autoargtest 1 Yes 0 1.1 Yes No Yes Hans 1""")
     assert ARG_TEST[0] == 1
@@ -93,19 +102,16 @@ def test_argument_parsing():
     assert ARG_TEST[2] == (0, 1.1, True, False, True, 'Hans', 1)
 
 
-
-
-#### Name
+# Name
 
 @cmd(name='$IsValid!')
 def name_test():
     global NAME_TEST
-    NAME_TEST=True
+    NAME_TEST = True
+
 
 def test_names():
     global NAME_TEST
-    NAME_TEST=False
+    NAME_TEST = False
     run_command('$IsValid!')
     assert NAME_TEST
-
-

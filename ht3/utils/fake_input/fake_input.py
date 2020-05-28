@@ -9,7 +9,7 @@ input (mouse moves, Key Strokes, etc).
 import re
 import time
 
-from ht3.check import CHECK;
+from ht3.check import CHECK
 
 if CHECK.os.win:
     from . import windows as impl
@@ -34,28 +34,31 @@ __all__ = (
 
 KEY_CODES = impl.KEY_CODES
 
+
 class Error(Exception):
     pass
 
+
 fake_types = (
-    ("WHITESPACE",  r"\s+"),
-    ("COUNT",       r"(?P<count>\d+)\*"),
-    ("MOVEABS",     r"(-?[\d]+)[/:,](-?[\d]+)"),
-    ("COMBO",       r"((?P<mod1>\w+)\+)"
-                    r"((?P<mod2>\w+)\+)?"
-                    r"((?P<mod3>\w+)\+)?"
-                    r"((?P<mod4>\w+)\+)?"
-                    r"(?P<modkey>[0-9a-zA-Z_]+)"),
-    ("MBTN",        r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
-    ("HKEY",        r"(?P<hkud>\+|-|)0x(?P<hkey>[0-9a-fA-F]{2})"),
-    ("KEY",         r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
-    ("STRING1",     r"'([^']*)'"),
-    ("STRING2",     r'"([^"]*)"'),
-    ("SLEEP",       r'\(([0-9.]+)\)'),
-    ("INVALID",     r"\S+")
-    )
+    ("WHITESPACE", r"\s+"),
+    ("COUNT", r"(?P<count>\d+)\*"),
+    ("MOVEABS", r"(-?[\d]+)[/:,](-?[\d]+)"),
+    ("COMBO", r"((?P<mod1>\w+)\+)"
+     r"((?P<mod2>\w+)\+)?"
+     r"((?P<mod3>\w+)\+)?"
+     r"((?P<mod4>\w+)\+)?"
+     r"(?P<modkey>[0-9a-zA-Z_]+)"),
+    ("MBTN", r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
+    ("HKEY", r"(?P<hkud>\+|-|)0x(?P<hkey>[0-9a-fA-F]{2})"),
+    ("KEY", r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
+    ("STRING1", r"'([^']*)'"),
+    ("STRING2", r'"([^"]*)"'),
+    ("SLEEP", r'\(([0-9.]+)\)'),
+    ("INVALID", r"\S+")
+)
 
 fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in fake_types))
+
 
 def fake(string, interval=10, restore_mouse_pos=False):
     """
@@ -95,34 +98,36 @@ def fake(string, interval=10, restore_mouse_pos=False):
     sequence = []
     count = 1
     mouse_needs_restore = False
+
     def a(f, *a):
         nonlocal count
         for _ in range(count):
             sequence.append((f, a, m))
         count = 1
 
-    logs=[]
+    logs = []
+
     def log(s, *args):
         pass
-        #logs.append(s%args)
+        # logs.append(s%args)
 
     for m in fake_re.finditer(string):
-        groups = [ x for x in m.groups() if x is not None][1:]
+        groups = [x for x in m.groups() if x is not None][1:]
         try:
-            if   m.group("WHITESPACE"):
+            if m.group("WHITESPACE"):
                 pass
             elif m.group("COUNT"):
                 count = int(m.group("count"))
             elif m.group("MOVEABS"):
                 mouse_needs_restore = True
-                x,y = groups
+                x, y = groups
                 x = int(x)
                 y = int(y)
                 a(impl.mouse_move, x, y)
                 log("MouseMove to x=%.1f y=%.1f", x, y)
             elif m.group("MBTN"):
                 ud = m.group('mud')
-                btn= int(m.group('btn'))
+                btn = int(m.group('btn'))
                 if ud != '-':
                     a(impl.mouse_down, btn)
                     log("MouseDown b=%d", btn)
@@ -130,7 +135,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     a(impl.mouse_up, btn)
                     log("MouseUp b=%d", btn)
             elif m.group("COMBO"):
-                keys = ['mod1','mod2','mod3','mod4','modkey']
+                keys = ['mod1', 'mod2', 'mod3', 'mod4', 'modkey']
                 keys = [m.group(k) for k in keys]
                 keys = [KEY_CODES[k.upper()] for k in keys if k is not None]
                 for key in keys:
@@ -141,8 +146,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     log("KeyUp vk=%d", key)
             elif m.group("KEY"):
                 ud = m.group('kud')
-                key= m.group('key')
-                key= KEY_CODES[key.upper()]
+                key = m.group('key')
+                key = KEY_CODES[key.upper()]
                 if ud != '-':
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
@@ -151,8 +156,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     log("KeyUp vk=%d", key)
             elif m.group("HKEY"):
                 ud = m.group('hkud')
-                key= m.group('hkey')
-                key= int(key,16)
+                key = m.group('hkey')
+                key = int(key, 16)
                 if ud != '-':
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
@@ -165,7 +170,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
                 log("String Input: %s", s)
             elif m.group("SLEEP"):
                 t = int(groups[0])
-                a(time.sleep, t/1000)
+                a(time.sleep, t / 1000)
                 log("Sleep for %dms", t)
             else:
                 assert m.group("INVALID")
@@ -179,14 +184,15 @@ def fake(string, interval=10, restore_mouse_pos=False):
         mp = get_mouse_pos()
     for c, a, m in sequence:
         if interval:
-            time.sleep(float(interval)/1000)
+            time.sleep(float(interval) / 1000)
         c(*a)
     if restore_mouse_pos:
         if interval:
-            time.sleep(float(interval)/1000)
+            time.sleep(float(interval) / 1000)
         mouse_move(*mp)
+
 
 for e in __all__:
     g = globals()
-    if hasattr(impl,e):
-        g[e]=getattr(impl,e)
+    if hasattr(impl, e):
+        g[e] = getattr(impl, e)

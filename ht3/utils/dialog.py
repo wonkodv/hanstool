@@ -2,6 +2,7 @@ import tkinter as tk
 
 __all__ = ('option_dialog', )
 
+
 class OptionDialog(tk.Tk):
     def __init__(self, title, message, def_option, *more_options, timeout=0):
         super().__init__()
@@ -31,9 +32,11 @@ class OptionDialog(tk.Tk):
         else:
             self._job = None
 
-
     def _option(self, o):
-        b = tk.Button(self.buttons, text=str(o), width=len(str(o)), command=lambda:self._select(o))
+        b = tk.Button(
+            self.buttons, text=str(o),
+            width=len(str(o)),
+            command=lambda: self._select(o))
         b.pack(side=tk.LEFT, padx=5, pady=5)
         return b
 
@@ -56,6 +59,7 @@ class OptionDialog(tk.Tk):
             self.after_cancel(self._job)
         self.destroy()
 
+
 def option_dialog(title, message, *options, timeout=0):
     od = OptionDialog(title, message, *options, timeout=timeout)
     od.wait_window(od)
@@ -64,6 +68,14 @@ def option_dialog(title, message, *options, timeout=0):
 
 if __name__ == '__main__':
     print(
-        option_dialog("Title", "Message", "Option 0", "Option 1", 42, timeout=4),
-        option_dialog("Title", "Message", "Ok")
-    )
+        option_dialog(
+            "Title",
+            "Message",
+            "Option 0",
+            "Option 1",
+            42,
+            timeout=4),
+        option_dialog(
+            "Title",
+            "Message",
+            "Ok"))

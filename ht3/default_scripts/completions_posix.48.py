@@ -1,12 +1,14 @@
 from Env import which, CHECK, exe_completer, procio, Path
 import shlex
 
+
 @exe_completer('ls')
 def _complete_ls(parts):
     if parts[-1] == '-':
         for f in 'lrst10':
             yield '-' + f
         return True
+
 
 @exe_completer('killall')
 def _complete_killall(parts):

@@ -17,7 +17,7 @@ from ht3 import lib
 _SCRIPT_RELOAD = False
 _SCRIPT_ADD_TO_ENV = False
 
-s = pkg_resources.resource_filename('ht3','default_scripts')
+s = pkg_resources.resource_filename('ht3', 'default_scripts')
 add_scripts(s)
 
 

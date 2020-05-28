@@ -17,6 +17,7 @@ from ht3.complete import complete_command_with_args
 RE_INET6 = re.compile(r"\[([\d:]+)\]:(\d+)")
 RE_INET = re.compile(r"(\d+\.\d+\.\d+\.\d+):(\d+)")
 
+
 def socket_info():
     """Parse Address from DAEMON_ADDRESS as ipv4, ipv6 or socket
 
@@ -28,7 +29,7 @@ def socket_info():
 
     adr = Env.get('DAEMON_ADDRESS', None)
     if adr is None:
-        if hasattr(socket,'AF_UNIX'):
+        if hasattr(socket, 'AF_UNIX'):
             adr = os.path.expanduser('~/.config/ht3/socket')
             typ = socket.AF_UNIX
         else:
@@ -45,19 +46,20 @@ def socket_info():
                 typ = socket.AF_INET
                 adr = tuple(m.groups())
             else:
-                if hasattr(socket,'AF_UNIX'):
+                if hasattr(socket, 'AF_UNIX'):
                     typ = socket.AF_UNIX
                     adr = os.path.expanduser(adr)
                 else:
                     raise ValueError("Misformed Address, should look like "
-                            "'127.0.0.1:4267' or '[::1]:4267'", adr)
+                                     "'127.0.0.1:4267' or '[::1]:4267'", adr)
     if typ is getattr(socket, 'AF_UNIX', object()):
         if os.path.exists(adr):
             os.remove(adr)
     return typ, adr
 
+
 def handle_socket(sock, addr):
-    ht3.lib.THREAD_LOCAL.frontentd = "{}({})".format(__name__,addr)
+    ht3.lib.THREAD_LOCAL.frontentd = "{}({})".format(__name__, addr)
     with sock:
         sock.settimeout(0.1)
         with sock.makefile("wrb") as sock_file:
@@ -97,11 +99,14 @@ def handle_socket(sock, addr):
                     pass
                 ht3.lib.EXCEPTION_HOOK(exception=e)
 
+
 _evt = None
+
 
 def start():
     global _evt
     _evt = threading.Event()
+
 
 def loop():
     typ, adr = socket_info()
@@ -121,6 +126,7 @@ def loop():
                     handle_socket(conn, addr)
                 except Exception:
                     pass
+
 
 def stop():
     _evt.set()

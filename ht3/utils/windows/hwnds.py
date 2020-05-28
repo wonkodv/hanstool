@@ -8,7 +8,8 @@ import time
 from ctypes.wintypes import RECT, POINT, HWND, LPARAM, DWORD, BOOL
 from ctypes import c_wchar, c_bool, byref
 
-Rect = collections.namedtuple('Rect','left,top,width,height')
+Rect = collections.namedtuple('Rect', 'left,top,width,height')
+
 
 class Window:
     # Placeholder for singleton Objects
@@ -29,7 +30,7 @@ class Window:
             hwnd = hwnd.hwnd
         if not isinstance(hwnd, int):
             raise TypeError("expected Int", hwnd)
-        self.hwnd=hwnd
+        self.hwnd = hwnd
 
     @classmethod
     def get_foreground_window(cls):
@@ -88,7 +89,7 @@ class Window:
             w = cls.TOP.find(s)
         if w:
             return w
-        raise ValueError("No window",s)
+        raise ValueError("No window", s)
 
     # Properties
 
@@ -117,7 +118,7 @@ class Window:
     @property
     def rect(self):
         """Window Rectangle."""
-        r = RECT(0,0,0,0)
+        r = RECT(0, 0, 0, 0)
         p = byref(r)
         if not ctypes.windll.user32.GetWindowRect(self.hwnd, p):
             raise ctypes.WinError()
@@ -204,13 +205,13 @@ class Window:
     # Methods
 
     _getwindow_command = dict(
-        CHILD         =  5,
-        ENABLEDPOPUP  =  6,
-        FIRST         =  0,
-        LAST          =  1,
-        NEXT          =  2,
-        PREV          =  3,
-        OWNER         =  4,
+        CHILD=5,
+        ENABLEDPOPUP=6,
+        FIRST=0,
+        LAST=1,
+        NEXT=2,
+        PREV=3,
+        OWNER=4,
     )
 
     def _GetWindow(self, cmd):
@@ -236,13 +237,21 @@ class Window:
         if not ctypes.windll.user32.BringWindowToTop(self.hwnd):
             raise ctypes.WinError()
 
-    _setwindowpos_after = dict(BOTTOM=1,TOP=0,TOPMOST=-1,NOTOPMOST=-2)
-    _setwindowpos_flags = dict(SHOW=0x40,HIDE=0x80,NOACTIVATE=0x10,)
+    _setwindowpos_after = dict(BOTTOM=1, TOP=0, TOPMOST=-1, NOTOPMOST=-2)
+    _setwindowpos_flags = dict(SHOW=0x40, HIDE=0x80, NOACTIVATE=0x10,)
 
-    def set_pos(self, *,after=..., left=..., top=..., width=..., height=..., flags=0):
+    def set_pos(
+            self,
+            *,
+            after=...,
+            left=...,
+            top=...,
+            width=...,
+            height=...,
+            flags=0):
         """Set position and Placement Flags using SetWindowPos."""
-        after = self._setwindowpos_after.get(after,after)
-        flags = self._setwindowpos_flags.get(flags,flags)
+        after = self._setwindowpos_after.get(after, after)
+        flags = self._setwindowpos_flags.get(flags, flags)
 
         if left is ... or top is ...:
             flags |= 2  # NO MOVE
@@ -258,23 +267,24 @@ class Window:
             flags |= 4  # NO ORDER
             after = 0
 
-        if not ctypes.windll.user32.SetWindowPos(self.hwnd, after, left, top, width, height, flags):
+        if not ctypes.windll.user32.SetWindowPos(
+                self.hwnd, after, left, top, width, height, flags):
             ctypes.WinError()
 
     _show_window_command = dict(
-        FORCEMINIMIZE    =  11,
-        HIDE             =   0,
-        MAXIMIZE         =   3,
-        MINIMIZE         =   6,
-        RESTORE          =   9,
-        SHOW             =   5,
-        SHOWDEFAULT      =  10,
-        SHOWMAXIMIZED    =   3,
-        SHOWMINIMIZED    =   2,
-        SHOWMINNOACTIVE  =   7,
-        SHOWNA           =   8,
-        SHOWNOACTIVATE   =   4,
-        SHOWNORMAL       =   1,
+        FORCEMINIMIZE=11,
+        HIDE=0,
+        MAXIMIZE=3,
+        MINIMIZE=6,
+        RESTORE=9,
+        SHOW=5,
+        SHOWDEFAULT=10,
+        SHOWMAXIMIZED=3,
+        SHOWMINIMIZED=2,
+        SHOWMINNOACTIVE=7,
+        SHOWNA=8,
+        SHOWNOACTIVATE=4,
+        SHOWNORMAL=1,
     )
 
     def _ShowWindow(self, cmd):
@@ -306,6 +316,7 @@ class Window:
         """
         exc = None
         result = None
+
         @ctypes.WINFUNCTYPE(BOOL, HWND, LPARAM)
         def _cb(handle, lparam):
             nonlocal result
@@ -336,16 +347,23 @@ class Window:
             after = self.NULL
 
         if spec is ...:
-            w = ctypes.windll.user32.FindWindowExW(self.hwnd, after.hwnd, class_name, title)
+            w = ctypes.windll.user32.FindWindowExW(
+                self.hwnd, after.hwnd, class_name, title)
             if not w:
-                raise KeyError("No Window with title and class", self, class_name, title)
+                raise KeyError(
+                    "No Window with title and class",
+                    self,
+                    class_name,
+                    title)
         else:
             if class_name or title:
                 raise TypeError("spec and tile or class_name passed")
 
-            w = ctypes.windll.user32.FindWindowExW(self.hwnd, after.hwnd, spec, None)
+            w = ctypes.windll.user32.FindWindowExW(
+                self.hwnd, after.hwnd, spec, None)
             if not w:
-                w = ctypes.windll.user32.FindWindowExW(self.hwnd, after.hwnd, None, spec)
+                w = ctypes.windll.user32.FindWindowExW(
+                    self.hwnd, after.hwnd, None, spec)
             if not w:
                 raise KeyError("No Window with title or class", self, spec)
         return type(self)(w)
@@ -353,6 +371,7 @@ class Window:
     def search_by_title(self, regex):
         """Return the first child Window with a Title that matches the Regular Expression."""
         regex = re.compile(regex)
+
         def cb(w):
             if regex.search(w.title):
                 return w
@@ -377,13 +396,15 @@ class Window:
 
     def __repr__(self):
         if self:
-            return "Window(hwnd={self:#X}, class_name={self.class_name!r}, text={self.title!r})".format(self=self)
+            return "Window(hwnd={self:#X}, class_name={self.class_name!r}, text={self.title!r})".format(
+                self=self)
         else:
             return "Window(hwnd={self.hwnd:#X}, INVALID)".format(self=self)
 
     def __format__(self, spec):
         return format(self.hwnd, spec)
 
-Window.DESKTOP= Window.get_desktop_window()
+
+Window.DESKTOP = Window.get_desktop_window()
 Window.NULL = Window(0)
 Window.TOP = Window.NULL

@@ -20,6 +20,7 @@ def get_history_file():
         p.parent.mkdir(parents=True)
     return p
 
+
 def get_history():
     global HISTORY
     if HISTORY is None:
@@ -29,10 +30,11 @@ def get_history():
             HISTORY = []
     return HISTORY
 
+
 def load_history():
     """Load the history from file, enforce Limit."""
     global HISTORY
-    limit = Env.get('HISTORY_LIMIT',1000)
+    limit = Env.get('HISTORY_LIMIT', 1000)
     with get_history_file().open("rt") as f:
         if limit is not None:
             HISTORY = list(collections.deque((l.strip() for l in f), limit))
@@ -43,10 +45,10 @@ def load_history():
             for l in HISTORY:
                 f.write(l + "\n")
 
+
 def append_history(*cmd):
     get_history().extend(cmd)
     for c in cmd:
         APPEND_HOOK(command_string=c)
     with get_history_file().open("at") as f:
         f.write("\n".join(cmd) + "\n")
-

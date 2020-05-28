@@ -23,15 +23,16 @@ class TestCmd(unittest.TestCase):
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_command_called(self):
         x = 0
+
         @cmd
-        def someCommand(arg:int):
+        def someCommand(arg: int):
             nonlocal x
             x = arg
 
         run_command('someCommand 1')
-        assert x==1
+        assert x == 1
         run_command('someCommand 2')
-        assert x==2
+        assert x == 2
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_origin(self):
@@ -43,7 +44,6 @@ class TestCmd(unittest.TestCase):
         assert f == __file__
         assert l > 5
 
-
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_origin(self):
         @cmd
@@ -53,15 +53,16 @@ class TestCmd(unittest.TestCase):
         f, l = self.COMMANDS['someCommand'].origin
         assert f == __file__
         assert l > 5
-
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_context(self):
         X = None
+
         @cmd
         def someOtherCommand():
             nonlocal X
             X = THREAD_LOCAL.command
+
         @cmd
         def someCommand():
             run_command('someOtherCommand')
@@ -76,16 +77,16 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_noarg(self):
-        m =  MagicMock()
+        m = MagicMock()
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
         c = get_registered_command("cmd")
-        m.assert_called_with("cmd","")
+        m.assert_called_with("cmd", "")
         assert m() is c
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_empty_cmd(self):
-        m =  MagicMock()
+        m = MagicMock()
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
         with self.assertRaises(NoCommandError):
@@ -95,7 +96,7 @@ class Test_get_command(unittest.TestCase):
 
     @patch('ht3.command.COMMANDS', COMMANDS)
     def test_arg(self):
-        m =  MagicMock()
+        m = MagicMock()
         self.COMMANDS.clear()
         self.COMMANDS['cmd'] = m
         c = get_registered_command("cmd arg string")

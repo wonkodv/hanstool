@@ -22,23 +22,24 @@ elif CHECK.os.win:
         e = ['notepad.exe']
 else:
     if CHECK.frontend('ht3.cli'):
-        editors =['nvim', 'vim', 'nano', 'emacs']
+        editors = ['nvim', 'vim', 'nano', 'emacs']
     else:
-        editors =['nvim-qt', 'gvim', 'gedit']
+        editors = ['nvim-qt', 'gvim', 'gedit']
     for s in editors:
         s = shutil.which(s)
         if s:
             e = [s]
             break
     else:
-        e = ['ed'] # haha
+        e = ['ed']  # haha
 
-Env['EDITOR'] = tuple(e) # make unmodifiable
+Env['EDITOR'] = tuple(e)  # make unmodifiable
+
 
 @Env.updateable
 @args.enforce_args
 @cmd
-def edit_file(file_name:Path, line:int=0):
+def edit_file(file_name: Path, line: int = 0):
     """Edit a file using EDITOR."""
     e = " ".join(Env.EDITOR).lower()
 

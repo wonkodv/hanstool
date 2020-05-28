@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch
 from .fake_input import fake, fake_re, impl
 
+
 class Test_fake(unittest.TestCase):
 
     def test_re_combo(self):
@@ -32,15 +33,15 @@ class Test_fake(unittest.TestCase):
     def runSequence(self, string, interval):
         s = []
         with patch("time.sleep") as mockSleep:
-            mockSleep.side_effect=lambda t: s.append(['s', t])
+            mockSleep.side_effect = lambda t: s.append(['s', t])
             with patch(__package__ + ".fake_input.impl") as fake_in:
-                fake_in.mouse_move =    lambda x,y  : s.append(["ma", x, y])
-                fake_in.mouse_down =    lambda b    : s.append(["md", b])
-                fake_in.mouse_up =      lambda b    : s.append(["mu", b])
-                fake_in.key_down =      lambda k    : s.append(["kd", k])
-                fake_in.key_up =        lambda k    : s.append(["ku", k])
-                fake_in.type_string =   lambda t,i  : s.append(["t", t, i])
-                fake_in.KEY_CODES =     impl.KEY_CODES
+                fake_in.mouse_move = lambda x, y: s.append(["ma", x, y])
+                fake_in.mouse_down = lambda b: s.append(["md", b])
+                fake_in.mouse_up = lambda b: s.append(["mu", b])
+                fake_in.key_down = lambda k: s.append(["kd", k])
+                fake_in.key_up = lambda k: s.append(["ku", k])
+                fake_in.type_string = lambda t, i: s.append(["t", t, i])
+                fake_in.KEY_CODES = impl.KEY_CODES
                 fake(string, interval)
         return s
 
@@ -61,16 +62,16 @@ class Test_fake(unittest.TestCase):
             M1
             CTRL+A
             3*-0xDC
-            """,0)
+            """, 0)
         exp = [
-            ['kd',k['SHIFT']],
-            ['kd',k['A']],
-            ['ku',k['A']],
-            ['kd',0x42],
-            ['ku',0x42],
-            ['ku',0xFF],
+            ['kd', k['SHIFT']],
+            ['kd', k['A']],
+            ['ku', k['A']],
+            ['kd', 0x42],
+            ['ku', 0x42],
+            ['ku', 0xFF],
             ['s', 0.1],
-            ['ku',k['SHIFT']],
+            ['ku', k['SHIFT']],
             ['t', 'A\\SD"F', 0],
             ['t', "GH'I", 0],
             ['ma', 1000, 2000],
@@ -78,10 +79,10 @@ class Test_fake(unittest.TestCase):
             ['ma', -2555, -356],
             ['md', 1],
             ['mu', 1],
-            ['kd',k['CTRL']],
-            ['kd',k['A']],
-            ['ku',k['A']],
-            ['ku',k['CTRL']],
+            ['kd', k['CTRL']],
+            ['kd', k['A']],
+            ['ku', k['A']],
+            ['ku', k['CTRL']],
             ['ku', 0xDC],
             ['ku', 0xDC],
             ['ku', 0xDC],

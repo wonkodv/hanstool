@@ -16,13 +16,17 @@ if CHECK.os.posix:
             if 'children' in d:
                 for c in d['children']:
                     yield from walk(c)
-        s = procio("lsblk","--json","--output","name,label,partlabel,fstype")
+        s = procio(
+            "lsblk",
+            "--json",
+            "--output",
+            "name,label,partlabel,fstype")
         d = json.loads(s)
         for c in d['blockdevices']:
             yield from walk(c)
 
     @cmd
-    def mount(device:complete_mount_device):
+    def mount(device: complete_mount_device):
         """Mount a dvice by its label, partlabel or name.
 
         Creates a folder in /media for the name/label and mounts to it."""
@@ -34,7 +38,6 @@ if CHECK.os.posix:
         else:
             raise ValueError("no such blockdevice", device)
 
-
         target = Path('/media') / device
         if target.exists():
             if not target.is_dir():
@@ -45,15 +48,25 @@ if CHECK.os.posix:
         fstype = procio("lsblk", "-ln", "-oFSTYPE", str(dev)).strip()
         if fstype == 'ext4':
             options = "rw,nosuid,nodev,relatime"
-        elif fstype in[
-            'fat', 'vfat', 'umsdos', 'msdos','ntfs',
-            'hfs', 'hpfs', 'udf']:
-            options = "rw,nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(os.geteuid(), os.getegid())
+        elif fstype in [
+            'fat', 'vfat', 'umsdos', 'msdos', 'ntfs',
+                'hfs', 'hpfs', 'udf']:
+            options = "rw,nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(
+                os.geteuid(), os.getegid())
         elif fstype == 'iso9660':
-            options = "nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(os.geteuid(), os.getegid())
+            options = "nosuid,nodev,relatime,uid={:d},gid={:d},fmask=113,dmask=002".format(
+                os.geteuid(), os.getegid())
 
         show(f"mount -t {fstype} {dev} {target} --options {options}")
-        return procio("sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options)
+        return procio(
+            "sudo",
+            "mount",
+            "-t",
+            fstype,
+            str(dev),
+            str(target),
+            "--options",
+            options)
 
     def complete_mounted_devices(s):
         with open('/proc/mounts') as f:
@@ -66,7 +79,7 @@ if CHECK.os.posix:
                         yield mp[7:]
 
     @cmd
-    def umount(device:complete_mounted_devices):
+    def umount(device: complete_mounted_devices):
         m = False
         device = Path(device)
         if not device.is_absolute():
@@ -84,25 +97,28 @@ if CHECK.os.posix:
     @cmd
     def bd():
         show(procio("lsblk", "--output",
-            "name,mountpoint,ro,fstype,size,label,partlabel,model"))
+                    "name,mountpoint,ro,fstype,size,label,partlabel,model"))
 
     @Env
     @cmd(name='o')
-    def xdg_open(s:Path):
+    def xdg_open(s: Path):
         """Open something with xdg-open."""
         execute_disconnected('xdg-open', s)
 
-    print("\x1b]2;HansTool\x07", end="") # Set Title of Terminal Window
-
+    print("\x1b]2;HansTool\x07", end="")  # Set Title of Terminal Window
 
     @Env
     def get_clipboard(s):
-        return procio("xclip","-out",'-selection','clipboard')
+        return procio("xclip", "-out", '-selection', 'clipboard')
 
     @Env
     def set_clipboard(s):
-        p = Env['_xclip'] = execute_pipes("xclip","-in",'-selection','clipboard',
-                universal_newlines=True)
+        p = Env['_xclip'] = execute_pipes(
+            "xclip",
+            "-in",
+            '-selection',
+            'clipboard',
+            universal_newlines=True)
         p.stdin.write(s)
         p.stdin.close()
 
@@ -112,4 +128,4 @@ if CHECK.os.posix:
         @Env
         @cmd
         def MoveHtWindow():
-            pass # there is no proper Place
+            pass  # there is no proper Place

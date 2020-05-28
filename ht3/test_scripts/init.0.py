@@ -16,5 +16,5 @@ def _raise_error(exception):
 SCRIPT_ORDER = ['init']
 
 
-for k,v in list(vars().items()):
+for k, v in list(vars().items()):
     Env[k] = v

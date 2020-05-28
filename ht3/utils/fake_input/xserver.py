@@ -15,9 +15,11 @@ mouse_down = None
 mouse_up = None
 mouse_wheel = None
 
+
 @functools.lru_cache(1)
 def display():
     return Xlib.display.Display()
+
 
 def key_down(vk):
     if isinstance(vk, str):
@@ -25,15 +27,18 @@ def key_down(vk):
     Xlib.ext.xtest.fake_input(display(), Xlib.X.KeyPress, vk)
     display().sync()
 
+
 def key_up(vk):
     if isinstance(vk, str):
         vk = KEY_CODES[vk.upper()]
     Xlib.ext.xtest.fake_input(display(), Xlib.X.KeyRelease, vk)
     display().sync()
 
+
 def type_string(s, interval=0):
     if interval:
-        interval = float(interval)/1000
+        interval = float(interval) / 1000
+
         def i():
             time.sleep(interval)
     else:

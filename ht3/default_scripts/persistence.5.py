@@ -3,11 +3,15 @@ import Env
 import pickle
 import pathlib
 
+
 class Persistence:
     dict = None
 
     def path(self):
-        return pathlib.Path(Env.get('PERSISTENCE_FILE','~/.config/ht3/persist')).expanduser()
+        return pathlib.Path(
+            Env.get(
+                'PERSISTENCE_FILE',
+                '~/.config/ht3/persist')).expanduser()
 
     def load(self):
         if self.dict is not None:
@@ -15,7 +19,7 @@ class Persistence:
         try:
             with self.path().open("rb") as f:
                 self.dict = pickle.load(f)
-        except Exception: # forget everything on the slightest error
+        except Exception:  # forget everything on the slightest error
             self.dict = {}
 
     def save(self):
@@ -23,7 +27,7 @@ class Persistence:
         with self.path().open("wb") as f:
             pickle.dump(self.dict, f)
 
-    def set(self,key,val):
+    def set(self, key, val):
         self.load()
         try:
             if self.dict[key] == val:
@@ -44,6 +48,7 @@ class Persistence:
             return self[key]
         except KeyError:
             return default
+
 
 Per = Persistence()
 

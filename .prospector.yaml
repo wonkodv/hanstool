@@ -19,6 +19,10 @@ mccabe:
 pep257:
     # docstring checking
     run: true
+    disable:
+        - D105 # Missing ocstring in magic Method
+        - D203 # 1 Blank before Class Docstring
+        - D213 # Multiline Docstring should start on second line
 
 pep8:
     # style checking

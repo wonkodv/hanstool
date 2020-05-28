@@ -31,15 +31,20 @@ if CHECK.os.windows:
 from pathlib import Path
 
 
-args.Python = args.Param(complete=lambda s:Env.complete_py(s),
-                doc="PythonCode")
+args.Python = args.Param(complete=lambda s: Env.complete_py(s),
+                         doc="PythonCode")
 args.Path = args.Param(convert=pathlib.Path,
-             complete=lambda s:Env.complete_path(s),
-             doc="Path")
-args.Executable = args.Param(complete=lambda s:Env.complete_executable(s), doc="Executable")
-args.Command = args.Param(complete=lambda s:Env.complete_commands(s), doc="Command")
-args.CommandWithArgs = args.Param(complete=lambda s:Env.complete_command_with_args(s),
-                        doc="CommandWithArgs")
+                       complete=lambda s: Env.complete_path(s),
+                       doc="Path")
+args.Executable = args.Param(
+    complete=lambda s: Env.complete_executable(s),
+    doc="Executable")
+args.Command = args.Param(
+    complete=lambda s: Env.complete_commands(s),
+    doc="Command")
+args.CommandWithArgs = args.Param(
+    complete=lambda s: Env.complete_command_with_args(s),
+    doc="CommandWithArgs")
 
 
-Env.update((k,v) for k,v in globals().items() if k[0] != '_')
+Env.update((k, v) for k, v in globals().items() if k[0] != '_')

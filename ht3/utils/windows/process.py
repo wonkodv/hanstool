@@ -9,9 +9,10 @@ from ht3.utils import process
 from ht3.env import Env
 from ht3.complete import filter_completions_i
 
+
 def execute(exe, *args, is_split=..., shell=False, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
-    if not isinstance(exe,str):
+    if not isinstance(exe, str):
         raise TypeError("Expecting a string as exe", exe, type(exe))
     for a in args:
         if not isinstance(a, str):
@@ -25,7 +26,7 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
             # execute("c:/program files/mozilla/firefox.exe", "http://example.com")
             p = which(exe)
             if not p:
-                raise FileNotFoundError("Cannot find executable",exe)
+                raise FileNotFoundError("Cannot find executable", exe)
             exe = str(p)
         else:
             if args:
@@ -39,16 +40,17 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
                 if p:
                     exe = shellescape(str(p))
                 else:
-                    pass # good luck with that, maybe it's a shell command
-            elif exe.startswith(e+" "):
+                    pass  # good luck with that, maybe it's a shell command
+            elif exe.startswith(e + " "):
                 # execute("ls -l")
-                # try to change the 1st word to the full path of an executable file
+                # try to change the 1st word to the full path of an executable
+                # file
                 tail = exe[len(e):]
                 p = which(e)
                 if p:
                     e = shellescape(str(p))
                 else:
-                    pass # good luck with that, maybe it's a shell command
+                    pass  # good luck with that, maybe it's a shell command
 
                 assert tail[0] == ' '
                 exe = e + tail
@@ -64,10 +66,12 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
                 #       c:\program files\sub dir\program.exe name
                 #       c:\program files\sub dir\program name.exe
 
-
-    # Ugly flag stuff so windows does not create ConsoleWindows for processes which have the io streams set.
-    if all(x in kwargs and kwargs[x] == subprocess.PIPE for x in ('stdin','stdout','stderr')):
-        if not 'startupinfo' in kwargs:
+    # Ugly flag stuff so windows does not create ConsoleWindows for processes
+    # which have the io streams set.
+    if all(
+            x in kwargs and kwargs[x] == subprocess.PIPE
+            for x in ('stdin', 'stdout', 'stderr')):
+        if 'startupinfo' not in kwargs:
             si = subprocess.STARTUPINFO()
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
@@ -75,10 +79,17 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
 
     # TODO: handle messed up encoding of windows shell processes
 
-    return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
+    return process.execute(
+        exe,
+        *args,
+        is_split=is_split,
+        shell=shell,
+        **kwargs)
 
-_extensions = os.environ.get('PATHEXT','').split(os.pathsep)
+
+_extensions = os.environ.get('PATHEXT', '').split(os.pathsep)
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]
+
 
 def which(exe):
     try:
@@ -86,24 +97,26 @@ def which(exe):
     except StopIteration:
         return None
 
+
 def _get_exe_path_ext(p, full_path, glob):
     if glob:
         glob = '*'
     else:
         glob = ''
     if p.suffix:
-        for c in p.parent.glob(p.name+glob):
+        for c in p.parent.glob(p.name + glob):
             if full_path:
                 yield str(c)
             else:
                 yield str(c), ''
     else:
         for ext in _extensions:
-            for c in p.parent.glob(p.name+glob+ext):
+            for c in p.parent.glob(p.name + glob + ext):
                 if full_path:
                     yield str(c)
                 else:
                     yield c.name, ext
+
 
 def _get_exe_path(s, full_path, glob):
     p = pathlib.Path(s)
@@ -111,14 +124,15 @@ def _get_exe_path(s, full_path, glob):
     if len(parts) > 1:
         yield from _get_exe_path_ext(p, full_path, glob)
     else:
-        for c in Env.get('PATH',_paths):
+        for c in Env.get('PATH', _paths):
             f = c / s
             yield from _get_exe_path_ext(f, full_path, glob)
+
 
 def complete_executable(s):
     """Find all possible executables in PATH, optionally appending PATHEXT.
 
-    If there is more than file with the same name, only differing in the 
+    If there is more than file with the same name, only differing in the
     extension, yield both, else yield only the name"""
     s = shlex.split(s)
     if len(s) != 1:
@@ -151,14 +165,13 @@ def WaitForInputIdle(process, timeout=-1):
     r = int(r)
     if r == 0:
         return True
-    if r == 0x102: #WAIT_TIMEOUT
+    if r == 0x102:  # WAIT_TIMEOUT
         raise TimeoutError()
-    if r == 0x80: #WAIT_ABANDONED
+    if r == 0x80:  # WAIT_ABANDONED
         raise ChildProcessError("Wait abandoned", r, p)
-    if r == -1: # WAIT_FAILED
+    if r == -1:  # WAIT_FAILED
         return False
     try:
         raise ctypes.WinError()
-    except:
+    except BaseException:
         raise ValueError("Unexpected return value", r)
-

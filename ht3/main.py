@@ -17,7 +17,7 @@ from . import scripts
 from .scripts import load_scripts, add_scripts
 from .check import CHECK
 
-HELP= """The initialization and actions of the ht3 can be programmed on the commandline and/or in
+HELP = """The initialization and actions of the ht3 can be programmed on the commandline and/or in
 the scripts.  Each argument is either a shorthand that looks like an option, or executed as a python
 statement.
 
@@ -47,33 +47,37 @@ After Initialization, the following default actions are executed:
 class ArgumentError(ValueError):
     pass
 
+
 def load_default_script():
     if not scripts.SCRIPTS:
         if not scripts.ADDED_SCRIPTS:
             import pkg_resources
-            s = pkg_resources.resource_filename('ht3','default_script.py')
+            s = pkg_resources.resource_filename('ht3', 'default_script.py')
             add_scripts(s)
     while scripts.ADDED_SCRIPTS:
         load_scripts()
+
 
 def put_env(k, v):
     try:
         v = int(v)
     except ValueError:
         pass
-    Env.put_static(k,v)
+    Env.put_static(k, v)
+
 
 POSSIBLE_ARGUMENTS = [
     #   short    Long              Function          ParamNo Done/Action
-    [  '-s',  '--add-script',      add_scripts,          1,  False  ],
-    [  '-l',  '--load-scripts',    load_scripts,         0,  False  ],
-    [  '-f',  '--load-frontend',   load_frontend,        1,  False  ],
-    [  '-r',  '--run-frontends',   run_frontends,        0,  True   ],
-    [  '-d',  '--default-script',  load_default_script,  0,  False  ],
-    [  '-e',  '--set-env',         put_env,       2,  False  ],
-    [  '-c',  '--command',         run_command,          1,  True   ],
-    [  '-x',  '--execute',         "code",               1,  True   ],
+    ['-s', '--add-script', add_scripts, 1, False],
+    ['-l', '--load-scripts', load_scripts, 0, False],
+    ['-f', '--load-frontend', load_frontend, 1, False],
+    ['-r', '--run-frontends', run_frontends, 0, True],
+    ['-d', '--default-script', load_default_script, 0, False],
+    ['-e', '--set-env', put_env, 2, False],
+    ['-c', '--command', run_command, 1, True],
+    ['-x', '--execute', "code", 1, True],
 ]
+
 
 def parse(args):
     arg_iter = iter(args)
@@ -95,6 +99,7 @@ def parse(args):
         else:
             yield 'code', (a,), False
 
+
 def precompile(args):
     for i, (f, p, d) in enumerate(args):
         if f == 'code':
@@ -103,19 +108,27 @@ def precompile(args):
             p = (c,)
         yield f, p, d
 
+
 def main(args):
     args = precompile(parse(args))
     try:
-        args = list(args) # consume to get errors early
+        args = list(args)  # consume to get errors early
     except ArgumentError as e:
-        print (*e.args)
-        print (HELP)
+        print(*e.args)
+        print(HELP)
         return 1
 
     try:
-        # populate "globals" so that Env can act as "locals" and not have those functions in it
+        # populate "globals" so that Env can act as "locals" and not have those
+        # functions in it
         glob = {}
-        for f in [add_scripts, load_scripts, load_frontend, run_command, run_frontends, Env.put_static]:
+        for f in [
+                add_scripts,
+                load_scripts,
+                load_frontend,
+                run_command,
+                run_frontends,
+                Env.put_static]:
             glob[f.__name__] = f
         done = False
         for f, a, done in args:
@@ -133,7 +146,7 @@ def main(args):
                 load_frontend('ht3.cli')
             run_frontends()
     except Exception:
-        if Env.get('DEBUG',False):
+        if Env.get('DEBUG', False):
             import traceback
             traceback.print_exc()
             import pdb

@@ -10,6 +10,7 @@ import datetime
 
 if CHECK.frontend('ht3.cli'):
     import ht3.cli
+
     @ht3.cli.do_on_start
     def import_readline():
         try:
@@ -18,21 +19,25 @@ if CHECK.frontend('ht3.cli'):
         except ImportError:
             pass
 
+
 @cmd
 def txt():
     """Edit ~/txt."""
     edit_file(expanduser("~/txt"))
 
+
 @cmd
-def timer(t:args.Time, event:str="Done"):
+def timer(t: args.Time, event: str = "Done"):
     """ timer timer """
 
     t2 = datetime.datetime.now() + datetime.timedelta(seconds=t)
     show(f"Reminding you of {event} at {t2}")
+
     @threaded
     def timer_thread():
         sleep(t)
-        option_dialog("Timer", "Timer up ({0})".format(event),"OK")
+        option_dialog("Timer", "Timer up ({0})".format(event), "OK")
+
 
 @cmd
 def measure_interval():
@@ -55,23 +60,32 @@ def complete_virtualbox(s=None):
             x = s.split('"')
             yield x[1]
 
+
 @cmd
-def vb(box:complete_virtualbox=None):
+def vb(box: complete_virtualbox = None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
         return execute_disconnected("virtualbox")
     else:
         return execute_disconnected("vboxmanage", "startvm", box)
 
+
 @cmd
-def rand(low:int=0, high:int=0xFFFFFFFF):
+def rand(low: int = 0, high: int = 0xFFFFFFFF):
     """Copy a random number to the Clipboard."""
-    r = random.randint(low,high)
+    r = random.randint(low, high)
     set_clipboard("0x{:8X}".format(r))
     show(r)
 
+
 @cmd
-def password(length:int=16, lower:bool=True, upper:bool=True, numbers:bool=True, common_symbols:bool=True, other:bool=False):
+def password(
+        length: int = 16,
+        lower: bool = True,
+        upper: bool = True,
+        numbers: bool = True,
+        common_symbols: bool = True,
+        other: bool = False):
     ll = set(string.ascii_lowercase)
     ul = set(string.ascii_uppercase)
     no = set(string.digits)
@@ -102,16 +116,21 @@ def password(length:int=16, lower:bool=True, upper:bool=True, numbers:bool=True,
             if not any(c in no for c in pwd):
                 continue
         if other or common_symbols:
-            if not any(c in (ot|ss) for c in pwd):
+            if not any(c in (ot | ss) for c in pwd):
                 continue
         set_clipboard("".join(pwd))
         return
-    raise ValueError("can not match all categories", "".join(sorted(pwd)), "".join(sorted(pwchars)))
+    raise ValueError(
+        "can not match all categories", "".join(
+            sorted(pwd)), "".join(
+            sorted(pwchars)))
+
 
 class PaSinkInput(args.Param):
     def get_sink_inputs(self):
         s = procio("pactl list sink-inputs")
-        return re.findall(r'Sink Input #(\d+)(?:\n\t.*)*application.process.binary = "([^"]+)"', s)
+        return re.findall(
+            r'Sink Input #(\d+)(?:\n\t.*)*application.process.binary = "([^"]+)"', s)
 
     def complete(self, s):
         for id, name in self.get_sink_inputs():
@@ -123,24 +142,29 @@ class PaSinkInput(args.Param):
                 return id
         return s
 
+
 class PaSink(args.Param):
     def get_sink(self):
         s = procio("pactl list sinks")
-        return re.findall(r'Sink #(\d+)(?:\n\t.*)*device.description = "([^"]+)"', s)
+        return re.findall(
+            r'Sink #(\d+)(?:\n\t.*)*device.description = "([^"]+)"', s)
 
     def complete(self, s):
         for id, name in self.get_sink():
             yield name
 
     def convert(self, s):
-        sinks = [(id, name) for (id,name) in self.get_sink() if s.lower() in name.lower()]
+        sinks = [(id, name)
+                 for (id, name) in self.get_sink() if s.lower() in name.lower()]
         if len(sinks) > 1:
             raise ValueError("Search term too generic", s, sinks)
         if len(sinks) == 1:
             return sinks[0][0]
         return s
+
+
 @cmd
-def audio_move(sink_input:PaSinkInput(), sink:PaSink()):
+def audio_move(sink_input: PaSinkInput(), sink: PaSink()):
     """Change which Sink a Pulse Audio Client uses"""
 
     cmd = f"pactl move-sink-input {sink_input} {sink}"

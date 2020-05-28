@@ -15,6 +15,7 @@ EXCEPTION_HOOK = ht3.hook.Hook("exception")
 DEBUG_HOOK = ht3.hook.Hook("message")
 ALERT_HOOK = ht3.hook.Hook("message")
 
+
 @EXCEPTION_HOOK.register
 def _exception_hook_fallback(exception):
     """ If no other handlers are installed, raise Exc. """
@@ -40,17 +41,20 @@ THREAD_LOCAL.frontend = 'ht3.main'
 
 
 check.CHECK.frontend = check.Group(FRONTENDS)
-check.CHECK.current_frontend = check.Value(lambda:THREAD_LOCAL.frontend)
+check.CHECK.current_frontend = check.Value(lambda: THREAD_LOCAL.frontend)
 check.CHECK.frontends_running = False
+
 
 def _is_cli_frontend():
     fe = THREAD_LOCAL.frontend
     if fe is None:
         return False
     m = importlib.import_module(fe)
-    return getattr(m,'_IS_CLI_FRONTEND', None)
+    return getattr(m, '_IS_CLI_FRONTEND', None)
+
 
 check.CHECK.is_cli_frontend = check.Value(_is_cli_frontend)
+
 
 def load_frontend(name):
     """Load a the frontend with qualified name: ``name``"""
@@ -67,6 +71,7 @@ def load_frontend(name):
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
 
+
 def run_frontends():
     """Run all Frontends.
 
@@ -79,7 +84,8 @@ def run_frontends():
     `loop()`, this function returns.
     """
 
-    frontends = tuple(FRONTEND_MODULES) # avoid concurrency if modules load modules
+    # avoid concurrency if modules load modules
+    frontends = tuple(FRONTEND_MODULES)
 
     if not frontends:
         raise ValueError("No Frontend Loaded yet")
@@ -124,16 +130,18 @@ def run_frontends():
     for t in threads:
         t.join()
 
-    _Stop_FrontEnds_Sem  = None
+    _Stop_FrontEnds_Sem = None
     _RUNNING_FRONTENDS = None
 
+
 def stop_frontends():
-    if _Stop_FrontEnds_Sem.acquire(False): # the first to return stops all
+    if _Stop_FrontEnds_Sem.acquire(False):  # the first to return stops all
         for f in _RUNNING_FRONTENDS:
             try:
                 f.stop()
             except Exception as e:
                 EXCEPTION_HOOK(exception=e)
+
 
 def execute_py_expression(s):
     """Execute a python expression"""
@@ -147,17 +155,24 @@ def evaluate_py_expression(s):
     r = eval(c, {}, Env.dict)
     return r
 
-def threaded(f=None,**kwargs):
+
+def threaded(f=None, **kwargs):
     if f is None:
         def deco(f):
-            start_thread(f,**kwargs)
+            start_thread(f, **kwargs)
             return f
         return deco
-    start_thread(f,**kwargs)
+    start_thread(f, **kwargs)
     return f
 
 
-def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_finish=None):
+def start_thread(
+        func,
+        args=None,
+        kwargs=None,
+        name=None,
+        on_exception=None,
+        on_finish=None):
     """
     Start a thread that is HT3 aware
 
@@ -168,17 +183,18 @@ def start_thread(func, args=None, kwargs=None, name=None, on_exception=None, on_
     if name is None:
         name = func.__name__
     if on_finish is None:
-        on_finish = lambda *a:None #Env.log_thread_finished #TODO
+        on_finish = lambda *a: None  # Env.log_thread_finished #TODO
     if on_exception is None:
-        on_exception = lambda e:EXCEPTION_HOOK(exception=e)
+        def on_exception(e): return EXCEPTION_HOOK(exception=e)
     if args is None:
-        args=tuple()
+        args = tuple()
     if kwargs is None:
         kwargs = dict()
     fe = THREAD_LOCAL.frontend
     cmd = THREAD_LOCAL.command
 
     stack = inspect.stack(0)
+
     def target(stack):
         __STACK_FRAMES__ = stack
         THREAD_LOCAL.frontend = fe

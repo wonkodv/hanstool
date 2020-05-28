@@ -16,14 +16,21 @@ import ht3.hook
 SUBPROCESS_SPAWN_HOOK = ht3.hook.Hook("process")
 SUBPROCESS_FINISH_HOOK = ht3.hook.Hook("process")
 
+
 def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
-def execute(*args, shell=False, is_split=..., env=None, more_env=None, **kwargs):
+
+def execute(
+    *args,
+    shell=False,
+    is_split=...,
+    env=None,
+    more_env=None,
+        **kwargs):
     """Execute a program."""
     if not all(isinstance(a, str) for a in args):
         raise TypeError("Expecting strings")
-
 
     if shell:
         if is_split is ...:
@@ -63,11 +70,12 @@ def execute(*args, shell=False, is_split=..., env=None, more_env=None, **kwargs)
     try:
         p = subprocess.Popen(args, shell=shell, env=env, **kwargs)
     except OSError as e:
-        e.args = e.args + (args,shell)
+        e.args = e.args + (args, shell)
         raise e
     p.name = name
     p.shell = shell
     SUBPROCESS_SPAWN_HOOK(process=p)
+
     def onreturn(cb):
         "Do cb if process finishes"
         processwatch.watch(p, cb)
@@ -76,7 +84,9 @@ def execute(*args, shell=False, is_split=..., env=None, more_env=None, **kwargs)
     p.onreturn(lambda p: SUBPROCESS_FINISH_HOOK(process=p))
     return p
 
+
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]
+
 
 def which(exe):
     p = pathlib.Path(exe)
@@ -86,28 +96,31 @@ def which(exe):
             return p
         else:
             return None
-    for c in Env.get('PATH',_paths):
-        p = c/exe
+    for c in Env.get('PATH', _paths):
+        p = c / exe
         if p.exists():
             return p
     return None
 
+
 def execute_disconnected(*args, **kwargs):
     """Execute a program without any file handles or signals or ... attached."""
     return Env.execute(*args,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        stdin=subprocess.DEVNULL,
-        start_new_session=True,
-        **kwargs)
+                       stdout=subprocess.DEVNULL,
+                       stderr=subprocess.DEVNULL,
+                       stdin=subprocess.DEVNULL,
+                       start_new_session=True,
+                       **kwargs)
+
 
 def execute_pipes(*args, **kwargs):
     """Execute a program without any file handles or signals or ... attached."""
     return Env.execute(*args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        **kwargs)
+                       stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE,
+                       stdin=subprocess.PIPE,
+                       **kwargs)
+
 
 def execute_auto(*args, **kwargs):
     """Execute a program, in foreground if on CLI, else in background."""
@@ -118,14 +131,16 @@ def execute_auto(*args, **kwargs):
         p = Env.execute_disconnected(*args, **kwargs)
     return p
 
+
 class ProcIOException(Exception):
     def __init__(self, msg, returncode, out, err, args):
         self.returncode = returncode
         self.out = out
         self.err = err
         self.args = args
-        self.msg  = msg
+        self.msg = msg
         super().__init__(msg, returncode, out, err, args)
+
 
 def procio(*args, input=None, timeout=None, **kwargs):
     """Get ouput from a program."""
@@ -139,11 +154,18 @@ def procio(*args, input=None, timeout=None, **kwargs):
 
     out, err = p.communicate(input=input, timeout=timeout)
     if p.returncode != 0:
-        raise ProcIOException("Non-zero return code", p.returncode, out, err, args)
+        raise ProcIOException(
+            "Non-zero return code",
+            p.returncode,
+            out,
+            err,
+            args)
     return out
+
 
 def complete_executable(s):
     return sorted(_complete_executable(s))
+
 
 def _complete_executable(s):
     s = shlex.split(s)
@@ -153,13 +175,14 @@ def _complete_executable(s):
     p = pathlib.Path(s)
 
     if p.is_absolute() or '/' in s:
-        for c in p.parent.glob(p.name+'*'):
-            if c.is_dir() or (c.is_file() and os.access(c, os.F_OK | os.X_OK)): # dirs and readable, exwecutable files
+        for c in p.parent.glob(p.name + '*'):
+            if c.is_dir() or (c.is_file() and os.access(c, os.F_OK | os.X_OK)
+                              ):  # dirs and readable, exwecutable files
                 yield str(c)
     else:
         for p in os.get_exec_path():
             p = pathlib.Path(p)
-            for c in p.glob(s+'*'):
+            for c in p.glob(s + '*'):
                 if c.is_file():
                     if os.access(str(c), os.F_OK | os.X_OK):
                         yield c.name

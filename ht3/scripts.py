@@ -17,6 +17,7 @@ ADDED_SCRIPTS = []
 
 _SCRIPT_FILE_NAME_RE = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
 
+
 def _script_module(path):
     name = path.stem
 
@@ -28,6 +29,7 @@ def _script_module(path):
 
     return name
 
+
 def _script_order_key(p):
     """get a key that sorts scripts"""
     m = _SCRIPT_FILE_NAME_RE.fullmatch(p.stem)
@@ -38,6 +40,7 @@ def _script_order_key(p):
     else:
         return 100, name
 
+
 def add_scripts(path):
     """ Add a script or directory full of scripts.  """
     path = pathlib.Path(path)
@@ -47,12 +50,14 @@ def add_scripts(path):
             add_scripts(p)
     elif path.is_file():
         if path not in ADDED_SCRIPTS:
-            if not any(path.samefile(pathlib.Path(m.__file__)) for m in SCRIPTS):
+            if not any(path.samefile(pathlib.Path(m.__file__))
+                       for m in SCRIPTS):
                 ADDED_SCRIPTS.append(path)
     elif not path.exists():
         raise FileNotFoundError(path)
     else:
         raise Exception("not file or dir", path)
+
 
 def load_scripts():
     """Load added Scripts, sorted d.5.py before c.20.py before b.py before a.101.py."""
@@ -72,8 +77,10 @@ def load_scripts():
         SCRIPTS.append(mod)
         if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
             if Env.get(name):
-                raise ImportError(f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False")
+                raise ImportError(
+                    f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False")
             Env.put(name, mod)
+
 
 def reload_all():
     try:
@@ -84,7 +91,7 @@ def reload_all():
                 try:
                     delattr(Env, mod.__name__[4:])
                 except KeyError:
-                    pass # was already removed from Env
+                    pass  # was already removed from Env
             if Env.get(mod.__name__[4:], None) == mod:
                 del Env[mod.__name__[4:]]
         SCRIPTS.clear()
@@ -93,6 +100,7 @@ def reload_all():
         import traceback
         traceback.print_exc()
         raise
+
 
 def check_all_compilable():
     r = True

@@ -7,26 +7,29 @@ import threading
 import time
 import os
 
+
 def _complete_fake(string):
     parts = re.split('[^A-Za-z0-9_]+', string)
     if len(parts) > 0:
         p = parts[-1]
     else:
-        p=''
+        p = ''
 
-    prefix = string[:len(string)-len(p)]
+    prefix = string[:len(string) - len(p)]
     values = filter_completions_i(p, ht3.utils.fake_input.KEY_CODES)
     values = sorted(values)
     values = (prefix + x for x in values)
     return values
 
+
 @cmd(name=':')
-def test_fake(s:_complete_fake):
+def test_fake(s: _complete_fake):
     """Test a fake-sequence after 500 ms."""
     sleep(0.5)
     fake(s, restore_mouse_pos=True)
     global FAKE_TEXT
     FAKE_TEXT = s
+
 
 @cmd
 def record_fake_mouse():
@@ -43,8 +46,9 @@ def record_fake_mouse():
                 break
             mp = get_mouse_pos()
             s.append("{}/{}".format(*mp))
-    s = ": "+" ".join(s)
+    s = ": " + " ".join(s)
     show(s)
+
 
 @cmd(attrs=dict(HotKey='F10'))
 def repeat_fake():
@@ -52,13 +56,14 @@ def repeat_fake():
     global FAKE_TEXT
     fake(FAKE_TEXT)
 
+
 Env['__'] = []
 Env['_'] = None
 
 
 # Some Eval Python functions
 @cmd(name='=')
-def _show_eval(s:args.Python=""):
+def _show_eval(s: args.Python = ""):
     """ Evaluate a python expression and show the result """
     r = evaluate_py_expression(s.lstrip())
     if inspect.isgenerator(r):
@@ -68,8 +73,9 @@ def _show_eval(s:args.Python=""):
     Env['_'] = r
     return r
 
+
 @cmd(name=';')
-def _execute_py_expression(s:args.Python):
+def _execute_py_expression(s: args.Python):
     """Execute a python statement."""
     execute_py_expression(s.lstrip())
 
@@ -102,5 +108,5 @@ class PythonFallback(ht3.command.Command):
 
 
 @cmd
-def cd(p:Path):
+def cd(p: Path):
     os.chdir(p)
