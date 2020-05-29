@@ -29,8 +29,8 @@ def filter_completions_i(s, *prop):
     returned proposals have the same case as ``s``.
     """
     already_yielded = set()
-    l = len(s)
-    if l > 0:
+    length = len(s)
+    if length > 0:
         us = s.upper()
         upper = s[-1].isupper()
         lower = s[-1].islower()
@@ -42,14 +42,14 @@ def filter_completions_i(s, *prop):
     for it in prop:
         for p in it:
             up = p.upper()
-            if up[:l] == us:
+            if up[:length] == us:
                 if up not in already_yielded:
                     if upper:
-                        yield s + up[l:]
+                        yield s + up[length:]
                     elif lower:
-                        yield s + p[l:].lower()
+                        yield s + p[length:].lower()
                     else:
-                        yield s + p[l:]
+                        yield s + p[length:]
                     already_yielded.add(up)
 
 
@@ -57,10 +57,10 @@ def filter_completions(s, *prop):
     """Filter out proposals that don't start with ``s``."""
     assert len(prop) > 0
     already_yielded = set()
-    l = len(s)
+    length = len(s)
     for it in prop:
         for p in it:
-            if p[:l] == s:
+            if p[:length] == s:
                 if p not in already_yielded:
                     yield p
                     already_yielded.add(p)
@@ -88,8 +88,8 @@ def complete_command_with_args(string):
 
     if p_space == -1:
         return complete_commands(string)
-    else:
-        return complete_command_args(string)
+
+    return complete_command_args(string)
 
 
 _COMPLETE_PY_SEPERATOR = re.compile("[^a-zA-Z0-9_.]+")
@@ -135,7 +135,7 @@ def complete_path(s):
     if not s or s[-1] in ['/', os.sep]:
         stem = s
         mask = '*'
-        p = p
+        # p = p
     else:
         stem = s[:-len(p.name)]
         mask = p.name + '*'

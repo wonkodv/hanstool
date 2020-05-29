@@ -185,7 +185,10 @@ def start_thread(
     if on_finish is None:
         on_finish = lambda *a: None  # Env.log_thread_finished #TODO
     if on_exception is None:
-        def on_exception(e): return EXCEPTION_HOOK(exception=e)
+        del on_exception
+
+        def on_exception(e):
+            return EXCEPTION_HOOK(exception=e)
     if args is None:
         args = tuple()
     if kwargs is None:

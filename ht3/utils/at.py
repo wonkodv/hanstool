@@ -35,51 +35,51 @@ class CronScheduler:
                     b = b + mod - r
                 return b
             if a[0] == '=':
-                return (
+                return ()
+            raise ValueError("??", a[0])
 
 
 class Job:
     def __init__(self, cb, schedule):
-        self.cb=cb
-        self.schedule=schedule
-        self.last=self.datetime.datetime.now()
+        self.cb = cb
+        self.schedule = schedule
+        self.last = self.datetime.datetime.now()
 
     def trigger(self):
-        now=self.datetime.datetime.now()
+        now = self.datetime.datetime.now()
         if self.next() <= now:
             self.cb()
-        self.last=now
+        self.last = now
 
     def next(self):
         return self.schedule.next(self.last)
 
-_EVENT=threading.Event()
-jobs=tuple()
+
+_EVENT = threading.Event()
+jobs = tuple()
 
 
 def register(job=None, *, callback=None, schedule=None):
+    global jobs
     if job is None:
         if schedule is None:
             raise ValueError("schedule is None")
         if callback is None:
             raise ValueError("callback is None")
-        job=Job(callback, schedule)
-    jobs=jobs + (job,)
+        job = Job(callback, schedule)
+    jobs = jobs + (job,)
     _EVENT.set()
 
 
-def _thread():
-    wait=10000
-    while 1:
+def _watch_thread():
+    wait = 10000
+    while True:
         if not _EVENT.wait(timeout=wait):
             continue
 
 
-
-
-
-WATCH_THREAD=threading.Thread(
+WATCH_THREAD = threading.Thread(
     target=_watch_thread,
     name='ProcessWatch',
-     daemon=True)
+    daemon=True)
 WATCH_THREAD.start()

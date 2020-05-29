@@ -1,8 +1,8 @@
 import functools
 import inspect
 
-from ctypes import *
-from ctypes.wintypes import *
+from ctypes import windll, c_int, FormatError
+from ctypes.wintypes import DWORD, HWND, LPCSTR, UINT, INT, HINSTANCE, LPCWSTR
 
 kernel32 = windll.kernel32
 shell32 = windll.shell32
@@ -78,11 +78,13 @@ def load(dll, check=check_non_zero):
 
 
 @load(kernel32, check_ok)
-def GetLastError() -> DWORD: pass
+def GetLastError() -> DWORD:
+    pass
 
 
 @load(kernel32, check_ok)
-def SetLastError(e: DWORD) -> None: pass
+def SetLastError(e: DWORD) -> None:
+    pass
 
 
 @load(shell32, lambda r: r > 32)
@@ -99,10 +101,11 @@ def ShellExecuteA(
 
 @load(user32, check_non_zero)
 def MessageBoxW(
-    hWnd: HWND,
-    lpText: LPCWSTR,
-    lpCaption: LPCWSTR,
-    uType: UINT) -> c_int: pass
+        hWnd: HWND,
+        lpText: LPCWSTR,
+        lpCaption: LPCWSTR,
+        uType: UINT) -> c_int:
+    pass
 
 
 __all__ = tuple(set(globals().keys()) - notAll)

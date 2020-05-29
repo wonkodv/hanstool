@@ -78,10 +78,10 @@ def set_clipboard(text):
 
     hCd = GlobalAlloc(0x2, text_len + 2)
     try:
-        l = GlobalSize(hCd)
-        if l <= len(e):
+        length = GlobalSize(hCd)
+        if length <= len(e):
             raise OSError(
-                f"Allocated MemBlock {hCd!r} smaller than requested: {l}")
+                f"Allocated MemBlock {hCd!r} smaller than requested: {length}")
         pchData = GlobalLock(hCd)
 
         memmove(c_wchar_p(pchData), c_wchar_p(text), text_len)

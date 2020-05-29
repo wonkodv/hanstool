@@ -60,8 +60,8 @@ class OptionDialog(tk.Tk):
         self.destroy()
 
 
-def option_dialog(title, message, *options, timeout=0):
-    od = OptionDialog(title, message, *options, timeout=timeout)
+def option_dialog(title, message, def_option, *options, timeout=0):
+    od = OptionDialog(title, message, def_option, *options, timeout=timeout)
     od.wait_window(od)
     return od.result
 

@@ -37,8 +37,7 @@ def _script_order_key(p):
     idx = m.group(3)
     if idx:
         return int(idx), name
-    else:
-        return 100, name
+    return 100, name
 
 
 def add_scripts(path):

@@ -110,7 +110,7 @@ class Window:
     def parent(self, parent):
         """Set Parent of the Window."""
         if parent is None or parent == 0:
-            parent = cls.TOP
+            parent = self.TOP
 
         if not ctypes.windll.user32.SetParent(self.hwnd, parent.hwnd):
             raise ctypes.WinError()
@@ -375,6 +375,7 @@ class Window:
         def cb(w):
             if regex.search(w.title):
                 return w
+            return None
         return self.enumerate(cb)
 
     # Magic
@@ -398,8 +399,7 @@ class Window:
         if self:
             return "Window(hwnd={self:#X}, class_name={self.class_name!r}, text={self.title!r})".format(
                 self=self)
-        else:
-            return "Window(hwnd={self.hwnd:#X}, INVALID)".format(self=self)
+        return "Window(hwnd={self.hwnd:#X}, INVALID)".format(self=self)
 
     def __format__(self, spec):
         return format(self.hwnd, spec)

@@ -94,8 +94,7 @@ def which(exe):
     if len(parts) > 1:
         if p.exists():
             return p
-        else:
-            return None
+        return None
     for c in Env.get('PATH', _paths):
         p = c / exe
         if p.exists():

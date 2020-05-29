@@ -119,7 +119,7 @@ class TestUnionParam(unittest.TestCase):
     def test_complete(self):
         p = args.Union(args.Bool, args.Int)
         assert 'Yes' in list(p.complete(''))
-        assert '0b' in list(p.complete('0'))
+        assert '42' in list(p.complete('4'))
 
 
 class TestMultiParam(unittest.TestCase):

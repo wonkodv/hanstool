@@ -26,7 +26,7 @@ class ParamClassMeta(type):
     def __subclasscheck__(self, other):
         if super().__subclasscheck__(other):
             return True
-        if issubclass(other, Param):
+        if issubclass(other, BaseParam):
             return False
         for m in ['convert', 'complete']:
             for c in inspect.getmro(other):
@@ -60,38 +60,15 @@ class ParamClass(metaclass=ParamClassMeta):
         return []
 
 
-class Param:
+class BaseParam:
     """Parameter where an instance of the class is the param type.
 
     Used when the param type has Arguments:
 
-        class MyParam(Param): pass
+        class MyParam(BaseParam): pass
         @cmd
         def foo(a:My(some_args)):
     """
-
-    def __init__(self, convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
-        """Create Parameter Object."""
-
-        if convert is not _DEFAULT:
-            if not callable(convert):
-                raise TypeError("Convert should be callable", convert)
-            self.convert = convert
-
-        if complete is not _DEFAULT:
-            if not callable(complete):
-                if isinstance(complete, collections.abc.Sequence):
-                    self.complete = lambda s: complete
-                else:
-                    raise TypeError("Complete should be callable", convert)
-            else:
-                self.complete = complete
-
-        if doc is not _DEFAULT:
-            self.doc = doc
-        elif complete is not _DEFAULT or convert is not _DEFAULT:
-            self.doc = "ParamObject(convert={0}, complete={1})".format(
-                self.convert, self.complete)
 
     def _no_completion(self, s):
         return []
@@ -106,11 +83,35 @@ class Param:
         return self.convert(s)
 
     def __repr__(self):
-        if hasattr(self, 'doc'):
-            return self.doc
-        if self.__doc__ is not None:
-            return self.__doc__
-        return "Some kind of param: %s" % (type(self))
+        return self.__doc__
+
+
+def Param(convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
+    """Create quick Parameter Object"""
+
+    p = BaseParam()
+
+    if convert is not _DEFAULT:
+        if not callable(convert):
+            raise TypeError("Convert should be callable", convert)
+        p.convert = convert
+
+    if complete is not _DEFAULT:
+        if callable(complete):
+            p.complete = complete
+        else:
+            if isinstance(complete, collections.abc.Sequence):
+                def complete_from_sequence(s):
+                    return complete
+                p.complete = complete_from_sequence
+            else:
+                raise TypeError("Complete should be callable", convert)
+
+    if doc is not _DEFAULT:
+        p.__doc__ = doc
+    elif complete is not _DEFAULT or convert is not _DEFAULT:
+        p.__doc__ = f"Param(convert={p.convert}, complete={p.complete})"
+    return p
 
 
 class MultiParam:
@@ -151,7 +152,7 @@ class Sequence(MultiParam):
         return "Sequence of parameters with the Values: " + repr(self.params)
 
 
-class Union(Param):
+class Union(BaseParam):
     """One Parameter that can have one of several Types."""
 
     def __init__(self, *params):
@@ -174,18 +175,7 @@ class Union(Param):
 
 
 Str = Param(convert=str, doc="str")
-Int = Param(
-    convert=lambda s: int(
-        s,
-        0),
-    complete=[
-        '0x',
-        '0b',
-        '0o',
-        '1',
-        '2',
-        '42'],
-    doc="int")
+Int = Param(convert=lambda s: int(s, 0), complete=['42'], doc="int")
 Float = Param(convert=float, complete=[], doc="float")
 
 
@@ -210,7 +200,7 @@ def _complete_bool(s):
 Bool = Param(convert=_convert_bool, complete=_complete_bool, doc="bool")
 
 
-class Range(Param):
+class Range(BaseParam):
     """Parameter has to be in Range."""
 
     def __init__(self, *r):
@@ -288,7 +278,7 @@ Time = Param(
     doc="Time, as 1H5M3S or 5.0")
 
 
-class Option(Param):
+class Option(BaseParam):
     """Param can/must be on of a set of options."""
 
     def __init__(
@@ -336,7 +326,7 @@ class Option(Param):
         raise ValueError(s)
 
     def __repr__(self):
-        return "Option of " + repr([o for o in self.options])
+        return "Option of " + repr(list(self.options))
 
 
 def _get_param(p, var_arg):
@@ -345,7 +335,7 @@ def _get_param(p, var_arg):
             return p
         if p is inspect.Parameter.empty:
             return MultiParam(Str)
-        if isinstance(p, Param):
+        if isinstance(p, BaseParam):
             return MultiParam(p)
         if issubclass(p, ParamClass):
             return MultiParam(p)
@@ -354,7 +344,7 @@ def _get_param(p, var_arg):
                 raise TypeError("Instantiate your Param Type")
         raise TypeError("Need Specific Parameter Annotation for *args", p)
 
-    if isinstance(p, Param):
+    if isinstance(p, BaseParam):
         return p
 
     try:
@@ -364,25 +354,25 @@ def _get_param(p, var_arg):
         pass
 
     try:
-        b = issubclass(p, Param)
+        b = issubclass(p, BaseParam)
     except TypeError:
         pass
     else:
         if b:
-            return p()  # raise type errors if there are
+            return p()  # raise errors if there is no 0 argument Constructor
 
     if isinstance(p, str):
         raise TypeError("Can not convert a String to a Param", p)
 
     if isinstance(p, collections.abc.Sequence):
-        if (any(isinstance(e, (Param, MultiParam)) for e in p) or not any(
+        if (any(isinstance(e, (BaseParam, MultiParam)) for e in p) or not any(
                 isinstance(e, str) for e in p)):  # allow ['a','1',2] use only a and 1
             raise TypeError("Give a list of allowed strings", p)
 
         return Option(p)
 
     if p is inspect.Parameter.empty:
-        return Param()
+        return BaseParam()
     if p is bool:
         return Bool
     if p is str:
@@ -391,28 +381,27 @@ def _get_param(p, var_arg):
         return Int
     if p is float:
         return Float
-    if p is pathlib.Path:
-        return Path
     if p is range:
         return Range(p)
+    if p is pathlib.Path:
+        return ht3.args.Path  # someone will patch this in
 
     if inspect.isclass(p):
         raise TypeError(
             "Classes can not be Argument types.", p, "Exceptions: \n"
             "* they specify convert and complete as classmethods\n"
             "* they are subclasses of ParamClass\n"
-            "* they are Subclass of Param and accept an empty constructor")
+            "* they are Subclass of BaseParam and accept an empty constructor")
 
     if inspect.isfunction(p):
         n = p.__name__.lower()
         if 'convert' in n:
             return Param(convert=p)
-        elif 'complete' in n:
+        if 'complete' in n:
             return Param(complete=p)
-        else:
-            raise TypeError(
-                "Can not convert function to param if name does not"
-                " contain 'convert' or 'complete'", p)
+        raise TypeError(
+            "Can not convert function to param if name does not"
+            " contain 'convert' or 'complete'", p)
 
     raise TypeError("Can not Guess Parameter type", p)
 
@@ -491,7 +480,7 @@ class ShellArgParser(BaseArgParser):
     def complete(self, string):
         param_info = self.param_info
         if len(param_info) == 0:
-            return []
+            return
 
         for quote in ['', '"', "'"]:
             try:
@@ -562,16 +551,17 @@ class ShellArgParser(BaseArgParser):
 
     def describe_params(self):
         param_info = self.param_info
+
         if not param_info:
             return "No Parameters"
-        else:
-            s = ["Takes the following params:"]
-            for pi in param_info:
-                s.append("%s%s%s: %s" % ("*" if pi.multiple else '',
-                                         pi.name,
-                                         '?' if pi.optional else '',
-                                         pi.typ))
-            return "\n".join(s)
+
+        s = ["Takes the following params:"]
+        for pi in param_info:
+            s.append("%s%s%s: %s" % ("*" if pi.multiple else '',
+                                     pi.name,
+                                     '?' if pi.optional else '',
+                                     pi.typ))
+        return "\n".join(s)
 
 
 class GetOptArgParser(BaseArgParser):
@@ -750,7 +740,8 @@ def enforce_args(_f=None, *, apply_defaults=False):
             args, kwargs = h.apply_args(args, kwargs)
             return f(*args, **kwargs)
         return wrapper
+
     if _f is None:
         return deco
-    else:
-        return deco(_f)
+
+    return deco(_f)

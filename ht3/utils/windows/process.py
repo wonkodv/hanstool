@@ -136,7 +136,7 @@ def complete_executable(s):
     extension, yield both, else yield only the name"""
     s = shlex.split(s)
     if len(s) != 1:
-        return
+        return ()
     s = s[0]
 
     values = {}
@@ -168,7 +168,7 @@ def WaitForInputIdle(process, timeout=-1):
     if r == 0x102:  # WAIT_TIMEOUT
         raise TimeoutError()
     if r == 0x80:  # WAIT_ABANDONED
-        raise ChildProcessError("Wait abandoned", r, p)
+        raise ChildProcessError("Wait abandoned", r)
     if r == -1:  # WAIT_FAILED
         return False
     try:

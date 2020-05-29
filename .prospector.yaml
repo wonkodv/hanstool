@@ -4,8 +4,10 @@ strictness: low
 #doc-warnings: true
 
 ignore-patterns:
-#    - (^|/)\..+
-    - .*scripts/
+    - test_*
+
+ignore-paths:
+    - default_scripts
 
 dodgy:
     # Looks at Python code to search for things which look "dodgy"
@@ -18,7 +20,7 @@ mccabe:
 
 pep257:
     # docstring checking
-    run: true
+    run: false
     disable:
         - D105 # Missing ocstring in magic Method
         - D203 # 1 Blank before Class Docstring
@@ -27,8 +29,8 @@ pep257:
 pep8:
     # style checking
     run: true
-    options:
-        max-line-length: 100
+    disable:
+        - E741 # Ambigous Variable Name I l O  I really like l. Use better Fonts 11
 
 pyflakes:
     run: true
@@ -38,18 +40,8 @@ pylint:
     run: true
     options:
         dummy-variables-rgx: '_$|__$|dummy'
-        max-line-length: 100
         ignored-classes: pytest
     disable:
-        # Too many lines in module
-        - C0302
-        # Used * or ** magic
-        - W0142
-
-#pyroma:
-#    # checks setup.py
-#    run: true
-
-#vulture:
-#    # this tool finds unused code.
-#    run: true
+        - relative-beyond-top-level
+        - import-outside-toplevel
+        - inconsistent-return-statements

@@ -6,6 +6,7 @@ import Xlib.XK
 import Xlib.protocol.event
 import Xlib.ext.xtest
 import functools
+import time
 
 from ht3.utils.keycodes.xserver import KEY_CODES
 

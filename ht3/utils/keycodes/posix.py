@@ -447,4 +447,4 @@ KEY_CODES = {
     'ONSCREEN_KEYBOARD': 632,
 }
 
-KEY_NAMES = dict([(name, code) for (code, name) in KEY_CODES.items()])
+KEY_NAMES = {name: code for (code, name) in KEY_CODES.items()}

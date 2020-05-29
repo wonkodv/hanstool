@@ -68,17 +68,17 @@ def edit_command(c: args.Union(args.Command, args.Python)):
         o = evaluate_py_expression(c)
         o = inspect.unwrap(o)  # unwrap @Env.updateable functions
         try:
-            f = inspect.getsourcefile(o)
+            filename = inspect.getsourcefile(o)
         except TypeError as e:
             try:
-                f = inspect.getsourcefile(type(o))
+                filename = inspect.getsourcefile(type(o))
             except TypeError:
                 raise e
         try:
             _, l = inspect.getsourcelines(o)
         except TypeError:
             l = 0
-    edit_file(f, l)
+    edit_file(filename, l)
 
 
 @Env

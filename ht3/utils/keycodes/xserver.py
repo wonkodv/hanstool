@@ -139,4 +139,4 @@ KEY_CODES = {
     'SCRIPT_SWITCH': 203,
 }
 
-KEY_NAMES = dict([(name, code) for (code, name) in KEY_CODES.items()])
+KEY_NAMES = {name: code for (code, name) in KEY_CODES.items()}

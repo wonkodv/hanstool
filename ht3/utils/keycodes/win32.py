@@ -150,4 +150,4 @@ KEY_CODES = {
 for x in '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ':
     KEY_CODES[x] = ord(x)
 
-KEY_NAMES = dict([(name, code) for (code, name) in KEY_CODES.items()])
+KEY_NAMES = {name: code for (code, name) in KEY_CODES.items()}

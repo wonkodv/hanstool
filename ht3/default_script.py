@@ -8,7 +8,7 @@ Add Scripts from:
 """
 import pkg_resources
 from ht3.scripts import add_scripts, load_scripts
-from os import environ
+from os import environ, expanduser
 from ht3.check import CHECK
 from pathlib import Path
 from ht3 import scripts
@@ -32,4 +32,4 @@ if s:
     else:
         sep = ':'
     for p in s.split(sep):
-        add_scripts(expanduser(p))
+        add_scripts(Path(p).expanduser())

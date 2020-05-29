@@ -32,6 +32,15 @@ __all__ = (
     'key_up'
 )
 
+type_string = impl.type_string
+get_mouse_pos = impl.get_mouse_pos
+mouse_wheel = impl.mouse_wheel
+mouse_move = impl.mouse_move
+mouse_down = impl.mouse_down
+mouse_up = impl.mouse_up
+key_down = impl.key_down
+key_up = impl.key_up
+
 KEY_CODES = impl.KEY_CODES
 
 
@@ -105,11 +114,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
             sequence.append((f, a, m))
         count = 1
 
-    logs = []
-
     def log(s, *args):
         pass
-        # logs.append(s%args)
 
     for m in fake_re.finditer(string):
         groups = [x for x in m.groups() if x is not None][1:]

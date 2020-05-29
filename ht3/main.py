@@ -2,9 +2,10 @@
 
 main() is called from ht3.__main__"""
 
-import sys
 import os.path
+import pkg_resources
 import shlex
+import sys
 
 from collections import deque
 from os.path import expanduser
@@ -51,7 +52,6 @@ class ArgumentError(ValueError):
 def load_default_script():
     if not scripts.SCRIPTS:
         if not scripts.ADDED_SCRIPTS:
-            import pkg_resources
             s = pkg_resources.resource_filename('ht3', 'default_script.py')
             add_scripts(s)
     while scripts.ADDED_SCRIPTS:
@@ -84,7 +84,7 @@ def parse(args):
     for a in arg_iter:
         if a.startswith('-'):
             for short, long, function, params, done in POSSIBLE_ARGUMENTS:
-                if a == short or a == long:
+                if a in (short, long):
                     if params:
                         try:
                             p = tuple(next(arg_iter) for _ in range(params))

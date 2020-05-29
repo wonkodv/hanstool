@@ -37,13 +37,13 @@ def load_history():
     limit = Env.get('HISTORY_LIMIT', 1000)
     with get_history_file().open("rt") as f:
         if limit is not None:
-            HISTORY = list(collections.deque((l.strip() for l in f), limit))
+            HISTORY = [line.strip() for line in collections.deque(f, limit)]
         else:
-            h = [l.strip() for l in f]
+            h = [line.strip() for line in f]
     if limit is not None:
         with get_history_file().open("wt") as f:
-            for l in HISTORY:
-                f.write(l + "\n")
+            for line in HISTORY:
+                f.write(line + "\n")
 
 
 def append_history(*cmd):

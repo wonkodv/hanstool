@@ -63,7 +63,7 @@ class Command():
                 self.exception = e
                 if self.parent is None:
                     if COMMAND_EXCEPTION_HOOK(command=self, exception=e):
-                        return
+                        return None
                 raise
             else:
                 COMMAND_FINISHED_HOOK(command=self)
@@ -79,16 +79,14 @@ class Command():
             state = "New"
             return "Command(name={0.name}, invocation={0.invocation})".format(
                 self)
-        elif not self.finished:
+        if not self.finished:
             return "Command(name={0.name}, invocation={0.invocation}, running)".format(
                 self)
-        else:
-            if self.exception:
-                return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(
-                    self)
-            else:
-                return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(
-                    self, textwrap.shorten(repr(self.result), 30))
+        if self.exception:
+            return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(
+                self)
+        return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(
+            self, textwrap.shorten(repr(self.result), 30))
 
     def __str__(self):
         if self.invocation.startswith(self.name):
@@ -185,8 +183,8 @@ def cmd(func=None, **kwargs):
             register_command(func=func, origin_stacked=3, **kwargs)
             return func
         return decorator
-    else:
-        register_command(func=func, origin_stacked=3, **kwargs)
+
+    register_command(func=func, origin_stacked=3, **kwargs)
     return func
 
 

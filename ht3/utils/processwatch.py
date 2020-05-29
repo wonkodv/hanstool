@@ -26,7 +26,7 @@ def watch(subprocess, callback):
 
 
 def _watch_thread():
-    l = []
+    process_list = []
     wait = LONG_SLEEP
 
     def _done(p, c):
@@ -42,8 +42,8 @@ def _watch_thread():
             wait = min(LONG_SLEEP, 2 * wait)
         else:
             wait = SHORT_SLEEP
-            l.append(x)
-        l = [x for x in l if not _done(*x)]
+            process_list.append(x)
+        process_list = [x for x in process_list if not _done(*x)]
 
 
 WATCH_THREAD = threading.Thread(

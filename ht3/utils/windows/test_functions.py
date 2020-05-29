@@ -1,5 +1,6 @@
 import unittest
 
+from ctypes import c_size_t, c_void_p
 from . import functions
 
 if hasattr(functions, '__all__'):
