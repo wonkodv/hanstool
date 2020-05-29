@@ -135,7 +135,7 @@ def raise_exception():
 
 @DEBUG_HOOK.register
 def trace_log(message):
-    if Env.get('DEBUG', False):
+    if Env.get('TRACE_LOG', False):
         print()
         traceback.print_stack()
         print("Debug Message")
@@ -143,7 +143,7 @@ def trace_log(message):
 
 @ALERT_HOOK.register
 def trace_alert(message):
-    if Env.get('DEBUG', False):
+    if Env.get('TRACE_ALERT', False):
         print()
         traceback.print_stack()
         print("Alert Message")
