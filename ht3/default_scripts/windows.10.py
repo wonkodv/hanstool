@@ -2,12 +2,17 @@
 
 from Env import *
 
-from pathlib import Path
-import functools
-import re
-
 if CHECK.os.win:
+
+    from pathlib import Path
+    import functools
+    import re
     from ctypes import windll
+
+    @Env
+    def explorer_select(f):
+        execute_disconnected('explorer /select,"{}"'.format(str(Path(f))))
+
 
     # 32Bit binaries (python) can not acces System32 Folder, but Sysnative redirects there
     # lots of useful tools there.
@@ -158,8 +163,7 @@ if CHECK.os.win:
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 
-        w = Window.TOP.search_by_title(r"Firefox \(Private Browsing\)$")
-        log(w)
+        w = Window.TOP.search_by_title(r"Firefox \(Private[ \w]*\)$")
         if w:
             if w.visible:
                 if w == Window.get_foreground_window():
@@ -168,8 +172,6 @@ if CHECK.os.win:
             else:
                 w.show()
                 w.to_front()
-#        else:
-#            execute_disconnected("C:/Program Files/Mozilla Firefox/Firefox.exe", "-private")
 
     @cmd
     def tmp(name=None):
