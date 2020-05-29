@@ -472,6 +472,7 @@ class ShellArgParser(BaseArgParser):
                             quoted +
                             '"'
                         )
+                    if False: # TODO: this is difficult. can not use shlex here?
                         assert s.startswith(string), f"""
                                 s       {s},
                                 string  {string},

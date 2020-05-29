@@ -63,6 +63,8 @@ def load(dll, check=check_non_zero):
 
 @load(kernel32, check_ok)
 def GetLastError() -> DWORD: pass
+
+@load(kernel32, check_ok)
 def SetLastError(e:DWORD) -> None: pass
 
 @load(shell32, lambda r:r>32)

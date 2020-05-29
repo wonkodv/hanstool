@@ -3,20 +3,6 @@ import ht3.history
 from pathlib import Path
 import os.path
 
-def test_lazy_file_path(monkeypatch, tmpdir):
-    f = ht3.history.get_history_file()
-    p = Path(os.path.expanduser(Env.get('HISTORY', ht3.history.HISTORY_FILE_DEFAULT)))
-
-    assert f == p
-
-    f2 = Path(str(tmpdir.join('history2')))
-    monkeypatch.setattr(ht3.history,'Env',{'HISTORY':str(f2)})
-
-    hf = ht3.history.get_history_file()
-    assert hf == f
-    assert hf != f2
-
-
 def test_append_with_limit(monkeypatch, tmpdir):
     """History should enforce the limit when loading."""
     f = str(tmpdir.join('history'))
