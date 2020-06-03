@@ -16,7 +16,7 @@ if CHECK.os.win:
 elif CHECK.os.posix:
     try:
         from . import xserver as impl
-    except NotImplementedError:
+    except ImportError:
         impl = None
 
 __all__ = (
