@@ -29,6 +29,9 @@ if CHECK.os.windows:
     from ht3.utils.windows import *
 
 from pathlib import Path
+import os
+import os.path
+import re
 
 
 args.Python = args.Param(complete=lambda s: Env.complete_py(s),
