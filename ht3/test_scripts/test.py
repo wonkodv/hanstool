@@ -1,7 +1,8 @@
 """A set of commands that test if scripts and commands work as expected."""
 
-from Env import *
+_SCRIPT_ADD_TO_ENV = False
 
+from Env import *
 
 @cmd
 def test(silent: args.Bool = False):

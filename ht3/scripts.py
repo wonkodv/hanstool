@@ -77,7 +77,9 @@ def load_scripts():
         if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
             if Env.get(name):
                 raise ImportError(
-                    f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False")
+                    f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False",
+                    name,
+                    Env[name])
             Env.put(name, mod)
 
 
