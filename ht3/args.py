@@ -520,7 +520,7 @@ class ShellArgParser(BaseArgParser):
             compl = pi.typ.complete(current)
 
         for v in compl:
-            if shlex._find_unsafe(v) is None:
+            if not shlex._find_unsafe(v):
                 s = prefix + v + quote
                 if s.startswith(string):
                     yield s
@@ -532,24 +532,9 @@ class ShellArgParser(BaseArgParser):
                 else:
                     if v.startswith(current):
                         rem = v[len(current):]
-                        quoted = rem.replace('"', r'\"')
-                        s = (
-                            prefix +
-                            current +
-                            '"' +
-                            quoted +
-                            '"'
-                        )
-                    if False:  # TODO: this is difficult. can not use shlex here?
-                        assert s.startswith(string), f"""
-                                s       {s},
-                                string  {string},
-                                prefix  {prefix},
-                                current {current},
-                                v       {v},
-                                rem     {rem},
-                                quoted  {quoted}"""
-                        yield s
+                        if shlex._find_unsafe(rem):
+                            rem = '"' + rem.replace('"', r'\"') + '"'
+                        yield string + rem
 
     def describe_params(self):
         param_info = self.param_info

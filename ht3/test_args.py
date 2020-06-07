@@ -176,8 +176,6 @@ class TestShellArgParser(unittest.TestCase):
         assert list(p.complete("1 text")) == ["1 text"]
         assert list(p.complete('1 "w')) == ['1 "ws text"']
 
-        return
-        # TODO: this is difficult, get it done sometime
         assert list(p.complete('1 w')) == ['1 w"s text"']
         assert list(
             p.complete('1 ')) == [
