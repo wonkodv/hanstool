@@ -83,7 +83,9 @@ class BaseParam:
         return self.convert(s)
 
     def __repr__(self):
-        return self.__doc__
+        if self.__doc__:
+            return self.__doc__
+        return type(self).__name__
 
 
 def Param(convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
