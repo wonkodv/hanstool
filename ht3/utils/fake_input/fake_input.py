@@ -32,18 +32,6 @@ __all__ = (
     'key_up'
 )
 
-type_string = impl.type_string
-get_mouse_pos = impl.get_mouse_pos
-mouse_wheel = impl.mouse_wheel
-mouse_move = impl.mouse_move
-mouse_down = impl.mouse_down
-mouse_up = impl.mouse_up
-key_down = impl.key_down
-key_up = impl.key_up
-
-KEY_CODES = impl.KEY_CODES
-
-
 class Error(Exception):
     pass
 
@@ -141,9 +129,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     a(impl.mouse_up, btn)
                     log("MouseUp b=%d", btn)
             elif m.group("COMBO"):
-                keys = ['mod1', 'mod2', 'mod3', 'mod4', 'modkey']
-                keys = [m.group(k) for k in keys]
-                keys = [KEY_CODES[k.upper()] for k in keys if k is not None]
+                keys = [m.group(g) for g in ('mod1', 'mod2', 'mod3', 'mod4', 'modkey')]
+                keys = [impl.KEY_CODES[k.upper()] for k in keys if k is not None]
                 for key in keys:
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
@@ -153,7 +140,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
             elif m.group("KEY"):
                 ud = m.group('kud')
                 key = m.group('key')
-                key = KEY_CODES[key.upper()]
+                key = impl.KEY_CODES[key.upper()]
                 if ud != '-':
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
@@ -197,8 +184,8 @@ def fake(string, interval=10, restore_mouse_pos=False):
             time.sleep(float(interval) / 1000)
         mouse_move(*mp)
 
-
+# Import symbols from impl
+g = globals()
 for e in __all__:
-    g = globals()
-    if hasattr(impl, e):
-        g[e] = getattr(impl, e)
+    if not e in g:
+        g[e] = getattr(impl, e, None)

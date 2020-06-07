@@ -1,10 +1,8 @@
 import unittest
 from unittest.mock import patch
-from .fake_input import fake, fake_re, impl
+from .fake_input import fake, fake_re
 
-
-class Test_fake(unittest.TestCase):
-
+class Test_fake_re(unittest.TestCase):
     def test_re_combo(self):
         s = "CTRL+SHIFT+A"
         l = list(fake_re.finditer(s))
@@ -30,6 +28,11 @@ class Test_fake(unittest.TestCase):
         assert m.group('hkud') == '+'
         assert m.group('hkey') == 'EF'
 
+class Test_fake(unittest.TestCase):
+    KEY_CODES =  { k:i for i,k in enumerate(
+        "SHIFT CTRL A S D F G H I J".split())
+    }
+
     def runSequence(self, string, interval):
         s = []
         with patch("time.sleep") as mockSleep:
@@ -41,12 +44,12 @@ class Test_fake(unittest.TestCase):
                 fake_in.key_down = lambda k: s.append(["kd", k])
                 fake_in.key_up = lambda k: s.append(["ku", k])
                 fake_in.type_string = lambda t, i: s.append(["t", t, i])
-                fake_in.KEY_CODES = impl.KEY_CODES
+                fake_in.KEY_CODES = self.KEY_CODES
                 fake(string, interval)
         return s
 
     def test_all(self):
-        k = impl.KEY_CODES
+        k = self.KEY_CODES
         s = self.runSequence("""
             +Shift
             A
