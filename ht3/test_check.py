@@ -53,8 +53,3 @@ class Test_check(unittest.TestCase):
         with patch('ht3.lib.THREAD_LOCAL') as fl:
             fl.frontend = 'testfe'
             assert CHECK.current_frontend('testfe')
-
-    def test_py(self):
-        assert CHECK.py > '3'
-        assert CHECK.py >= '3.5'
-        assert CHECK.py < '5'

@@ -70,9 +70,4 @@ if os.name == 'nt':
 
 CHECK.os = Group(OS)
 
-
-# Py
-
-CHECK.py = Value(lambda: "{0.major}.{0.minor}".format(sys.version_info))
-
 # frontend and current_frontend are inserted by ht3.lib
