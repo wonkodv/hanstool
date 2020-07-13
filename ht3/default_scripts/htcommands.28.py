@@ -68,17 +68,17 @@ def edit_command(c: args.Union(args.Command, args.Python)):
         o = evaluate_py_expression(c)
         o = inspect.unwrap(o)  # unwrap @Env.updateable functions
         try:
-            filename = inspect.getsourcefile(o)
+            f = inspect.getsourcefile(o)
         except TypeError as e:
             try:
-                filename = inspect.getsourcefile(type(o))
+                f = inspect.getsourcefile(type(o))
             except TypeError:
                 raise e
         try:
             _, l = inspect.getsourcelines(o)
         except TypeError:
             l = 0
-    edit_file(filename, l)
+    edit_file(f, l)
 
 
 @Env
@@ -92,9 +92,8 @@ def add_command(script: _complete_script_names, name=None, text=None):
     """Define a command in a script.
 
         1.  If `script` matches a loaded one, it is edited, otherwise
-            a new script with the name
-            (it must end in .py) is created in the directory of
-            the most recently loaded script.
+            a new script with the name (it must end in .py) is created in the
+            directory of the most recently loaded script.
         2. If `name` is given, a command definition is added with the name.
         3. If text is given, it is added as comment to the function
         4. The script is edited.
