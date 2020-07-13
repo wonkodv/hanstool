@@ -29,8 +29,8 @@ def execute(
     more_env=None,
         **kwargs):
     """Execute a program."""
-    if not all(isinstance(a, str) for a in args):
-        raise TypeError("Expecting strings")
+
+    args = [os.fspath(a) for a in args]
 
     if shell:
         if is_split is ...:

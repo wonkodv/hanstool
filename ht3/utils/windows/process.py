@@ -12,11 +12,7 @@ from ht3.complete import filter_completions_i
 
 def execute(exe, *args, is_split=..., shell=False, **kwargs):
     """Find an executable in PATH, optionally appending PATHEXT extensions, then execute."""
-    if not isinstance(exe, str):
-        raise TypeError("Expecting a string as exe", exe, type(exe))
-    for a in args:
-        if not isinstance(a, str):
-            raise TypeError("Expecting only strings as args", a, type(a))
+
     if not shell:
         if is_split is ...:
             is_split = len(args) > 0
@@ -33,14 +29,17 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
                 raise ValueError("Expecting only 1 string if not `is_split`")
 
             # replace 1st word in exe with looked up 1st word
+
+            # TODO: windows does not do this exactly
             e = shlex.split(exe)[0]
             if e == exe:
                 # execute("ls")
                 p = which(e)
                 if p:
+                    # TODO: shellescape is not exactly the right thing on windows ?
                     exe = shellescape(str(p))
                 else:
-                    pass  # good luck with that, maybe it's a shell command
+                    pass  # good luck with that
             elif exe.startswith(e + " "):
                 # execute("ls -l")
                 # try to change the 1st word to the full path of an executable
@@ -50,7 +49,7 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
                 if p:
                     e = shellescape(str(p))
                 else:
-                    pass  # good luck with that, maybe it's a shell command
+                    pass  # good luck with that
 
                 assert tail[0] == ' '
                 exe = e + tail
