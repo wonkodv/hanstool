@@ -68,7 +68,7 @@ def vb(box: complete_virtualbox = None):
     if not box:
         return execute_disconnected("virtualbox")
     else:
-        return execute_disconnected("vboxmanage", "startvm", box)
+        return procio("vboxmanage", "startvm", box)
 
 
 @cmd
