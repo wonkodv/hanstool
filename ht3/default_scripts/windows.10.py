@@ -60,7 +60,7 @@ if CHECK.os.win:
     if CHECK.frontend('ht3.gui'):
         import ht3.gui
 
-        def taskbar_window():
+        def taskbar_toolbar():
             w = Window.TOP.find(class_name='Shell_TrayWnd')
             w = w.find(class_name='ReBarWindow32')
             w = w.find(class_name='ToolbarWindow32', title='hanstool')
@@ -70,7 +70,10 @@ if CHECK.os.win:
         @cmd
         def MoveHtWindow():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
-            w = taskbar_window()
+            try:
+                w = taskbar_toolbar()
+            except KeyError:
+                return
             l, t, r, b = w.rect
 
             @ht3.gui.interact(False)
@@ -81,8 +84,12 @@ if CHECK.os.win:
         @Env
         @cmd
         def DockInTaskbar():
-            """Find a toolbar named ``hanstool`` and place the command window INSIDE it."""
-            w = taskbar_window()
+            """Find a toolbar named ``hanstool`` and place the command window INSIDE it.
+
+            Causes some issues if HT hangs, because then the taskbar also hangs.
+            Can only be undone by restarting ht.
+            """
+            w = taskbar_toolbar()
             r = w.rect
 
             @ht3.gui.interact(True)
@@ -169,10 +176,12 @@ if CHECK.os.win:
     def device_manager():
         execute_disconnected('mmc devmgmt.msc')
 
-    @cmd(attrs={'HotKey': 'F7'})
+    @cmd(attrs={'HotKey': 'SHIFT+ESCAPE'})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 
+        while GetAsyncKeyState("SHIFT"):
+            sleep(0)
         w = Window.TOP.search_by_title(r"Firefox \(Private[ \w]*\)$")
         if w:
             if w.visible:
