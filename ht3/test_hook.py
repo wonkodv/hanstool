@@ -21,23 +21,33 @@ class TestHook(unittest.TestCase):
         h(x=2)
         assert X == [1, 2]
 
-    @unittest.skipIf(sys.version_info < (3, 5),
-                     "signature(follow_wrapped) not implemented")
+    @unittest.skipIf(
+        sys.version_info < (3, 5), "signature(follow_wrapped) not implemented"
+    )
     def test_signature_check(self):
         h = Hook("a", "b")
 
         with self.assertRaises(TypeError):
+
             @h.register
-            def callback(a, b, c): pass
+            def callback(a, b, c):
+                pass
+
         with self.assertRaises(TypeError):
+
             @h.register
-            def callback(x, y): pass
+            def callback(x, y):
+                pass
+
         with self.assertRaises(TypeError):
+
             @h.register
-            def callback(a): pass
+            def callback(a):
+                pass
 
         @h.register
-        def callback(a, b, *c): pass
+        def callback(a, b, *c):
+            pass
 
 
 class TestResultHook(unittest.TestCase):

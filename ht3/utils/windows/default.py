@@ -6,8 +6,7 @@ from ht3.utils.keycodes.win32 import KEY_CODES
 
 
 def GetTickCount():
-    return datetime.timedelta(
-        milliseconds=ctypes.windll.kernel32.GetTickCount())
+    return datetime.timedelta(milliseconds=ctypes.windll.kernel32.GetTickCount())
 
 
 def GetAsyncKeyState(k):

@@ -27,13 +27,13 @@ def socket_info():
     *   For a unix socket, it must be a path
     """
 
-    adr = Env.get('DAEMON_ADDRESS', None)
+    adr = Env.get("DAEMON_ADDRESS", None)
     if adr is None:
-        if hasattr(socket, 'AF_UNIX'):
-            adr = os.path.expanduser('~/.config/ht3/socket')
+        if hasattr(socket, "AF_UNIX"):
+            adr = os.path.expanduser("~/.config/ht3/socket")
             typ = socket.AF_UNIX
         else:
-            adr = ('::1', 4267)
+            adr = ("::1", 4267)
             typ = socket.AF_INET6
     else:
         m = RE_INET6.match(adr)
@@ -46,13 +46,16 @@ def socket_info():
                 typ = socket.AF_INET
                 adr = tuple(m.groups())
             else:
-                if hasattr(socket, 'AF_UNIX'):
+                if hasattr(socket, "AF_UNIX"):
                     typ = socket.AF_UNIX
                     adr = os.path.expanduser(adr)
                 else:
-                    raise ValueError("Misformed Address, should look like "
-                                     "'127.0.0.1:4267' or '[::1]:4267'", adr)
-    if typ is getattr(socket, 'AF_UNIX', object()):
+                    raise ValueError(
+                        "Misformed Address, should look like "
+                        "'127.0.0.1:4267' or '[::1]:4267'",
+                        adr,
+                    )
+    if typ is getattr(socket, "AF_UNIX", object()):
         if os.path.exists(adr):
             os.remove(adr)
     return typ, adr

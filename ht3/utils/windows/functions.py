@@ -31,23 +31,23 @@ def load(dll, check=check_non_zero):
         sig = inspect.signature(f)
 
         if not (
-                sig.return_annotation is None
-                or
-                isinstance(sig.return_annotation, c_int.__mro__)
+            sig.return_annotation is None
+            or isinstance(sig.return_annotation, c_int.__mro__)
         ):
             raise TypeError(
                 "return_annotation must be a ctypes datatype or None for void",
-                sig.return_annotation)
+                sig.return_annotation,
+            )
         restype = sig.return_annotation
 
         argtypes = []
         for p in sig.parameters.values():
             if p.kind != p.POSITIONAL_OR_KEYWORD:
-                raise TypeError(
-                    "expected POSITIONAL_OR_KEYWORD params only", sig)
+                raise TypeError("expected POSITIONAL_OR_KEYWORD params only", sig)
             if not isinstance(p.annotation, c_int.__mro__):
                 raise TypeError(
-                    "annotation must be a ctypes datatype or None for void", p)
+                    "annotation must be a ctypes datatype or None for void", p
+                )
             argtypes.append(p.annotation)
 
         def _errcheck(result, func, args):
@@ -56,14 +56,7 @@ def load(dll, check=check_non_zero):
             e = GetLastError()
             SetLastError(0)  # clear Error Code to prevent confusion later
             s = FormatError(e)
-            raise OSError(
-                "ResultCheckFailed",
-                check,
-                result,
-                e,
-                s,
-                func.__name__,
-                args)
+            raise OSError("ResultCheckFailed", check, result, e, s, func.__name__, args)
 
         func = dll[name]
         func.argtypes = argtypes
@@ -74,6 +67,7 @@ def load(dll, check=check_non_zero):
         functools.update_wrapper(f, func)
 
         return func
+
     return deco
 
 
@@ -89,22 +83,18 @@ def SetLastError(e: DWORD) -> None:
 
 @load(shell32, lambda r: r > 32)
 def ShellExecuteA(
-        hwnd: HWND,
-        lpOperation: LPCSTR,
-        lpFile: LPCSTR,
-        lpParameters: LPCSTR,
-        lpDirectory: LPCSTR,
-        nShowCmd: INT,
+    hwnd: HWND,
+    lpOperation: LPCSTR,
+    lpFile: LPCSTR,
+    lpParameters: LPCSTR,
+    lpDirectory: LPCSTR,
+    nShowCmd: INT,
 ) -> HINSTANCE:
     pass
 
 
 @load(user32, check_non_zero)
-def MessageBoxW(
-        hWnd: HWND,
-        lpText: LPCWSTR,
-        lpCaption: LPCWSTR,
-        uType: UINT) -> c_int:
+def MessageBoxW(hWnd: HWND, lpText: LPCWSTR, lpCaption: LPCWSTR, uType: UINT) -> c_int:
     pass
 
 

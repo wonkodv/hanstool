@@ -7,14 +7,14 @@ import time
 
 
 __all__ = (
-    'type_string',
-    'get_mouse_pos',
-    'mouse_wheel',
-    'mouse_move',
-    'mouse_down',
-    'mouse_up',
-    'key_down',
-    'key_up'
+    "type_string",
+    "get_mouse_pos",
+    "mouse_wheel",
+    "mouse_move",
+    "mouse_down",
+    "mouse_up",
+    "key_down",
+    "key_up",
 )
 
 
@@ -22,18 +22,20 @@ mouse_event = ctypes.windll.user32.mouse_event
 keybd_event = ctypes.windll.user32.keybd_event
 keyscan = ctypes.windll.user32.VkKeyScanW
 
-EXTENDED_KEYS = set(KEY_CODES[k] for k in (
-    'UP',
-    'DOWN',
-    'LEFT',
-    'RIGHT',
-    'HOME',
-    'END',
-    'PRIOR',
-    'NEXT',
-    'INSERT',
-    'DELETE'
-)
+EXTENDED_KEYS = set(
+    KEY_CODES[k]
+    for k in (
+        "UP",
+        "DOWN",
+        "LEFT",
+        "RIGHT",
+        "HOME",
+        "END",
+        "PRIOR",
+        "NEXT",
+        "INSERT",
+        "DELETE",
+    )
 )
 
 KEYEVENTF_EXTENDEDKEY = 0x0001
@@ -123,41 +125,46 @@ def type_string(s, interval=0):
 
         def i():
             time.sleep(interval)
+
     else:
+
         def i():
             pass
+
     for c in s:
         x = keyscan(ord(c))
         if x & 0x8000:  # 'negative'
             raise OSError(
                 "Can not get keycodes on current keyboard layout for character \\u{0:04X}: {1}".format(
-                    ord(c), c))
+                    ord(c), c
+                )
+            )
 
         if x & 0x100:
             i()
-            key_down(KEY_CODES['SHIFT'])
+            key_down(KEY_CODES["SHIFT"])
         if x & 0x200:
             i()
-            key_down(KEY_CODES['CTRL'])
+            key_down(KEY_CODES["CTRL"])
         if x & 0x400:
             i()
-            key_down(KEY_CODES['ALT'])
+            key_down(KEY_CODES["ALT"])
         if x & 0x800:
             i()
             raise NotImplementedError("What is a Hankaku Key?")
         i()
-        key_down(x & 0xff)
+        key_down(x & 0xFF)
         i()
-        key_up(x & 0xff)
+        key_up(x & 0xFF)
         if x & 0x800:
             i()
             raise NotImplementedError("What is a Hankaku Key?")
         if x & 0x400:
             i()
-            key_up(KEY_CODES['ALT'])
+            key_up(KEY_CODES["ALT"])
         if x & 0x200:
             i()
-            key_up(KEY_CODES['CTRL'])
+            key_up(KEY_CODES["CTRL"])
         if x & 0x100:
             i()
-            key_up(KEY_CODES['SHIFT'])
+            key_up(KEY_CODES["SHIFT"])

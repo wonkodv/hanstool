@@ -27,7 +27,7 @@ import tkinter as tk
 import traceback
 
 
-class UserInterface():
+class UserInterface:
 
     BUSY = 1
     IDLE = 2
@@ -42,7 +42,7 @@ class UserInterface():
         self.root.after(400, self.cmd_win.to_front)
         self._thread = threading.current_thread()
 
-        if Env.get('DEBUG', False):
+        if Env.get("DEBUG", False):
             self.__getattribute__ = self._getattr
 
     def _getattr(self, name):
@@ -74,7 +74,7 @@ class UserInterface():
         lib.start_thread(cmd, name=f"ht3.gui.ComandRunner({cmd.invocation})")
         return True
 
-    class CommandWindow():
+    class CommandWindow:
         def __init__(self, ui):
             self.ui = ui
             self.window = ui.root
@@ -91,7 +91,7 @@ class UserInterface():
 
             self.cmd = tk.StringVar()
             self.text = tk.Entry(self.window, textvariable=self.cmd)
-            self.text.pack(fill='both', expand=1)
+            self.text.pack(fill="both", expand=1)
             self.text.bind("<KeyPress-Return>", self._submit)
             self.text.bind("<KeyPress-KP_Enter>", self._submit)
             self.text.bind("<Control-KeyPress-W>", self._delete_word)  # TODO
@@ -103,12 +103,11 @@ class UserInterface():
             self._completion_index = None
             self._uncompleted_string = None
             self._completion_update = False
-            self.cmd.trace("w",
-                           lambda *args: (self._clear_completion(),
-                                          self._clear_history()))
+            self.cmd.trace(
+                "w", lambda *args: (self._clear_completion(), self._clear_history())
+            )
             self.text.bind("<KeyPress-Tab>", lambda e: self._set_completion(1))
-            self.text.bind("<Shift-KeyPress-Tab>",
-                           lambda e: self._set_completion(-1))
+            self.text.bind("<Shift-KeyPress-Tab>", lambda e: self._set_completion(-1))
 
             self._load_history()
             self._history_update = False
@@ -128,13 +127,13 @@ class UserInterface():
         def _update_color(self):
             if self._state == UserInterface.IDLE:
                 if self._has_focus:
-                    self.text['bg'] = 'white'
+                    self.text["bg"] = "white"
                 else:
-                    self.text['bg'] = '#D4D0C8'
+                    self.text["bg"] = "#D4D0C8"
             elif self._state == UserInterface.BUSY:
-                self.text['bg'] = 'red'
+                self.text["bg"] = "red"
             elif self._state == UserInterface.ERROR:
-                self.text['bg'] = 'orange'
+                self.text["bg"] = "orange"
             else:
                 assert False
             self.master.update_idletasks()
@@ -144,12 +143,12 @@ class UserInterface():
             self._update_color()
 
         def to_front(self):
-            self.text.select_range(0, 'end')
+            self.text.select_range(0, "end")
             self.window.deiconify()
             self.text.focus_force()
 
         def stay_on_top(self):
-            self.window.wm_attributes('-topmost', 1)
+            self.window.wm_attributes("-topmost", 1)
 
         def set_rect(self, left, top, width, height):
             self.window.geometry("%dx%d+%d+%d" % (width, height, left, top))
@@ -197,7 +196,8 @@ class UserInterface():
                 self._completion_cache.extend(self._completion_iter)
                 try:
                     self._completion_index = self._completion_index % (
-                        len(self._completion_cache) + 1)
+                        len(self._completion_cache) + 1
+                    )
                 except ZeroDivisionError:
                     self._completion_index = 0
             else:
@@ -248,9 +248,11 @@ class UserInterface():
             self.text.delete(0, tk.END)
             self.text.insert(0, text)
             if text:
+
                 def sel():
                     self.text.selection_clear()
                     self.text.xview(len(text) - 1)
+
                 self.window.after(0, sel)
 
         def _delete_word(self, event):
@@ -262,11 +264,11 @@ class UserInterface():
         def _submit(self, event):
             s = self.cmd.get()
             if self.ui.run_command(s):
-                self._set_text('')
+                self._set_text("")
             self._history.append(s)
             self._history_index = -1
 
-    class MessageWindow():
+    class MessageWindow:
         def __init__(self, ui):
             self.ui = ui
             self.master = ui.root
@@ -274,16 +276,16 @@ class UserInterface():
             self.window.title("Log")
             self.text = tk.Text(self.window)
             self.scrollbar = tk.Scrollbar(self.window)
-            self.scrollbar.pack(side='right', fill='y')
-            self.text.pack(fill='both', expand=1)
+            self.scrollbar.pack(side="right", fill="y")
+            self.text.pack(fill="both", expand=1)
             self.text.config(yscrollcommand=self.scrollbar.set)
             self.scrollbar.config(command=self.text.yview)
 
-            self.window.protocol('WM_DELETE_WINDOW', self.hide)
+            self.window.protocol("WM_DELETE_WINDOW", self.hide)
             self.visible = False
             self.window.withdraw()
 
-            self.window.bind('<KeyPress-Escape>', lambda e: self.hide())
+            self.window.bind("<KeyPress-Escape>", lambda e: self.hide())
 
         def toggle(self):
             if not self.visible:
@@ -302,8 +304,8 @@ class UserInterface():
             self.ui.cmd_win.to_front()
 
         def log(self, message):
-            self.text.insert('end', message + '\n')
-            self.text.yview('end')
+            self.text.insert("end", message + "\n")
+            self.text.yview("end")
 
         def log_debug(self, frontend, message):
             o = message
@@ -318,7 +320,8 @@ class UserInterface():
                     s, l = inspect.getsourcelines(o)
                     msg = "".join(
                         "{0:>6d} {1}".format(n, s)
-                        for (n, s) in zip(itertools.count(l), s))
+                        for (n, s) in zip(itertools.count(l), s)
+                    )
                 except OSError:
                     msg = repr(o)
             else:
@@ -339,21 +342,12 @@ class UserInterface():
             e = exception
             if isinstance(e, ht3.utils.process.ProcIOException):
                 self.log(
-                    ("Returncode: {}\n"
-                     "stdout:\n"
-                     "{}\n"
-                     "stderr:\n"
-                     "{}\n").format(
+                    ("Returncode: {}\n" "stdout:\n" "{}\n" "stderr:\n" "{}\n").format(
                         exception.returncode,
-                        textwrap.indent(
-                            exception.out.rstrip(),
-                            '> ',
-                            lambda s: True),
-                        textwrap.indent(
-                            exception.err.rstrip(),
-                            '> ',
-                            lambda s: True),
-                    ))
+                        textwrap.indent(exception.out.rstrip(), "> ", lambda s: True),
+                        textwrap.indent(exception.err.rstrip(), "> ", lambda s: True),
+                    )
+                )
             else:
                 t = type(e)
                 tb = e.__traceback__
@@ -366,23 +360,27 @@ class UserInterface():
             args = process.args
             if not isinstance(args, str):
                 args = Env.shellescape(*args)
-            self.log("Process spawned {}{}:{}".format(
-                process.pid, ' shell' if process.shell else '', args))
+            self.log(
+                "Process spawned {}{}:{}".format(
+                    process.pid, " shell" if process.shell else "", args
+                )
+            )
 
         def log_subprocess_finished(self, frontend, process):
             a = process.args
             if not isinstance(a, str):
                 a = a[0]
             a = pathlib.Path(a)
-            a = a.with_suffix('')
+            a = a.with_suffix("")
             a = a.name
             self.log(
-                "Process finished %d (%s): %r" %
-                (process.pid, a, process.returncode))
+                "Process finished %d (%s): %r" % (process.pid, a, process.returncode)
+            )
             if process.returncode > 0:
                 if CHECK.os.win:
                     return  # return codes on windows don't make any sense
                 self.to_front()
+
 
 # Frontend API
 
@@ -390,8 +388,7 @@ class UserInterface():
 gui_action_q = queue.Queue()
 tl = threading.local()
 
-Interaction = collections.namedtuple(
-    'Interaction', 'event,function,args,kwargs,result')
+Interaction = collections.namedtuple("Interaction", "event,function,args,kwargs,result")
 
 
 def interact(wait):
@@ -399,7 +396,7 @@ def interact(wait):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                kwargs['GUI'] = tl.gui
+                kwargs["GUI"] = tl.gui
                 return f(*args, **kwargs)
             except AttributeError:
                 e = threading.Event()
@@ -408,18 +405,21 @@ def interact(wait):
                 gui_action_q.put(i)
                 e.wait()
                 return r[0]
+
         return wrapper
 
     def decorator_nowait(f):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                kwargs['GUI'] = tl.gui
+                kwargs["GUI"] = tl.gui
                 return f(*args, **kwargs)
             except AttributeError:
                 i = Interaction(None, f, args, kwargs, None)
                 gui_action_q.put_nowait(i)
+
         return wrapper
+
     if wait:
         return decorator_wait
     return decorator_nowait
@@ -435,8 +435,11 @@ def start():
 def loop():
     if threading.current_thread() is not threading.main_thread():
         import warnings
-        warnings.warn("ht3.gui is not running in the main thread."
-                      " Expect erratic, hard to debug crashes.")
+
+        warnings.warn(
+            "ht3.gui is not running in the main thread."
+            " Expect erratic, hard to debug crashes."
+        )
     try:
         gui = UserInterface()
 
@@ -454,6 +457,7 @@ def loop():
             except queue.Empty:
                 pass
             gui.schedule(100, _drain_q)
+
         gui.schedule(100, _drain_q)
 
         gui.loop()
@@ -482,6 +486,7 @@ def _log_in_gui(topic, frontend, kwargs, GUI):
 
 # logging
 
+
 def _log_proxy(topic):
     def forward(**kwargs):
         try:
@@ -489,27 +494,27 @@ def _log_proxy(topic):
         except AttributeError:
             f = ""  # e.g. process watch
         _log_in_gui(topic, f, kwargs)
+
     return forward
 
 
-lib.ALERT_HOOK.register(_log_proxy('log_show'))
-lib.DEBUG_HOOK.register(_log_proxy('log_debug'))
-lib.EXCEPTION_HOOK.register(_log_proxy('log_error'))
+lib.ALERT_HOOK.register(_log_proxy("log_show"))
+lib.DEBUG_HOOK.register(_log_proxy("log_debug"))
+lib.EXCEPTION_HOOK.register(_log_proxy("log_error"))
 
-command.COMMAND_RUN_HOOK.register(_log_proxy('log_command'))
-command.COMMAND_FINISHED_HOOK.register(_log_proxy('log_command_finished'))
+command.COMMAND_RUN_HOOK.register(_log_proxy("log_command"))
+command.COMMAND_FINISHED_HOOK.register(_log_proxy("log_command_finished"))
 
 
 @command.COMMAND_EXCEPTION_HOOK.register
 def _command_exception(exception, command):
-    _log_proxy('log_error')(exception=exception, command=command)
-    if command.frontend == 'ht3.gui':
+    _log_proxy("log_error")(exception=exception, command=command)
+    if command.frontend == "ht3.gui":
         return True  # Don't raise exception
 
 
-ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(
-    _log_proxy('log_subprocess_finished'))
-ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy('log_subprocess'))
+ht3.utils.process.SUBPROCESS_FINISH_HOOK.register(_log_proxy("log_subprocess_finished"))
+ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy("log_subprocess"))
 
 # Window State for Commands
 

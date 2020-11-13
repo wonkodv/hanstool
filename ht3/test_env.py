@@ -6,27 +6,27 @@ from ht3.env import _Env_class, Env
 class EnvTest(unittest.TestCase):
     def test_asDict(self):
         e = _Env_class()
-        e['key'] = 1
-        e['key2'] = 2
-        self.assertEqual(e['key'], 1)
-        self.assertEqual(e['key2'], 2)
+        e["key"] = 1
+        e["key2"] = 2
+        self.assertEqual(e["key"], 1)
+        self.assertEqual(e["key2"], 2)
 
     def test_iter(self):
         e = _Env_class()
-        e['Key1'] = 1
-        e['Key2'] = 2
+        e["Key1"] = 1
+        e["Key2"] = 2
 
         i = iter(e)
 
-        assert 'Key1' in set(i)
+        assert "Key1" in set(i)
 
     def test_ObjToDict(self):
         e = _Env_class()
-        e['Key1'] = 1
-        e['Key2'] = 2
+        e["Key1"] = 1
+        e["Key2"] = 2
         d = dict(e)
-        assert d['Key1'] == 1
-        assert d['Key2'] == 2
+        assert d["Key1"] == 1
+        assert d["Key2"] == 2
 
     def test_attribute_not_write(self):
         """The Attributes of Env are not writable"""
@@ -36,35 +36,36 @@ class EnvTest(unittest.TestCase):
 
     def test_attribute_read(self):
         e = _Env_class()
-        e.dict['Key3'] = 3
+        e.dict["Key3"] = 3
 
         self.assertEqual(e.Key3, 3)
 
     def test_reload(self):
         e = _Env_class()
-        e['key'] = 1
+        e["key"] = 1
 
         e._reload()
 
-        assert 'key' not in e
+        assert "key" not in e
 
     def test_persistent(self):
         e = _Env_class()
-        e['key'] = 1
-        e.put_static('pkey', 2)
+        e["key"] = 1
+        e.put_static("pkey", 2)
 
         e._reload()
 
-        assert 'key' not in e
-        assert e['pkey'] == 2
+        assert "key" not in e
+        assert e["pkey"] == 2
 
     def test_env_module(self):
-        Env['X'] = 42
-        Env['Y'] = 36
+        Env["X"] = 42
+        Env["Y"] = 36
 
         def _():
             import Env
             from Env import X
+
             return X
 
         assert _() == 42
@@ -76,7 +77,7 @@ class EnvTest(unittest.TestCase):
         def a():
             return 1
 
-        assert e['a']() == 1
+        assert e["a"]() == 1
 
     def test_updateable(self):
         e = _Env_class()
@@ -87,7 +88,7 @@ class EnvTest(unittest.TestCase):
 
         # this is not a but a wrapper that does e['a']() (without the
         # recursion)
-        ref1 = e['a']
+        ref1 = e["a"]
 
         assert a is ref1
         assert ref1() == 1
@@ -96,7 +97,7 @@ class EnvTest(unittest.TestCase):
         def a():
             return 2
 
-        ref2 = e['a']
+        ref2 = e["a"]
 
         assert ref1() == 2  # looks up the newest func from e
         assert ref2() == 2  # looks up the newest func from e

@@ -1,3 +1,3 @@
 from ht3.env import Env
 
-Env.SCRIPT_ORDER.append('c')
+Env.SCRIPT_ORDER.append("c")

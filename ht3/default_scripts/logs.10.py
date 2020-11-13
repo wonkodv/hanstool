@@ -10,8 +10,9 @@ def _print(s, **kwargs):
     try:
         print(s, **kwargs)
     except UnicodeError:
-        print(s.encode("ASCII", "backslashreplace").decode("ASCII"),
-              **kwargs)  # This happens on windows sometimes
+        print(
+            s.encode("ASCII", "backslashreplace").decode("ASCII"), **kwargs
+        )  # This happens on windows sometimes
 
 
 @Env.updateable
@@ -26,30 +27,30 @@ def log(o):
 
 @SUBPROCESS_SPAWN_HOOK.register
 def log_subprocess(process):
-    if Env.get('DEBUG', False):
+    if Env.get("DEBUG", False):
         args = process.args
         if not isinstance(args, str):
             args = shellescape(*args)
         _print(
             "Process spawned {}{}:{}".format(
-                process.pid,
-                ' shell' if process.shell else '',
-                args))
+                process.pid, " shell" if process.shell else "", args
+            )
+        )
 
 
 @SUBPROCESS_FINISH_HOOK.register
 def log_subprocess_finished(process):
-    if process.returncode > 0 or Env.get('DEBUG', False):
+    if process.returncode > 0 or Env.get("DEBUG", False):
         _print(
             "Process finished {} ({}):{}".format(
-                process.pid,
-                process.name,
-                process.returncode))
+                process.pid, process.name, process.returncode
+            )
+        )
 
 
 @DEBUG_HOOK.register
 def log_debug(message):
-    if not CHECK.frontend('ht3.cli') or Env.get('DEBUG', 0):
+    if not CHECK.frontend("ht3.cli") or Env.get("DEBUG", 0):
         log_alert(message)
 
 
@@ -66,13 +67,8 @@ def log_alert(message):
         try:
             s, l = inspect.getsourcelines(o)
             o = "".join(
-                "{0:>6d} {1}".format(
-                    n,
-                    s) for (
-                    n,
-                    s) in zip(
-                    itertools.count(l),
-                    s))
+                "{0:>6d} {1}".format(n, s) for (n, s) in zip(itertools.count(l), s)
+            )
         except OSError:
             o = repr(o)
     else:
@@ -86,26 +82,21 @@ def log_alert(message):
 def last_exception_h(exception, command=None):
     if isinstance(exception, ProcIOException):
         _print(
-            ("Returncode: {}\n"
-                "stdout:\n"
-                "{}\n"
-                "stderr:\n"
-                "{}\n"
-             ).format(
+            ("Returncode: {}\n" "stdout:\n" "{}\n" "stderr:\n" "{}\n").format(
                 exception.returncode,
-                textwrap.indent(exception.out.rstrip(), '> ', lambda s: True),
-                textwrap.indent(exception.err.rstrip(), '> ', lambda s: True),
+                textwrap.indent(exception.out.rstrip(), "> ", lambda s: True),
+                textwrap.indent(exception.err.rstrip(), "> ", lambda s: True),
             )
         )
     else:
         t = type(exception)
         tb = exception.__traceback__
         for s in traceback.format_exception(t, exception, tb):
-            _print(s, end='')
+            _print(s, end="")
 
 
 @COMMAND_FINISHED_HOOK.register
 def log_command_finished(command):
-    if not Env.get('DEBUG', False):
+    if not Env.get("DEBUG", False):
         return
     _print("Finished: {0}".format(command))

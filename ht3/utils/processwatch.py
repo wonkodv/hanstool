@@ -35,6 +35,7 @@ def _watch_thread():
             return False
         c(p)
         return True
+
     while True:
         try:
             x = PROCESS_QUEUE.get(timeout=wait)
@@ -46,8 +47,5 @@ def _watch_thread():
         process_list = [x for x in process_list if not _done(*x)]
 
 
-WATCH_THREAD = threading.Thread(
-    target=_watch_thread,
-    name='ProcessWatch',
-    daemon=True)
+WATCH_THREAD = threading.Thread(target=_watch_thread, name="ProcessWatch", daemon=True)
 WATCH_THREAD.start()

@@ -28,11 +28,12 @@ class ParamClassMeta(type):
             return True
         if issubclass(other, BaseParam):
             return False
-        for m in ['convert', 'complete']:
+        for m in ["convert", "complete"]:
             for c in inspect.getmro(other):
                 f = getattr(c, m, None)
                 if inspect.ismethod(
-                        f):  # classmethods are bound, methods of calsses not
+                    f
+                ):  # classmethods are bound, methods of calsses not
                     break
             else:
                 break
@@ -103,8 +104,10 @@ def Param(convert=_DEFAULT, complete=_DEFAULT, doc=_DEFAULT):
             p.complete = complete
         else:
             if isinstance(complete, collections.abc.Sequence):
+
                 def complete_from_sequence(s):
                     return complete
+
                 p.complete = complete_from_sequence
             else:
                 raise TypeError("Complete should be callable", convert)
@@ -177,7 +180,7 @@ class Union(BaseParam):
 
 
 Str = Param(convert=str, doc="str")
-Int = Param(convert=lambda s: int(s, 0), complete=['42'], doc="int")
+Int = Param(convert=lambda s: int(s, 0), complete=["42"], doc="int")
 Float = Param(convert=float, complete=[], doc="float")
 
 
@@ -185,9 +188,9 @@ def _convert_bool(s):
     s = s.lower()
     if not s:
         raise ValueError()
-    if s in ['n', 'no', 'false']:
+    if s in ["n", "no", "false"]:
         return False
-    if s in ['yes', 'true', 'y']:
+    if s in ["yes", "true", "y"]:
         return True
     raise ValueError("Not a boolean word", s)
 
@@ -195,7 +198,8 @@ def _convert_bool(s):
 def _complete_bool(s):
     if s:
         return ht3.complete.filter_completions_i(
-            s, ["yes", "no", "true", "false", "0", "1"])
+            s, ["yes", "no", "true", "false", "0", "1"]
+        )
     return ["Yes", "No"]
 
 
@@ -275,20 +279,14 @@ def _complete_time(s):
 
 
 Time = Param(
-    convert=_convert_time,
-    complete=_complete_time,
-    doc="Time, as 1H5M3S or 5.0")
+    convert=_convert_time, complete=_complete_time, doc="Time, as 1H5M3S or 5.0"
+)
 
 
 class Option(BaseParam):
     """Param can/must be on of a set of options."""
 
-    def __init__(
-            self,
-            options,
-            ignore_case=False,
-            sort=False,
-            allow_others=False):
+    def __init__(self, options, ignore_case=False, sort=False, allow_others=False):
         """Init.
 
         options: Possible Options,
@@ -367,8 +365,9 @@ def _get_param(p, var_arg):
         raise TypeError("Can not convert a String to a Param", p)
 
     if isinstance(p, collections.abc.Sequence):
-        if (any(isinstance(e, (BaseParam, MultiParam)) for e in p) or not any(
-                isinstance(e, str) for e in p)):  # allow ['a','1',2] use only a and 1
+        if any(isinstance(e, (BaseParam, MultiParam)) for e in p) or not any(
+            isinstance(e, str) for e in p
+        ):  # allow ['a','1',2] use only a and 1
             raise TypeError("Give a list of allowed strings", p)
 
         return Option(p)
@@ -390,20 +389,25 @@ def _get_param(p, var_arg):
 
     if inspect.isclass(p):
         raise TypeError(
-            "Classes can not be Argument types.", p, "Exceptions: \n"
+            "Classes can not be Argument types.",
+            p,
+            "Exceptions: \n"
             "* they specify convert and complete as classmethods\n"
             "* they are subclasses of ParamClass\n"
-            "* they are Subclass of BaseParam and accept an empty constructor")
+            "* they are Subclass of BaseParam and accept an empty constructor",
+        )
 
     if inspect.isfunction(p):
         n = p.__name__.lower()
-        if 'convert' in n:
+        if "convert" in n:
             return Param(convert=p)
-        if 'complete' in n:
+        if "complete" in n:
             return Param(complete=p)
         raise TypeError(
             "Can not convert function to param if name does not"
-            " contain 'convert' or 'complete'", p)
+            " contain 'convert' or 'complete'",
+            p,
+        )
 
     raise TypeError("Can not Guess Parameter type", p)
 
@@ -458,10 +462,11 @@ class SingleArgParser(BaseArgParser):
         return self.param_info.typ.complete(s)
 
     def describe_params(self):
-        return ("Takes one param:\n"
-                "%s%s: %s" % (self.param_info.name,
-                              '?' if self.param_info.optional else '',
-                              self.param_info.typ))
+        return "Takes one param:\n" "%s%s: %s" % (
+            self.param_info.name,
+            "?" if self.param_info.optional else "",
+            self.param_info.typ,
+        )
 
 
 class ShellArgParser(BaseArgParser):
@@ -469,8 +474,7 @@ class ShellArgParser(BaseArgParser):
 
     def __init__(self, helper):
         self.helper = helper
-        self.param_info = [
-            pi for pi in helper.param_info.values() if pi.positional]
+        self.param_info = [pi for pi in helper.param_info.values() if pi.positional]
 
     def convert(self, string):
         args = shlex.split(string)
@@ -484,10 +488,9 @@ class ShellArgParser(BaseArgParser):
         if len(param_info) == 0:
             return
 
-        for quote in ['', '"', "'"]:
+        for quote in ["", '"', "'"]:
             try:
-                values = shlex.split(
-                    string + quote + '|')  # pipe for cursor pos
+                values = shlex.split(string + quote + "|")  # pipe for cursor pos
             except ValueError:
                 continue
             else:
@@ -496,23 +499,20 @@ class ShellArgParser(BaseArgParser):
             # raise the error:
             shlex.split(string)
 
-        assert values[-1][-1] == '|'
+        assert values[-1][-1] == "|"
 
         current = values[-1][:-1]
         values = values[:-1]
 
-        prefix = string[:len(string) - len(current)]
+        prefix = string[: len(string) - len(current)]
 
         if len(values) < len(param_info):
             pi = param_info[len(values)]
         else:
             pi = param_info[-1]
             if not pi.multiple:
-                raise ArgError(
-                    "Too many arguments",
-                    len(values),
-                    len(param_info))
-            values = values[len(param_info):] + [current]
+                raise ArgError("Too many arguments", len(values), len(param_info))
+            values = values[len(param_info) :] + [current]
 
         if pi.multiple:
             compl = pi.typ.complete(values)
@@ -531,9 +531,9 @@ class ShellArgParser(BaseArgParser):
                         yield s
                 else:
                     if v.startswith(current):
-                        rem = v[len(current):]
+                        rem = v[len(current) :]
                         if shlex._find_unsafe(rem):
-                            rem = '"' + rem.replace('"', r'\"') + '"'
+                            rem = '"' + rem.replace('"', r"\"") + '"'
                         yield string + rem
 
     def describe_params(self):
@@ -544,10 +544,15 @@ class ShellArgParser(BaseArgParser):
 
         s = ["Takes the following params:"]
         for pi in param_info:
-            s.append("%s%s%s: %s" % ("*" if pi.multiple else '',
-                                     pi.name,
-                                     '?' if pi.optional else '',
-                                     pi.typ))
+            s.append(
+                "%s%s%s: %s"
+                % (
+                    "*" if pi.multiple else "",
+                    pi.name,
+                    "?" if pi.optional else "",
+                    pi.typ,
+                )
+            )
         return "\n".join(s)
 
 
@@ -559,13 +564,13 @@ class GetOptArgParser(BaseArgParser):
         self.helper = helper
 
     def complete(self, string):
-        if not string or string[-1] == ' ':
+        if not string or string[-1] == " ":
             for o in self.opts:
-                if o != ':':
-                    yield string + '-' + o
-        if string[-1] == '-' and (len(string) == 1 or string[-2] == ' '):
+                if o != ":":
+                    yield string + "-" + o
+        if string[-1] == "-" and (len(string) == 1 or string[-2] == " "):
             for o in self.opts:
-                if o != ':':
+                if o != ":":
                     yield string + o
 
     def convert(self, string):
@@ -573,7 +578,7 @@ class GetOptArgParser(BaseArgParser):
         kwargs = {}
         for k, v in optlist:
             k = k[1:]
-            if v == '':
+            if v == "":
                 # opts a:b, args -a '' -a '' will give a:2 but who would do
                 # such a thing
                 if k in kwargs:
@@ -600,17 +605,16 @@ def ArgParser(function, typ, apply_defaults):
     if isinstance(typ, BaseArgParser):
         return typ
     if isinstance(typ, type):
-        raise NotImplementedError(
-            "No convention for passing classes as arg parsers")
+        raise NotImplementedError("No convention for passing classes as arg parsers")
 
     helper = ParamHelper(function, apply_defaults)
 
     param_info = list(helper.param_info.values())
 
-    if isinstance(typ, str) and typ.startswith(':'):
+    if isinstance(typ, str) and typ.startswith(":"):
         return GetOptArgParser(typ[1:], helper)
 
-    if typ == 'auto':
+    if typ == "auto":
         if len(param_info) == 0:
             return NoArgParser()
 
@@ -626,14 +630,12 @@ def ArgParser(function, typ, apply_defaults):
 
         raise TypeError("No matching argument parser", param_info)
 
-    if typ in [1, '1']:
+    if typ in [1, "1"]:
         if len(param_info) > 1:
             if not param_info[0].multiple:
                 if all(i.optional for i in param_info[1:]):
                     return SingleArgParser(helper)
-            raise TypeError(
-                "There are more than 1 required paramertes",
-                param_info)
+            raise TypeError("There are more than 1 required paramertes", param_info)
         raise TypeError("No paramerter expected", param_info)
 
     if typ in [None, 0, False]:
@@ -641,22 +643,20 @@ def ArgParser(function, typ, apply_defaults):
             return NoArgParser()
         raise TypeError("There are required paramertes", param_info)
 
-    if typ in ['shell']:
+    if typ in ["shell"]:
         if all(i.positional or i.optional for i in param_info):
             return ShellArgParser(helper)
-        raise TypeError(
-            "There are required non-positional paramertes",
-            param_info)
+        raise TypeError("There are required non-positional paramertes", param_info)
 
     raise TypeError("No matching argument parser", param_info)
 
 
-class ParamHelper():
+class ParamHelper:
     """Helper that applies Arguments to function Parameters."""
 
     _param_info = collections.namedtuple(
-        'param_info', [
-            'name', 'multiple', 'positional', 'keyword', 'optional', 'typ'])
+        "param_info", ["name", "multiple", "positional", "keyword", "optional", "typ"]
+    )
 
     def __init__(self, f, apply_defaults):
         self.sig = inspect.signature(f)
@@ -671,19 +671,19 @@ class ParamHelper():
                 multiple = False
                 positional = True
                 keyword = False
-                optional = (sig_param.default != sig_param.empty)
+                optional = sig_param.default != sig_param.empty
             elif sig_param.kind == sig_param.POSITIONAL_OR_KEYWORD:
                 # X=1
                 multiple = False
                 positional = True
                 keyword = True
-                optional = (sig_param.default != sig_param.empty)
+                optional = sig_param.default != sig_param.empty
             elif sig_param.kind == sig_param.KEYWORD_ONLY:
                 # *, X=1
                 multiple = False
                 positional = False
                 keyword = True
-                optional = (sig_param.default != sig_param.empty)
+                optional = sig_param.default != sig_param.empty
             elif sig_param.kind == sig_param.VAR_POSITIONAL:
                 # *args
                 multiple = True
@@ -705,7 +705,8 @@ class ParamHelper():
                 keyword=keyword,
                 optional=optional,
                 name=name,
-                typ=_get_param(sig_param.annotation, multiple))
+                typ=_get_param(sig_param.annotation, multiple),
+            )
             self.param_info[name] = pi
 
     def apply_args(self, args, kwargs):
@@ -726,6 +727,7 @@ def enforce_args(_f=None, *, apply_defaults=False):
         def wrapper(*args, **kwargs):
             args, kwargs = h.apply_args(args, kwargs)
             return f(*args, **kwargs)
+
         return wrapper
 
     if _f is None:

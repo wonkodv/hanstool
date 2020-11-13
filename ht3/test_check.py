@@ -7,18 +7,18 @@ from ht3.check import Group, Value, CHECK
 
 class TestGroup(unittest.TestCase):
     def test_all(self):
-        l = ['x', 'y']
+        l = ["x", "y"]
         g = Group(l)
 
         assert g.x
         assert not g.z
 
-        assert 'x' in g
-        assert 'z' not in g
+        assert "x" in g
+        assert "z" not in g
 
-        assert g('x', 'y')
-        assert not g('x', 'y', 'z')
-        assert not g('z')
+        assert g("x", "y")
+        assert not g("x", "y", "z")
+        assert not g("z")
 
 
 class TestValue(unittest.TestCase):
@@ -41,15 +41,15 @@ class Test_check(unittest.TestCase):
         assert CHECK.os(os.name)
 
     def test_specific_os(self):
-        if os.name == 'nt':
+        if os.name == "nt":
             assert CHECK.os.win
             assert CHECK.os.windows
             assert CHECK.os.nt
-        elif os.name == 'posix':
+        elif os.name == "posix":
             assert CHECK.os.posix
             # TODO: assert CHECK.os.linux
 
     def test_currnet_frontend(self):
-        with patch('ht3.lib.THREAD_LOCAL') as fl:
-            fl.frontend = 'testfe'
-            assert CHECK.current_frontend('testfe')
+        with patch("ht3.lib.THREAD_LOCAL") as fl:
+            fl.frontend = "testfe"
+            assert CHECK.current_frontend("testfe")

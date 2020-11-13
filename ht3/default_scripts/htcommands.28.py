@@ -22,20 +22,20 @@ import contextlib
 import io
 
 
-@cmd(name='l')
+@cmd(name="l")
 def list_commands():
     """ List all commands."""
     text = ""
     for n in sorted(COMMANDS):
         c = COMMANDS[n]
-        d = inspect.getdoc(c).partition('\n\n')[0]
+        d = inspect.getdoc(c).partition("\n\n")[0]
         doc = textwrap.shorten(d, 60)
         doc = "%- 20s %s\n" % (n, doc)
         text += doc
     Env.show(text)
 
 
-@cmd(name='?')
+@cmd(name="?")
 def _help(what: args.Union(args.Command, args.Python)):
     """ Show help on a command or evaluated python expression """
     if what in COMMANDS:
@@ -56,7 +56,7 @@ def exit(returncode: int = 0):
     sys.exit(returncode)
 
 
-cmd(exit, name='quit')
+cmd(exit, name="quit")
 
 
 @cmd(name="+")
@@ -91,13 +91,13 @@ def _complete_script_names(s):
 def add_command(script: _complete_script_names, name=None, text=None):
     """Define a command in a script.
 
-        1.  If `script` matches a loaded one, it is edited, otherwise
-            a new script with the name (it must end in .py) is created in the
-            directory of the most recently loaded script.
-        2. If `name` is given, a command definition is added with the name.
-        3. If text is given, it is added as comment to the function
-        4. The script is edited.
-        5. you should restart for the new command to be activated.
+    1.  If `script` matches a loaded one, it is edited, otherwise
+        a new script with the name (it must end in .py) is created in the
+        directory of the most recently loaded script.
+    2. If `name` is given, a command definition is added with the name.
+    3. If text is given, it is added as comment to the function
+    4. The script is edited.
+    5. you should restart for the new command to be activated.
 
     """
     for m in SCRIPTS:
@@ -105,13 +105,14 @@ def add_command(script: _complete_script_names, name=None, text=None):
         if s.name == script:
             break
     else:
-        if not script.endswith('.py'):
+        if not script.endswith(".py"):
             raise ValueError(
-                'The script must be the name of a loaded script or'
-                ' a valid name for a new one')
+                "The script must be the name of a loaded script or"
+                " a valid name for a new one"
+            )
         s = s.parent  # parent of last loaded script
-        if s.name == 'default_scripts':
-            s = pathlib.Path('~/.config/ht3').expanduser()
+        if s.name == "default_scripts":
+            s = pathlib.Path("~/.config/ht3").expanduser()
             if not s.exists():
                 show("Creating Directory " + str(s))
                 s.mkdir(parents=True)
@@ -120,15 +121,17 @@ def add_command(script: _complete_script_names, name=None, text=None):
             show(f"Script already exists: {s}")
         else:
             show(f"New Script {s}")
-            with s.open('wt') as f:
+            with s.open("wt") as f:
                 f.write('"""" A new Script """\n\nfrom Env import *\n\n')
 
     if name:
         with s.open("ta") as f:
-            f.write("\n"
-                    "\n@cmd"
-                    "\ndef " + name + "():"
-                    "\n    " + (text if text else 'pass'))
+            f.write(
+                "\n"
+                "\n@cmd"
+                "\ndef " + name + "():"
+                "\n    " + (text if text else "pass")
+            )
 
     with s.open("rt") as f:
         l = len(list(f))
@@ -146,6 +149,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     from ht3.command import COMMANDS
     from ht3.scripts import reload_all
     from Env import CHECK
+
     try:
         from Env import _RELOADED
     except ImportError:
@@ -157,7 +161,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     debug = print
 
     # disable and delete hotkeys
-    if CHECK.frontend('ht3.hotkey'):
+    if CHECK.frontend("ht3.hotkey"):
         debug("Reload: Disable all hotkeys")
         ht3.hotkey.disable_all_hotkeys()  # let hotkeys and old functions be deleted
         l = list(ht3.hotkey.HotKey.HOTKEYS.values())
@@ -169,7 +173,8 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
         for c in list(h.callbacks):
             if c.__module__.startswith("Env."):
                 debug(
-                    f"Reload: Remove Hook {c.__name__} defined in script {c.__module__}")
+                    f"Reload: Remove Hook {c.__name__} defined in script {c.__module__}"
+                )
                 h.callbacks.remove(c)
 
     debug("Reload: Clear commands")
@@ -177,7 +182,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
 
     debug("Reload: Modules")
     for module in modules:
-        if module == 'ENV':
+        if module == "ENV":
             debug("Reload: ENV")
             Env._reload()
         else:
@@ -187,13 +192,13 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
 
     debug("Reload: ===== Cleanup Done, Begin reloading =====")
 
-    Env['_RELOADED'] = _RELOADED + 1
+    Env["_RELOADED"] = _RELOADED + 1
 
     try:
         debug("Reload: Scripts")
         reload_all()
     finally:
-        if CHECK.frontend('ht3.hotkey'):
+        if CHECK.frontend("ht3.hotkey"):
             debug("Reload: Hotkeys")
             ht3.hotkey.reload_hotkeys()
 
@@ -217,13 +222,13 @@ def restart(*more_args):
     else:
         args.append(sys.executable)
 
-    args += ['-m', 'ht3']
+    args += ["-m", "ht3"]
 
     arg_iter = iter(sys.argv[1:])
 
     # Copy from ht3.main.parse. Filters "command" arguments
     for a in arg_iter:
-        if a.startswith('-'):
+        if a.startswith("-"):
             for short, long, function, params, done in ht3.main.POSSIBLE_ARGUMENTS:
                 if a == short or a == long:
                     if params:
@@ -235,8 +240,7 @@ def restart(*more_args):
                         p = ()
                     if not (
                         long == "--command"
-                        or
-                        (long == "--set-env" and p[0] == "_RESTARTED")
+                        or (long == "--set-env" and p[0] == "_RESTARTED")
                     ):
                         args.append(a)
                         args.extend(p)
@@ -257,11 +261,12 @@ def restart(*more_args):
     os.execv(sys.executable, args)
 
 
-if CHECK.frontend('ht3.gui'):
+if CHECK.frontend("ht3.gui"):
     import ht3.gui
+
     ht3.gui.do_on_start(ht3.gui.cmd_win_stay_on_top)
 
-    if CHECK.frontend('ht3.hotkey'):
+    if CHECK.frontend("ht3.hotkey"):
         HT_TO_FRONT_TIME = 0
 
         @cmd(attrs=dict(HotKey="F8"))
@@ -276,7 +281,7 @@ if CHECK.frontend('ht3.gui'):
                 ht3.gui.log_win_to_front()
 
 
-if CHECK.frontend('ht3.hotkey'):
+if CHECK.frontend("ht3.hotkey"):
     import ht3.hotkey
 
     def complete_hotkey(s):

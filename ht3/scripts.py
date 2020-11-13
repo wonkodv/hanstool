@@ -15,7 +15,7 @@ from . import lib
 SCRIPTS = []
 ADDED_SCRIPTS = []
 
-_SCRIPT_FILE_NAME_RE = re.compile(r'^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$')
+_SCRIPT_FILE_NAME_RE = re.compile(r"^([a-zA-Z_][a-zA-Z0-9_]*)(\.(\d+))?$")
 
 
 def _script_module(path):
@@ -44,13 +44,12 @@ def add_scripts(path):
     """ Add a script or directory full of scripts.  """
     path = pathlib.Path(path)
     if path.is_dir():
-        l = path.glob('*.py')
+        l = path.glob("*.py")
         for p in l:
             add_scripts(p)
     elif path.is_file():
         if path not in ADDED_SCRIPTS:
-            if not any(path.samefile(pathlib.Path(m.__file__))
-                       for m in SCRIPTS):
+            if not any(path.samefile(pathlib.Path(m.__file__)) for m in SCRIPTS):
                 ADDED_SCRIPTS.append(path)
     elif not path.exists():
         raise FileNotFoundError(path)
@@ -66,7 +65,7 @@ def load_scripts():
         raise ValueError("No scripts added (or already loaded)")
     for path in l:
         name = _script_module(path)
-        ename = 'Env.' + name
+        ename = "Env." + name
         spec = spec_from_file_location(ename, str(path))
         mod = spec.loader.load_module()
         assert mod.__name__ == ename
@@ -74,21 +73,22 @@ def load_scripts():
         assert mod.__file__ == str(path)
         ADDED_SCRIPTS.remove(path)
         SCRIPTS.append(mod)
-        if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
+        if getattr(mod, "_SCRIPT_ADD_TO_ENV", True):
             if Env.get(name):
                 raise ImportError(
                     f"Env['{name}'] already occupied. Free it or specify _SCRIPT_ADD_TO_ENV=False",
                     name,
-                    Env[name])
+                    Env[name],
+                )
             Env.put(name, mod)
 
 
 def reload_all():
     try:
         for mod in SCRIPTS:
-            if getattr(mod, '_SCRIPT_RELOAD', True):
+            if getattr(mod, "_SCRIPT_RELOAD", True):
                 ADDED_SCRIPTS.append(pathlib.Path(mod.__file__))
-            if getattr(mod, '_SCRIPT_ADD_TO_ENV', True):
+            if getattr(mod, "_SCRIPT_ADD_TO_ENV", True):
                 try:
                     delattr(Env, mod.__name__[4:])
                 except KeyError:
@@ -99,6 +99,7 @@ def reload_all():
         load_scripts()
     except Exception as e:
         import traceback
+
         traceback.print_exc()
         raise
 

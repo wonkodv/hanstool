@@ -42,27 +42,30 @@ def type_string(s, interval=0):
 
         def i():
             time.sleep(interval)
+
     else:
+
         def i():
             pass
+
     for c in s:
         sym = Xlib.XK.string_to_keysym(c)
         if sym:
             shifted = c.isupper()
             kc = display().keysym_to_keycode(sym)
             if shifted:
-                key_down('SHIFT')
+                key_down("SHIFT")
             key_down(kc)
             key_up(kc)
             if shifted:
-                key_up('SHIFT')
+                key_up("SHIFT")
         else:
-            key_down('CONTROL')
-            key_down('SHIFT')
-            key_down('U')
-            key_up('U')
-            key_up('SHIFT')
-            key_up('CONTROL')
+            key_down("CONTROL")
+            key_down("SHIFT")
+            key_down("U")
+            key_up("U")
+            key_up("SHIFT")
+            key_up("CONTROL")
 
             u = ord(c)
             u = format(u, "04X")
@@ -71,5 +74,5 @@ def type_string(s, interval=0):
                 key_down(d)
                 key_up(d)
 
-            key_down('SPACE')
-            key_up('SPACE')
+            key_down("SPACE")
+            key_up("SPACE")

@@ -4,8 +4,8 @@ import shlex
 
 from Env import *
 
-if 'EDITOR' in os.environ:
-    e = shlex.split(os.environ['EDITOR'])
+if "EDITOR" in os.environ:
+    e = shlex.split(os.environ["EDITOR"])
 elif CHECK.os.win:
     editors = [
         "gvim",
@@ -19,21 +19,21 @@ elif CHECK.os.win:
             e = [e]
             break
     else:
-        e = ['notepad.exe']
+        e = ["notepad.exe"]
 else:
-    if CHECK.frontend('ht3.cli'):
-        editors = ['nvim', 'vim', 'nano', 'emacs']
+    if CHECK.frontend("ht3.cli"):
+        editors = ["nvim", "vim", "nano", "emacs"]
     else:
-        editors = ['nvim-qt', 'gvim', 'gedit']
+        editors = ["nvim-qt", "gvim", "gedit"]
     for s in editors:
         s = shutil.which(s)
         if s:
             e = [s]
             break
     else:
-        e = ['ed']  # haha
+        e = ["ed"]  # haha
 
-Env['EDITOR'] = tuple(e)  # make unmodifiable
+Env["EDITOR"] = tuple(e)  # make unmodifiable
 
 
 @Env.updateable
@@ -46,8 +46,8 @@ def edit_file(file_name: Path, line: int = 0):
     args = list(Env.EDITOR)
     args.append(str(file_name))
     if line:
-        if 'vim' in e:
-            args.append('+%d' % line)
-        elif 'notepad++' in e:
-            args.append('-n%d' % line)
+        if "vim" in e:
+            args.append("+%d" % line)
+        elif "notepad++" in e:
+            args.append("-n%d" % line)
     p = execute_auto(*args)

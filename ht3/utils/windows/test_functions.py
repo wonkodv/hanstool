@@ -1,13 +1,13 @@
 import sys
-if sys.platform == 'win32':
+
+if sys.platform == "win32":
     from . import functions
     from ctypes import c_size_t, c_void_p
     import unittest
 
-    if hasattr(functions, '__all__'):
-        del functions.__all__           # import EVERYTHING
+    if hasattr(functions, "__all__"):
+        del functions.__all__  # import EVERYTHING
         from .functions import *
-
 
     class TestLoad(unittest.TestCase):
         def test_load(self):

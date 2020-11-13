@@ -20,17 +20,18 @@ elif CHECK.os.posix:
         impl = None
 
 __all__ = (
-    'KEY_CODES',
-    'fake',
-    'type_string',
-    'get_mouse_pos',
-    'mouse_wheel',
-    'mouse_move',
-    'mouse_down',
-    'mouse_up',
-    'key_down',
-    'key_up'
+    "KEY_CODES",
+    "fake",
+    "type_string",
+    "get_mouse_pos",
+    "mouse_wheel",
+    "mouse_move",
+    "mouse_down",
+    "mouse_up",
+    "key_down",
+    "key_up",
 )
+
 
 class Error(Exception):
     pass
@@ -40,18 +41,21 @@ fake_types = (
     ("WHITESPACE", r"\s+"),
     ("COUNT", r"(?P<count>\d+)\*"),
     ("MOVEABS", r"(-?[\d]+)[/:,](-?[\d]+)"),
-    ("COMBO", r"((?P<mod1>\w+)\+)"
-     r"((?P<mod2>\w+)\+)?"
-     r"((?P<mod3>\w+)\+)?"
-     r"((?P<mod4>\w+)\+)?"
-     r"(?P<modkey>[0-9a-zA-Z_]+)"),
+    (
+        "COMBO",
+        r"((?P<mod1>\w+)\+)"
+        r"((?P<mod2>\w+)\+)?"
+        r"((?P<mod3>\w+)\+)?"
+        r"((?P<mod4>\w+)\+)?"
+        r"(?P<modkey>[0-9a-zA-Z_]+)",
+    ),
     ("MBTN", r"(?P<mud>\+|-|)M(?P<btn>[1-3])"),
     ("HKEY", r"(?P<hkud>\+|-|)0x(?P<hkey>[0-9a-fA-F]{2})"),
     ("KEY", r"(?P<kud>\+|-|)(?P<key>[A-Za-z_0-9]+)"),
     ("STRING1", r"'([^']*)'"),
     ("STRING2", r'"([^"]*)"'),
-    ("SLEEP", r'\(([0-9.]+)\)'),
-    ("INVALID", r"\S+")
+    ("SLEEP", r"\(([0-9.]+)\)"),
+    ("INVALID", r"\S+"),
 )
 
 fake_re = re.compile("|".join("(?P<%s>%s)" % pair for pair in fake_types))
@@ -120,16 +124,16 @@ def fake(string, interval=10, restore_mouse_pos=False):
                 a(impl.mouse_move, x, y)
                 log("MouseMove to x=%.1f y=%.1f", x, y)
             elif m.group("MBTN"):
-                ud = m.group('mud')
-                btn = int(m.group('btn'))
-                if ud != '-':
+                ud = m.group("mud")
+                btn = int(m.group("btn"))
+                if ud != "-":
                     a(impl.mouse_down, btn)
                     log("MouseDown b=%d", btn)
-                if ud != '+':
+                if ud != "+":
                     a(impl.mouse_up, btn)
                     log("MouseUp b=%d", btn)
             elif m.group("COMBO"):
-                keys = [m.group(g) for g in ('mod1', 'mod2', 'mod3', 'mod4', 'modkey')]
+                keys = [m.group(g) for g in ("mod1", "mod2", "mod3", "mod4", "modkey")]
                 keys = [impl.KEY_CODES[k.upper()] for k in keys if k is not None]
                 for key in keys:
                     a(impl.key_down, key)
@@ -138,23 +142,23 @@ def fake(string, interval=10, restore_mouse_pos=False):
                     a(impl.key_up, key)
                     log("KeyUp vk=%d", key)
             elif m.group("KEY"):
-                ud = m.group('kud')
-                key = m.group('key')
+                ud = m.group("kud")
+                key = m.group("key")
                 key = impl.KEY_CODES[key.upper()]
-                if ud != '-':
+                if ud != "-":
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
-                if ud != '+':
+                if ud != "+":
                     a(impl.key_up, key)
                     log("KeyUp vk=%d", key)
             elif m.group("HKEY"):
-                ud = m.group('hkud')
-                key = m.group('hkey')
+                ud = m.group("hkud")
+                key = m.group("hkey")
                 key = int(key, 16)
-                if ud != '-':
+                if ud != "-":
                     a(impl.key_down, key)
                     log("KeyDown vk=%d", key)
-                if ud != '+':
+                if ud != "+":
                     a(impl.key_up, key)
                     log("KeyUp vk=%d", key)
             elif m.group("STRING1") or m.group("STRING2"):
@@ -183,6 +187,7 @@ def fake(string, interval=10, restore_mouse_pos=False):
         if interval:
             time.sleep(float(interval) / 1000)
         mouse_move(*mp)
+
 
 # Import symbols from impl
 g = globals()

@@ -1,10 +1,11 @@
 import inspect
 
 
-class Hook():
+class Hook:
     """Delegate calls to all registered callbacks in reversed order.
 
     If at least one handler returns True, the Hook returns True ("handled")"""
+
     HOOKS = []
 
     def __init__(self, *parameters):
@@ -27,8 +28,9 @@ class Hook():
             try:
                 sig.bind(**{p: None for p in self.parameters})
             except TypeError:
-                raise TypeError("Incompatible Signature", cb,
-                                sig, self.parameters) from None
+                raise TypeError(
+                    "Incompatible Signature", cb, sig, self.parameters
+                ) from None
         self.callbacks.append(cb)
         return cb
 

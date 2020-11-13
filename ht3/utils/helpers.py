@@ -18,10 +18,12 @@ def cmd_func(name, func, *args, **kwargs):
     arguments.
     see `functools.partial`."""
     cmdf = functools.partial(func, *args, **kwargs)
-    register_command(cmdf,
-                     name=name,
-                     doc='executes\n' + " ".join(shlex.quote(x) for x in args),
-                     origin_stacked=3)
+    register_command(
+        cmdf,
+        name=name,
+        doc="executes\n" + " ".join(shlex.quote(x) for x in args),
+        origin_stacked=3,
+    )
 
     # be careful, black magic ahead!
     stack = inspect.stack()
@@ -55,8 +57,10 @@ def cache_for(t):
                 updated = now
                 cache = f()
             return cache
+
         return wrapper
+
     return deco
 
 
-__all__ = 'cmd_func', 'cache_for'
+__all__ = "cmd_func", "cache_for"

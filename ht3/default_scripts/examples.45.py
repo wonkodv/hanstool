@@ -8,14 +8,15 @@ import string
 import datetime
 
 
-if CHECK.frontend('ht3.cli'):
+if CHECK.frontend("ht3.cli"):
     import ht3.cli
 
     @ht3.cli.do_on_start
     def import_readline():
         try:
             import readline
-            readline.parse_and_bind('set editing-mode vi')
+
+            readline.parse_and_bind("set editing-mode vi")
         except ImportError:
             pass
 
@@ -55,7 +56,7 @@ def complete_virtualbox(s=None):
     vms = procio("vboxmanage list vms", shell=False, is_split=False)
 
     # "debian" {fbc948a5-7b8b-489c-88b0-7f5eaceb150e}
-    for s in sorted(vms.split('\n')):
+    for s in sorted(vms.split("\n")):
         if s:
             x = s.split('"')
             yield x[1]
@@ -80,12 +81,13 @@ def rand(low: int = 0, high: int = 0xFFFFFFFF):
 
 @cmd
 def password(
-        length: int = 16,
-        lower: bool = True,
-        upper: bool = True,
-        numbers: bool = True,
-        common_symbols: bool = True,
-        other: bool = False):
+    length: int = 16,
+    lower: bool = True,
+    upper: bool = True,
+    numbers: bool = True,
+    common_symbols: bool = True,
+    other: bool = False,
+):
     ll = set(string.ascii_lowercase)
     ul = set(string.ascii_uppercase)
     no = set(string.digits)
@@ -121,6 +123,5 @@ def password(
         set_clipboard("".join(pwd))
         return
     raise ValueError(
-        "can not match all categories", "".join(
-            sorted(pwd)), "".join(
-            sorted(pwchars)))
+        "can not match all categories", "".join(sorted(pwd)), "".join(sorted(pwchars))
+    )

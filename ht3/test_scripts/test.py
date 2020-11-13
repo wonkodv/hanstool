@@ -4,6 +4,7 @@ _SCRIPT_ADD_TO_ENV = False
 
 from Env import *
 
+
 @cmd
 def test(silent: args.Bool = False):
     test_assertions_enabled()
@@ -21,6 +22,7 @@ def test(silent: args.Bool = False):
 
 # Assertions
 
+
 def test_assertions_enabled():
     try:
         assert False
@@ -28,6 +30,7 @@ def test_assertions_enabled():
         pass
     else:
         raise Exception("Who runs a Test suite with Assertions disabled?")
+
 
 # Script Order
 
@@ -43,16 +46,18 @@ def test_script_order():
     #   test.py
     # And scripts run in the same namespace
 
-    assert Env['SCRIPT_ORDER'] == ['init', 'd', 'b', 'a', 'c']
+    assert Env["SCRIPT_ORDER"] == ["init", "d", "b", "a", "c"]
 
 
 def test_script_module():
-    assert __name__ == 'Env.test'
+    assert __name__ == "Env.test"
 
     import importlib
-    mod = importlib.import_module('Env.test')
+
+    mod = importlib.import_module("Env.test")
     assert mod.test_script_module is test_script_module
-    test_script_module.__module__ == 'Env.test'
+    test_script_module.__module__ == "Env.test"
+
 
 # @cmd
 
@@ -69,8 +74,8 @@ def decorator_args_dummy():
 
 def test_decorator():
     # decorative decorator decorated correctly
-    assert COMMANDS['decorator_noargs_dummy'].target is decorator_noargs_dummy
-    assert COMMANDS['decorator_args_dummy'].target is decorator_args_dummy
+    assert COMMANDS["decorator_noargs_dummy"].target is decorator_noargs_dummy
+    assert COMMANDS["decorator_args_dummy"].target is decorator_args_dummy
 
 
 # Args
@@ -95,17 +100,18 @@ def test_argument_parsing():
     run_command("""shellargtest 1 "2" '3'""")
     run_command("""shellargtest""")
     run_command("""shellargtest "a b c d" """)
-    assert ARG_TEST == [('1', '2', '3'), (), ('a b c d',)]
+    assert ARG_TEST == [("1", "2", "3"), (), ("a b c d",)]
     ARG_TEST.clear()
     run_command("""autoargtest 1 Yes 0 1.1 Yes No Yes Hans 1""")
     assert ARG_TEST[0] == 1
     assert ARG_TEST[1] is True
-    assert ARG_TEST[2] == (0, 1.1, True, False, True, 'Hans', 1)
+    assert ARG_TEST[2] == (0, 1.1, True, False, True, "Hans", 1)
 
 
 # Name
 
-@cmd(name='$IsValid!')
+
+@cmd(name="$IsValid!")
 def name_test():
     global NAME_TEST
     NAME_TEST = True
@@ -114,5 +120,5 @@ def name_test():
 def test_names():
     global NAME_TEST
     NAME_TEST = False
-    run_command('$IsValid!')
+    run_command("$IsValid!")
     assert NAME_TEST

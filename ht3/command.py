@@ -23,7 +23,7 @@ class NoCommandError(Exception):
     pass
 
 
-class Command():
+class Command:
     """Base class of commands.
 
     each Command will be a derived class. Objects of that class contain
@@ -77,16 +77,18 @@ class Command():
     def __repr__(self):
         if not self.started:
             state = "New"
-            return "Command(name={0.name}, invocation={0.invocation})".format(
-                self)
+            return "Command(name={0.name}, invocation={0.invocation})".format(self)
         if not self.finished:
             return "Command(name={0.name}, invocation={0.invocation}, running)".format(
-                self)
+                self
+            )
         if self.exception:
             return "Command(name={0.name}, invocation={0.invocation}, exception={0.exception})".format(
-                self)
+                self
+            )
         return "Command(name={0.name}, invocation={0.invocation}, result={1})".format(
-            self, textwrap.shorten(repr(self.result), 30))
+            self, textwrap.shorten(repr(self.result), 30)
+        )
 
     def __str__(self):
         if self.invocation.startswith(self.name):
@@ -105,7 +107,7 @@ class NamedFunctionCommand(Command):
         self.args, self.kwargs = self.parse(arg_string)
 
     def run(self):
-        t = type(self).target   # do not bind the target function to self
+        t = type(self).target  # do not bind the target function to self
         r = t(*self.args, **self.kwargs)
         return r
 
@@ -116,13 +118,16 @@ class NamedFunctionCommand(Command):
         return self.arg_parser.convert(s)
 
 
-def register_command(func, *,
-                     origin_stacked,
-                     name=_DEFAULT,
-                     args='auto',
-                     apply_default_param_anotations=False,
-                     doc=_DEFAULT,
-                     attrs=_DEFAULT):
+def register_command(
+    func,
+    *,
+    origin_stacked,
+    name=_DEFAULT,
+    args="auto",
+    apply_default_param_anotations=False,
+    doc=_DEFAULT,
+    attrs=_DEFAULT
+):
     """ Register a function as Command """
 
     origin = traceback.extract_stack()
@@ -142,18 +147,21 @@ def register_command(func, *,
         name = func_name
 
     if doc is _DEFAULT:
-        doc = inspect.getdoc(func) or ''
+        doc = inspect.getdoc(func) or ""
 
-    long_doc = "".join([
-        doc,
-        "\n",
-        "\n",
-        "Invoked as '%s'" % name,
-        (", calls %s\n" % func_name) if func_name != name else "",
-        "\n",
-        arg_parser.describe_params(), "\n",
-        "Defined in:\n\t%s:%d" % origin
-    ])
+    long_doc = "".join(
+        [
+            doc,
+            "\n",
+            "\n",
+            "Invoked as '%s'" % name,
+            (", calls %s\n" % func_name) if func_name != name else "",
+            "\n",
+            arg_parser.describe_params(),
+            "\n",
+            "Defined in:\n\t%s:%d" % origin,
+        ]
+    )
 
     d = dict(
         target=func,
@@ -161,7 +169,8 @@ def register_command(func, *,
         arg_parser=arg_parser,
         __doc__=long_doc,
         short_doc=doc,
-        attrs=attrs)
+        attrs=attrs,
+    )
     cmd = type(name, (NamedFunctionCommand,), d)
 
     COMMANDS[name] = cmd
@@ -178,10 +187,12 @@ def cmd(func=None, **kwargs):
     """
 
     if func is None:
+
         def decorator(func):
             """ the actual decorator """
             register_command(func=func, origin_stacked=3, **kwargs)
             return func
+
         return decorator
 
     register_command(func=func, origin_stacked=3, **kwargs)
@@ -189,7 +200,7 @@ def cmd(func=None, **kwargs):
 
 
 def parse_command(string):
-    return string.partition(' ')
+    return string.partition(" ")
 
 
 def get_registered_command(string):

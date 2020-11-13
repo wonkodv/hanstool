@@ -12,51 +12,48 @@ def helper(*args, **kwargs):
         stderr=subprocess.PIPE,
         universal_newlines=True,
         errors="replace",
-        env=dict([('TEST', 'hans')] + list(os.environ.items())),
+        env=dict([("TEST", "hans")] + list(os.environ.items())),
         **kwargs
     )
     return p
 
 
 class TestProcess(unittest.TestCase):
-    if sys.platform == 'win32':
+    if sys.platform == "win32":
+
         def test_excecute(self):
             p = helper(sys.executable, "-c", "print('%TEST%')")
             t, e = p.communicate()
-            assert t.strip() == '%TEST%'
+            assert t.strip() == "%TEST%"
 
         def test_excecute_split(self):
             p = helper(sys.executable, "-c", "print('%TEST%')", is_split=True)
             t, e = p.communicate()
-            assert t.strip() == '%TEST%'
+            assert t.strip() == "%TEST%"
 
         def test_excecute_shell(self):
-            p = helper(
-                '"' +
-                sys.executable +
-                '" -c "print(\'%TEST%\')"',
-                shell=True)
+            p = helper('"' + sys.executable + '" -c "print(\'%TEST%\')"', shell=True)
             t, e = p.communicate()
-            assert t.strip() == 'hans', [t, e, p]
+            assert t.strip() == "hans", [t, e, p]
+
     else:
+
         def test_excecute(self):
             p = helper(sys.executable, "-c", "print('$TEST')")
             t, e = p.communicate()
-            assert t.strip() == '$TEST'
+            assert t.strip() == "$TEST"
 
         def test_excecute_split(self):
             p = helper(sys.executable, "-c", "print('$TEST')", is_split=True)
             t, e = p.communicate()
-            assert t.strip() == '$TEST'
+            assert t.strip() == "$TEST"
 
         def test_excecute_shell(self):
             p = helper(
-                shellescape(
-                    sys.executable) +
-                " -c \"print('$TEST')\"",
-                shell=True)
+                shellescape(sys.executable) + " -c \"print('$TEST')\"", shell=True
+            )
             t, e = p.communicate()
-            assert t.strip() == 'hans'
+            assert t.strip() == "hans"
 
     def test_excecute_nosplit_err(self):
         with self.assertRaises(TypeError):

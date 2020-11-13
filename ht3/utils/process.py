@@ -21,13 +21,7 @@ def shellescape(*strings):
     return " ".join(shlex.quote(s) for s in strings)
 
 
-def execute(
-    *args,
-    shell=False,
-    is_split=...,
-    env=None,
-    more_env=None,
-        **kwargs):
+def execute(*args, shell=False, is_split=..., env=None, more_env=None, **kwargs):
     """Execute a program."""
 
     args = [os.fspath(a) for a in args]
@@ -80,6 +74,7 @@ def execute(
         "Do cb if process finishes"
         processwatch.watch(p, cb)
         return cb
+
     p.onreturn = onreturn
     p.onreturn(lambda p: SUBPROCESS_FINISH_HOOK(process=p))
     return p
@@ -95,7 +90,7 @@ def which(exe):
         if p.exists():
             return p
         return None
-    for c in Env.get('PATH', _paths):
+    for c in Env.get("PATH", _paths):
         p = c / exe
         if p.exists():
             return p
@@ -104,21 +99,25 @@ def which(exe):
 
 def execute_disconnected(*args, **kwargs):
     """Execute a program without any file handles or signals or ... attached."""
-    return Env.execute(*args,
-                       stdout=subprocess.DEVNULL,
-                       stderr=subprocess.DEVNULL,
-                       stdin=subprocess.DEVNULL,
-                       start_new_session=True,
-                       **kwargs)
+    return Env.execute(
+        *args,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        stdin=subprocess.DEVNULL,
+        start_new_session=True,
+        **kwargs
+    )
 
 
 def execute_pipes(*args, **kwargs):
     """Execute a program without any file handles or signals or ... attached."""
-    return Env.execute(*args,
-                       stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE,
-                       stdin=subprocess.PIPE,
-                       **kwargs)
+    return Env.execute(
+        *args,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        stdin=subprocess.PIPE,
+        **kwargs
+    )
 
 
 def execute_auto(*args, **kwargs):
@@ -149,16 +148,12 @@ def procio(*args, input=None, timeout=None, **kwargs):
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
         stdin=subprocess.PIPE,
-        **kwargs)
+        **kwargs
+    )
 
     out, err = p.communicate(input=input, timeout=timeout)
     if p.returncode != 0:
-        raise ProcIOException(
-            "Non-zero return code",
-            p.returncode,
-            out,
-            err,
-            args)
+        raise ProcIOException("Non-zero return code", p.returncode, out, err, args)
     return out
 
 
@@ -173,15 +168,16 @@ def _complete_executable(s):
     s = s[0]
     p = pathlib.Path(s)
 
-    if p.is_absolute() or '/' in s:
-        for c in p.parent.glob(p.name + '*'):
-            if c.is_dir() or (c.is_file() and os.access(c, os.F_OK | os.X_OK)
-                              ):  # dirs and readable, exwecutable files
+    if p.is_absolute() or "/" in s:
+        for c in p.parent.glob(p.name + "*"):
+            if c.is_dir() or (
+                c.is_file() and os.access(c, os.F_OK | os.X_OK)
+            ):  # dirs and readable, exwecutable files
                 yield str(c)
     else:
         for p in os.get_exec_path():
             p = pathlib.Path(p)
-            for c in p.glob(s + '*'):
+            for c in p.glob(s + "*"):
                 if c.is_file():
                     if os.access(str(c), os.F_OK | os.X_OK):
                         yield c.name

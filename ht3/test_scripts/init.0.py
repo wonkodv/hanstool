@@ -13,7 +13,7 @@ def _raise_error(exception):
     raise exception
 
 
-SCRIPT_ORDER = ['init']
+SCRIPT_ORDER = ["init"]
 
 
 for k, v in list(vars().items()):

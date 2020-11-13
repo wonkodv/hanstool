@@ -3,7 +3,7 @@ import os
 import sys
 import functools
 
-__all__ = ('CHECK', )
+__all__ = ("CHECK",)
 
 
 class Group:
@@ -64,7 +64,7 @@ OS = set()
 OS.add(os.name)
 OS.add(sys.platform)
 
-if os.name == 'nt':
+if os.name == "nt":
     OS.add("win")
     OS.add("windows")
 

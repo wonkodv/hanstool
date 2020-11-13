@@ -25,13 +25,12 @@ def history(*search):
                     show("{0: 4d} {1}".format(i, l.strip()))
 
 
-@cmd(name='!')
+@cmd(name="!")
 def rerun(x: args.Union(args.Int, args.Str)):
     """Redo a command from the history by its number or starting text."""
     if x == "!":
         x = -1
-    history = list(ht3.history.get_history())[
-        :-1]  # skip newest, thats the ! itself
+    history = list(ht3.history.get_history())[:-1]  # skip newest, thats the ! itself
     if isinstance(x, int):
         c = history[x]
     else:

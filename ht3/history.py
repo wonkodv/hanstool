@@ -6,7 +6,7 @@ import ht3.hook
 from ht3.env import Env
 
 
-HISTORY_FILE_DEFAULT = '~/.config/ht3/history'
+HISTORY_FILE_DEFAULT = "~/.config/ht3/history"
 
 APPEND_HOOK = ht3.hook.Hook("command_string")
 
@@ -14,7 +14,7 @@ HISTORY = None
 
 
 def get_history_file():
-    p = Env.get('HISTORY', HISTORY_FILE_DEFAULT)
+    p = Env.get("HISTORY", HISTORY_FILE_DEFAULT)
     p = pathlib.Path(p).expanduser()
     if not p.parent.exists():
         p.parent.mkdir(parents=True)
@@ -34,7 +34,7 @@ def get_history():
 def load_history():
     """Load the history from file, enforce Limit."""
     global HISTORY
-    limit = Env.get('HISTORY_LIMIT', 1000)
+    limit = Env.get("HISTORY_LIMIT", 1000)
     with get_history_file().open("rt") as f:
         if limit is not None:
             HISTORY = [line.strip() for line in collections.deque(f, limit)]

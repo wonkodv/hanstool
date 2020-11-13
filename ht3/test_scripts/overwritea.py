@@ -1,3 +1,3 @@
 import Env
 
-Env.SCRIPT_ORDER.append('a')
+Env.SCRIPT_ORDER.append("a")

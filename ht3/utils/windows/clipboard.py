@@ -1,9 +1,4 @@
-from ctypes import (
-    cdll, windll,
-    FormatError,
-    memmove,
-    c_wchar_p, c_size_t, c_void_p
-)
+from ctypes import cdll, windll, FormatError, memmove, c_wchar_p, c_size_t, c_void_p
 from ctypes.wintypes import UINT, BOOL, DWORD
 
 
@@ -73,7 +68,7 @@ def get_clipboard():
 
 def set_clipboard(text):
     text = str(text)
-    e = text.encode('utf-16-le')
+    e = text.encode("utf-16-le")
     text_len = len(e)
 
     hCd = GlobalAlloc(0x2, text_len + 2)
@@ -81,7 +76,8 @@ def set_clipboard(text):
         length = GlobalSize(hCd)
         if length <= len(e):
             raise OSError(
-                f"Allocated MemBlock {hCd!r} smaller than requested: {length}")
+                f"Allocated MemBlock {hCd!r} smaller than requested: {length}"
+            )
         pchData = GlobalLock(hCd)
 
         memmove(c_wchar_p(pchData), c_wchar_p(text), text_len)
@@ -95,11 +91,12 @@ def set_clipboard(text):
         GlobalUnlock(hCd)
 
 
-__all__ = ('get_clipboard', 'set_clipboard')
+__all__ = ("get_clipboard", "set_clipboard")
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
-    if sys.argv[1:] in ([], ['-o']):
+
+    if sys.argv[1:] in ([], ["-o"]):
         print(get_clipboard())
     else:
         set_clipboard(" ".join(sys.argv[1:]))

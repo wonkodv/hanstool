@@ -18,10 +18,10 @@ if CHECK.os.win:
 
     sysnative = Path(r"C:\Windows\Sysnative")
     if sysnative.exists():
-        Env['PATH'].append(sysnative)
+        Env["PATH"].append(sysnative)
 
     @Env
-    @cmd(name='o')
+    @cmd(name="o")
     def shellexecute(s: args.Union(args.Path, args.Executable)):
         """Shell Execute, windows's all purpose opening function for files and programms."""
         s = str(s)
@@ -54,16 +54,16 @@ if CHECK.os.win:
                 else:
                     log("File: " + str(p))
                     arg = "/select," + shellescape(str(p))
-                execute_disconnected('explorer ' + arg)
+                execute_disconnected("explorer " + arg)
                 return
 
-    if CHECK.frontend('ht3.gui'):
+    if CHECK.frontend("ht3.gui"):
         import ht3.gui
 
         def taskbar_toolbar():
-            w = Window.TOP.find(class_name='Shell_TrayWnd')
-            w = w.find(class_name='ReBarWindow32')
-            w = w.find(class_name='ToolbarWindow32', title='hanstool')
+            w = Window.TOP.find(class_name="Shell_TrayWnd")
+            w = w.find(class_name="ReBarWindow32")
+            w = w.find(class_name="ToolbarWindow32", title="hanstool")
             return w
 
         @Env
@@ -79,6 +79,7 @@ if CHECK.os.win:
             @ht3.gui.interact(False)
             def doit(GUI):
                 ht3.gui.cmd_win_set_rect(l + 2, t, r - 4, b)
+
             doit()
 
         @Env
@@ -121,9 +122,12 @@ if CHECK.os.win:
     def command_line_from_wnd(w):
         o = procio(
             "WMIC path win32_process WHERE processid={:d} GET commandline".format(
-                w.process_id), errors="backslashreplace", )
+                w.process_id
+            ),
+            errors="backslashreplace",
+        )
         lines = [l for l in o.split("\n") if l]
-        assert lines[0].strip() == 'CommandLine'
+        assert lines[0].strip() == "CommandLine"
         assert len(lines) == 2
         return lines[1]
 
@@ -132,9 +136,8 @@ if CHECK.os.win:
 
     @cmd(apply_default_param_anotations=True)
     def command_from_window(
-            script: _complete_script_names,
-            name=None,
-            wnd: Window = "_MOUSE_POS_MAIN"):
+        script: _complete_script_names, name=None, wnd: Window = "_MOUSE_POS_MAIN"
+    ):
         cmdline = command_line_from_wnd(wnd)
         if name is None:
             name = wnd.title
@@ -144,29 +147,30 @@ if CHECK.os.win:
             script,
             name=name,
             text="execute_disconnected(r'{}', is_split=False)".format(
-                cmdline.replace(
-                    "'",
-                    r"\'")))
+                cmdline.replace("'", r"\'")
+            ),
+        )
 
     @cmd(apply_default_param_anotations=True)
     def analyze_windows(w: Window = "_MOUSE_POS"):
         msg = []
         long = []
         short = []
-        Env['w'] = w
-        while(w):
+        Env["w"] = w
+        while w:
             r = w.rect
             msg.append(
-                f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}")
+                f"{w:6X}\t{w.title:20s}\t'{w.class_name:20s}'\t{r.left: 4} {r.top: 4} {r.width: 4} {r.height: 4}"
+            )
             if w.parent:
-                p = 'w'
+                p = "w"
             else:
-                p = 'Window.TOP'
+                p = "Window.TOP"
             long.append(
                 f"    w={p}.find(class_name={w.class_name!r}, title={w.title!r})\n"
-                f"    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})")
-            short.append(
-                f".find(class_name={w.class_name!r}, title={w.title!r})")
+                f"    w.set_pos(left={r.left}, top={r.top}, width={r.width}, height={r.height})"
+            )
+            short.append(f".find(class_name={w.class_name!r}, title={w.title!r})")
             w = w.parent
         show("\n".join(msg))
         show("\n".join(reversed(long)))
@@ -174,9 +178,9 @@ if CHECK.os.win:
 
     @cmd
     def device_manager():
-        execute_disconnected('mmc devmgmt.msc')
+        execute_disconnected("mmc devmgmt.msc")
 
-    @cmd(attrs={'HotKey': 'SHIFT+ESCAPE'})
+    @cmd(attrs={"HotKey": "SHIFT+ESCAPE"})
     def private():
         """Hide a Window (Firefox-Private Browsing) while someone looks over your Shoulder"""
 
@@ -201,13 +205,13 @@ if CHECK.os.win:
                 p.mkdir(parents=True)
             except FileExistsError:
                 pass
-        execute_disconnected('explorer {}'.format(shellescape(str(p))))
+        execute_disconnected("explorer {}".format(shellescape(str(p))))
 
     @Env
     def get_uptime():
         uptime = GetTickCount()
         boottime = format(datetime.datetime.now() - uptime, "%H:%M")
-        uptime = str(uptime).partition('.')[0]
+        uptime = str(uptime).partition(".")[0]
         return boottime, uptime
 
     @Env.updateable
@@ -218,26 +222,24 @@ if CHECK.os.win:
         """
         boot_time, up_time = get_uptime()
         now = datetime.datetime.now()
-        return (
-            f"{now:%H:%M} KW{now:%V}\n"
-            f"{now:%Y-%m-%d}\n"
-            f"Boot {boot_time}"
-        )
+        return f"{now:%H:%M} KW{now:%V}\n" f"{now:%Y-%m-%d}\n" f"Boot {boot_time}"
 
     @cmd
     def tna_text_updater():
-        """ Overwrite the text in the Clock of the TNA with `tna_text()`.
+        """Overwrite the text in the Clock of the TNA with `tna_text()`.
 
         Wind the Clock Window on the TaskBar and draw over it every full minute
         """
+
         @threaded
         def tna_updater_thread():
-            Env['tna_updater_thread'] = threading.current_thread()
-            while Env['tna_updater_thread'] is threading.current_thread():
-                w = Window.TOP.find(
-                    class_name='Shell_TrayWnd').find(
-                    class_name='TrayNotifyWnd').find(
-                    class_name='TrayClockWClass')
+            Env["tna_updater_thread"] = threading.current_thread()
+            while Env["tna_updater_thread"] is threading.current_thread():
+                w = (
+                    Window.TOP.find(class_name="Shell_TrayWnd")
+                    .find(class_name="TrayNotifyWnd")
+                    .find(class_name="TrayClockWClass")
+                )
                 dc = ctypes.windll.user32.GetDC(w.hwnd)
 
                 text = tna_text()
@@ -257,7 +259,7 @@ if CHECK.os.win:
 
     @cmd
     def tna_text_updater_stop():
-        Env['tna_updater_thread'] = None
+        Env["tna_updater_thread"] = None
 
     @cmd
     @Env
@@ -266,10 +268,7 @@ if CHECK.os.win:
         SPI_SETMOUSESPEED = 0x71
         SPIF_SENDCHANGE = 2
         r = windll.user32.SystemParametersInfoW(
-            SPI_SETMOUSESPEED,
-            0,
-            x,
-            SPIF_SENDCHANGE
+            SPI_SETMOUSESPEED, 0, x, SPIF_SENDCHANGE
         )
         if r == 0:
             raise OSError("SystemParametersInfo failed")
@@ -279,12 +278,7 @@ if CHECK.os.win:
         SPI_GETMOUSESPEED = 0x70
         i = ctypes.c_int(42)
         p = ctypes.byref(i)
-        r = windll.user32.SystemParametersInfoW(
-            SPI_GETMOUSESPEED,
-            0,
-            p,
-            0
-        )
+        r = windll.user32.SystemParametersInfoW(SPI_GETMOUSESPEED, 0, p, 0)
         if r == 0:
             raise OSError("SystemParametersInfo failed")
         return i.value
@@ -292,6 +286,7 @@ if CHECK.os.win:
     @Env
     def waitforprocessidle(p, timeout):
         import ctypes
+
         hp = windll.kernel32.OpenProcess(0x00100000, 0, p.pid)
         if hp == 0:
             raise ctypes.WinError()

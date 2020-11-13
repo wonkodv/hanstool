@@ -44,14 +44,14 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
                 # execute("ls -l")
                 # try to change the 1st word to the full path of an executable
                 # file
-                tail = exe[len(e):]
+                tail = exe[len(e) :]
                 p = which(e)
                 if p:
                     e = shellescape(str(p))
                 else:
                     pass  # good luck with that
 
-                assert tail[0] == ' '
+                assert tail[0] == " "
                 exe = e + tail
             else:
                 pass
@@ -68,25 +68,21 @@ def execute(exe, *args, is_split=..., shell=False, **kwargs):
     # Ugly flag stuff so windows does not create ConsoleWindows for processes
     # which have the io streams set.
     if all(
-            x in kwargs and kwargs[x] == subprocess.PIPE
-            for x in ('stdin', 'stdout', 'stderr')):
-        if 'startupinfo' not in kwargs:
+        x in kwargs and kwargs[x] == subprocess.PIPE
+        for x in ("stdin", "stdout", "stderr")
+    ):
+        if "startupinfo" not in kwargs:
             si = subprocess.STARTUPINFO()
             si.dwFlags = subprocess.STARTF_USESHOWWINDOW
             si.wShowWindow = subprocess.SW_HIDE
-            kwargs['startupinfo'] = si
+            kwargs["startupinfo"] = si
 
     # TODO: handle messed up encoding of windows shell processes
 
-    return process.execute(
-        exe,
-        *args,
-        is_split=is_split,
-        shell=shell,
-        **kwargs)
+    return process.execute(exe, *args, is_split=is_split, shell=shell, **kwargs)
 
 
-_extensions = os.environ.get('PATHEXT', '').split(os.pathsep)
+_extensions = os.environ.get("PATHEXT", "").split(os.pathsep)
 _paths = [pathlib.Path(p) for p in os.get_exec_path()]
 
 
@@ -99,15 +95,15 @@ def which(exe):
 
 def _get_exe_path_ext(p, full_path, glob):
     if glob:
-        glob = '*'
+        glob = "*"
     else:
-        glob = ''
+        glob = ""
     if p.suffix:
         for c in p.parent.glob(p.name + glob):
             if full_path:
                 yield str(c)
             else:
-                yield str(c), ''
+                yield str(c), ""
     else:
         for ext in _extensions:
             for c in p.parent.glob(p.name + glob + ext):
@@ -123,7 +119,7 @@ def _get_exe_path(s, full_path, glob):
     if len(parts) > 1:
         yield from _get_exe_path_ext(p, full_path, glob)
     else:
-        for c in Env.get('PATH', _paths):
+        for c in Env.get("PATH", _paths):
             f = c / s
             yield from _get_exe_path_ext(f, full_path, glob)
 
@@ -140,7 +136,7 @@ def complete_executable(s):
 
     values = {}
     for exe, ext in _get_exe_path(s, False, True):
-        short = exe[:-len(ext)]
+        short = exe[: -len(ext)]
         if short in values:
             values[short].add(exe)
         else:
@@ -152,6 +148,7 @@ def complete_executable(s):
                 yield short
             else:
                 yield from longs
+
     return filter_completions_i(s, gen())
 
 

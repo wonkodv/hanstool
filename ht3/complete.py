@@ -11,13 +11,13 @@ import pathlib
 import re
 
 __all__ = (
-    'filter_completions_i',
-    'filter_completions',
-    'complete_command_args',
-    'complete_commands',
-    'complete_command_with_args',
-    'complete_py',
-    'complete_path',
+    "filter_completions_i",
+    "filter_completions",
+    "complete_command_args",
+    "complete_commands",
+    "complete_command_with_args",
+    "complete_py",
+    "complete_path",
 )
 
 SCOPE = ChainMap(Env, __builtins__)
@@ -72,11 +72,8 @@ def complete_command_args(string):
         raise ValueError()
     c = ht3.command.COMMANDS[cmd]
     return (
-        cmd +
-        sep +
-        a for a in filter_completions(
-            args,
-            c.arg_parser.complete(args)))
+        cmd + sep + a for a in filter_completions(args, c.arg_parser.complete(args))
+    )
 
 
 def complete_commands(string):
@@ -84,7 +81,7 @@ def complete_commands(string):
 
 
 def complete_command_with_args(string):
-    p_space = string.find(' ')
+    p_space = string.find(" ")
 
     if p_space == -1:
         return complete_commands(string)
@@ -117,10 +114,10 @@ def complete_py(string):
         for p in inspect.getmro(type(val)):
             values.update(dir(p))
 
-    prefix = string[:len(string) - len(pl)]
+    prefix = string[: len(string) - len(pl)]
 
     values = filter_completions(pl, values)
-    values = sorted(values, key=lambda s: s and s[0] == '_')
+    values = sorted(values, key=lambda s: s and s[0] == "_")
     values = (prefix + x for x in values)
 
     return values
@@ -128,17 +125,17 @@ def complete_py(string):
 
 def complete_path(s):
     if not s:
-        p = pathlib.Path('.')
+        p = pathlib.Path(".")
     else:
         p = pathlib.Path(s).expanduser()
 
-    if not s or s[-1] in ['/', os.sep]:
+    if not s or s[-1] in ["/", os.sep]:
         stem = s
-        mask = '*'
+        mask = "*"
         # p = p
     else:
-        stem = s[:-len(p.name)]
-        mask = p.name + '*'
+        stem = s[: -len(p.name)]
+        mask = p.name + "*"
         p = p.parent
     for e in p.glob(mask):
         yield stem + e.name

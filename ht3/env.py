@@ -6,6 +6,7 @@ import inspect
 import importlib
 import functools
 import collections.abc
+
 _DEFAULT = object()
 
 
@@ -17,7 +18,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
     """
 
     def __init__(self):
-        object.__setattr__(self, '_finalized', False)
+        object.__setattr__(self, "_finalized", False)
 
         self.dict = dict()
         self.persistent_dict = dict()
@@ -28,13 +29,18 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         super().__init__("Env", _Env_class.__doc__)  # init as Module
         self._finalized = True  # stop attribute setting
 
-        for k in 'file', 'path', 'name', 'package':  # make the Module - properties static
-            k = '__{}__'.format(k)
+        for k in (
+            "file",
+            "path",
+            "name",
+            "package",
+        ):  # make the Module - properties static
+            k = "__{}__".format(k)
             self.put_static(k, getattr(self, k))
 
     @property
     def __all__(self):
-        return tuple(k for k in self.dict if k[0] != '_')
+        return tuple(k for k in self.dict if k[0] != "_")
 
     def _reload(self):
         self.dict.clear()
@@ -51,7 +57,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
     __setitem__ = put
 
     def __setattr__(self, key, val):
-        if not getattr(self, '_finalized'):
+        if not getattr(self, "_finalized"):
             self.__dict__[key] = val
         elif inspect.ismodule(val):
             self.put(key, val)  # importing a script as sub module of Env
@@ -98,23 +104,22 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         return iter(self.dict)
 
     def __call__(self, func):
-        """Decorator to put functions in Env
-        """
+        """Decorator to put functions in Env"""
         self.put(func.__name__, func)
         return func
 
     def updateable(self, func):
         """Put an updateable wrapper of a function in Env
 
-            @Env
-            def a(): return 1
-            x = Env.a
-            @Env
-            def a(): return 2
+        @Env
+        def a(): return 1
+        x = Env.a
+        @Env
+        def a(): return 2
 
-            assert a() == 2
-            assert a != x
-            assert x() == 2
+        assert a() == 2
+        assert a != x
+        assert x() == 2
         """
         name = func.__name__
 
@@ -123,6 +128,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
             w = self[name]
             f = inspect.unwrap(w)
             return f(*args, **kwargs)
+
         self.put(name, wrapper)
         return wrapper
 
@@ -135,4 +141,4 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
 
 Env = _Env_class()
 
-sys.modules['Env'] = Env
+sys.modules["Env"] = Env

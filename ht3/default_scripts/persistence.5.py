@@ -9,9 +9,8 @@ class Persistence:
 
     def path(self):
         return pathlib.Path(
-            Env.get(
-                'PERSISTENCE_FILE',
-                '~/.config/ht3/persist')).expanduser()
+            Env.get("PERSISTENCE_FILE", "~/.config/ht3/persist")
+        ).expanduser()
 
     def load(self):
         if self.dict is not None:
@@ -52,4 +51,4 @@ class Persistence:
 
 Per = Persistence()
 
-Env['Per'] = Per
+Env["Per"] = Per

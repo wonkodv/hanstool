@@ -37,7 +37,7 @@ _Stop_FrontEnds_Sem = None
 
 THREAD_LOCAL = threading.local()
 THREAD_LOCAL.command = None
-THREAD_LOCAL.frontend = 'ht3.main'
+THREAD_LOCAL.frontend = "ht3.main"
 
 
 check.CHECK.frontend = check.Group(FRONTENDS)
@@ -50,7 +50,7 @@ def _is_cli_frontend():
     if fe is None:
         return False
     m = importlib.import_module(fe)
-    return getattr(m, '_IS_CLI_FRONTEND', None)
+    return getattr(m, "_IS_CLI_FRONTEND", None)
 
 
 check.CHECK.is_cli_frontend = check.Value(_is_cli_frontend)
@@ -66,7 +66,12 @@ def load_frontend(name):
 
     for m in "start", "loop", "stop":
         if not callable(getattr(mod, m)):
-            raise TypeError("Frontend is missing a function", m, name, mod,)
+            raise TypeError(
+                "Frontend is missing a function",
+                m,
+                name,
+                mod,
+            )
 
     FRONTEND_MODULES.append(mod)
     FRONTENDS.append(name)
@@ -158,21 +163,19 @@ def evaluate_py_expression(s):
 
 def threaded(f=None, **kwargs):
     if f is None:
+
         def deco(f):
             start_thread(f, **kwargs)
             return f
+
         return deco
     start_thread(f, **kwargs)
     return f
 
 
 def start_thread(
-        func,
-        args=None,
-        kwargs=None,
-        name=None,
-        on_exception=None,
-        on_finish=None):
+    func, args=None, kwargs=None, name=None, on_exception=None, on_finish=None
+):
     """
     Start a thread that is HT3 aware
 
@@ -189,6 +192,7 @@ def start_thread(
 
         def on_exception(e):
             return EXCEPTION_HOOK(exception=e)
+
     if args is None:
         args = tuple()
     if kwargs is None:
@@ -211,6 +215,7 @@ def start_thread(
             on_exception(e)
         # Let go of stack if there were no exceptions
         del stack
+
     t = threading.Thread(target=target, name=name, args=(stack,))
     t.start()
     del stack

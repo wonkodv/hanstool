@@ -11,7 +11,7 @@ def test_cache_for():
         x = x + 1
         return x
 
-    assert f.__name__ == 'f'
+    assert f.__name__ == "f"
     assert f() == 1
     assert f() == 1
     assert f() == 1

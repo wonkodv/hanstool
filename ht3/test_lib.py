@@ -28,21 +28,21 @@ class Test_frontends(unittest.TestCase):
         m.stop = stop
         return m
 
-    @patch('importlib.import_module')
+    @patch("importlib.import_module")
     def test_full_run(self, importMock):
 
-        fe1 = self.get_fe('fe1')
-        fe2 = self.get_fe('fe2')
+        fe1 = self.get_fe("fe1")
+        fe2 = self.get_fe("fe2")
 
         fe3 = Mock()
         fe3.loop = lambda: time.sleep(0.1)
-        fe3.__name__ = 'fe3'
+        fe3.__name__ = "fe3"
 
         importMock.side_effect = [fe1, fe2, fe3]
 
-        lib.load_frontend('frontend1')
-        lib.load_frontend('frontend2')
-        lib.load_frontend('frontend3')
+        lib.load_frontend("frontend1")
+        lib.load_frontend("frontend2")
+        lib.load_frontend("frontend3")
 
         lib.run_frontends()
 

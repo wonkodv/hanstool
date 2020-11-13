@@ -19,7 +19,7 @@ except ImportError:
 
 @COMMAND_EXCEPTION_HOOK.register
 def _command_exception(exception, command):
-    if command.frontend == 'ht3.cli':
+    if command.frontend == "ht3.cli":
         return True  # Don't raise the exception
 
 
@@ -36,14 +36,16 @@ def start():
 
 def loop():
     if threading.current_thread() is not threading.main_thread():
-        print("ht3.cli is not running in main thread, but"
-              " Ctrl+C is only sent to the main thread")
+        print(
+            "ht3.cli is not running in main thread, but"
+            " Ctrl+C is only sent to the main thread"
+        )
     _setup_readline()
     for c in _do_on_start:
         c()
     while not _evt.is_set():
         try:
-            prompt = Env.get('CLI_PROMPT', 'ht3> ')
+            prompt = Env.get("CLI_PROMPT", "ht3> ")
             if callable(prompt):
                 prompt = prompt()
             s = input(prompt)  # TODO: let this be interrupted from stop.
@@ -89,9 +91,10 @@ def _setup_readline():
                 # readline ignores all exceptions
                 ht3.lib.EXCEPTION_HOOK(exception=e)
         return completion_cache[n]
+
     readline.set_completer(rl_complete)
-    readline.set_completer_delims('')  # complete with the whole line
-    readline.parse_and_bind('tab: complete')
+    readline.set_completer_delims("")  # complete with the whole line
+    readline.parse_and_bind("tab: complete")
 
 
 _do_on_start = []

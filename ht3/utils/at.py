@@ -26,15 +26,15 @@ class CronScheduler:
 
     def next(self, last):
         def m(a, b):
-            if a[0] == '*':
+            if a[0] == "*":
                 return b
-            if a[0] == '/':
+            if a[0] == "/":
                 mod = int(a[1:])
                 r = b % mod
                 if r:
                     b = b + mod - r
                 return b
-            if a[0] == '=':
+            if a[0] == "=":
                 return ()
             raise ValueError("??", a[0])
 
@@ -78,8 +78,5 @@ def _watch_thread():
             continue
 
 
-WATCH_THREAD = threading.Thread(
-    target=_watch_thread,
-    name='ProcessWatch',
-    daemon=True)
+WATCH_THREAD = threading.Thread(target=_watch_thread, name="ProcessWatch", daemon=True)
 WATCH_THREAD.start()
