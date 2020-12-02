@@ -1,0 +1,3 @@
+[submodule "ht3/hotkeys"]
+	path = ht3/hotkey
+	url = https://github.com/wonkodv/python-hotkeys
