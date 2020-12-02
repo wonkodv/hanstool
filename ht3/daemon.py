@@ -1,18 +1,14 @@
-import traceback
-import pickle
-import socket
 import os
 import os.path
-import threading
-import io
+import pickle
 import re
+import socket
+import threading
 
 import ht3.lib
-
 from ht3.command import run_command
-from ht3.env import Env
 from ht3.complete import complete_command_with_args
-
+from ht3.env import Env
 
 RE_INET6 = re.compile(r"\[([\d:]+)\]:(\d+)")
 RE_INET = re.compile(r"(\d+\.\d+\.\d+\.\d+):(\d+)")
@@ -98,7 +94,7 @@ def handle_socket(sock, addr):
                 obj = ("EXCEPTION", e, None)
                 try:
                     pickle.dump(obj, sock_file)
-                except Exception as e:
+                except Exception:
                     pass
                 ht3.lib.EXCEPTION_HOOK(exception=e)
 

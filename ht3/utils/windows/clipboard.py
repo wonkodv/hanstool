@@ -1,5 +1,6 @@
-from ctypes import cdll, windll, FormatError, memmove, c_wchar_p, c_size_t, c_void_p
-from ctypes.wintypes import UINT, BOOL, DWORD
+from ctypes import (FormatError, c_size_t, c_void_p, c_wchar_p, cdll, memmove,
+                    windll)
+from ctypes.wintypes import BOOL, DWORD, UINT
 
 
 def expect_nonzero(result, func, args):

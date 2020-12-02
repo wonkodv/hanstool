@@ -2,21 +2,14 @@
 
 main() is called from ht3.__main__"""
 
-import os.path
 import pkg_resources
-import shlex
-import sys
-
-from collections import deque
-from os.path import expanduser
 
 from . import lib
-from .lib import load_frontend, run_frontends, execute_py_expression
+from .lib import load_frontend, run_frontends
 from .command import run_command
 from .env import Env
 from . import scripts
 from .scripts import load_scripts, add_scripts
-from .check import CHECK
 
 HELP = """The initialization and actions of the ht3 can be programmed on the commandline and/or in
 the scripts.  Each argument is either a shorthand that looks like an option, or executed as a python
@@ -89,7 +82,7 @@ def parse(args):
                         try:
                             p = tuple(next(arg_iter) for _ in range(params))
                         except StopIteration:
-                            raise ArgumentError(f"Expecting a parameter", a)
+                            raise ArgumentError("Expecting a parameter", a)
                     else:
                         p = ()
                     yield function, p, done

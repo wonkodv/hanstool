@@ -1,7 +1,5 @@
-from ht3.env import Env
 import ht3.history
 from pathlib import Path
-import os.path
 
 
 def test_append_with_limit(monkeypatch, tmpdir):

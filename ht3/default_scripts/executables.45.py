@@ -1,6 +1,6 @@
-from Env import *
-
 import shlex
+
+from Env import *
 
 
 @cmd(name="$")

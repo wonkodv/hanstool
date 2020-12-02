@@ -11,11 +11,9 @@ import threading
 import time
 import weakref
 
+from ht3 import command, lib
 from ht3.check import CHECK
-
 from ht3.env import Env
-from ht3 import command
-from ht3 import lib
 
 impl = None
 if CHECK.os.win:

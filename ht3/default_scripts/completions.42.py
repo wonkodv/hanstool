@@ -6,10 +6,10 @@ the string parts of shlex.split. parts[0] is the exe, parts[1] the 1st argument 
 Functions should yield completed versions of `parts[-1]` and return True if this
 is all, or nothing if File-Completion should be tried.
 """
-from Env import *
-
 import shlex
+
 import ht3.hook
+from Env import *
 
 EXECUTABLE_W_ARGS_COMPLETE_HOOK = ht3.hook.GeneratorHook("parts")
 Env["EXECUTABLE_W_ARGS_COMPLETE_HOOK"] = EXECUTABLE_W_ARGS_COMPLETE_HOOK

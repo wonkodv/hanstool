@@ -1,6 +1,5 @@
 """Module for loading frontends and miscelaneous functions"""
 
-import sys
 import importlib
 import threading
 
@@ -186,7 +185,10 @@ def start_thread(
     if name is None:
         name = func.__name__
     if on_finish is None:
-        on_finish = lambda *a: None  # Env.log_thread_finished #TODO
+
+        def on_finish(*a):
+            None  # Env.log_thread_finished #TODO
+
     if on_exception is None:
         del on_exception
 

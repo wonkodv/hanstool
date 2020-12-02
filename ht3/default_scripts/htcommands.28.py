@@ -1,25 +1,19 @@
 """Commands that make HT Usable."""
 
-from Env import *
-
-from ht3.scripts import SCRIPTS
-
-import ht3.scripts
-
-import difflib
+import contextlib
 import importlib
 import inspect
+import io
 import os
 import os.path
 import pathlib
-import re
-import shlex
-import shutil
 import sys
 import textwrap
 import time
-import contextlib
-import io
+
+import ht3.scripts
+from Env import *
+from ht3.scripts import SCRIPTS
 
 
 @cmd(name="l")
@@ -63,22 +57,22 @@ cmd(exit, name="quit")
 def edit_command(c: args.Union(args.Command, args.Python)):
     """Edit the location where a command or function was defined."""
     if c in COMMANDS:
-        f, l = COMMANDS[c].origin
+        file_name, line = COMMANDS[c].origin
     else:
         o = evaluate_py_expression(c)
         o = inspect.unwrap(o)  # unwrap @Env.updateable functions
         try:
-            f = inspect.getsourcefile(o)
+            file_name = inspect.getsourcefile(o)
         except TypeError as e:
             try:
-                f = inspect.getsourcefile(type(o))
+                file_name = inspect.getsourcefile(type(o))
             except TypeError:
                 raise e
         try:
-            _, l = inspect.getsourcelines(o)
+            _, line = inspect.getsourcelines(o)
         except TypeError:
-            l = 0
-    edit_file(f, l)
+            line = 0
+    edit_file(file_name, line)
 
 
 @Env
@@ -134,8 +128,8 @@ def add_command(script: _complete_script_names, name=None, text=None):
             )
 
     with s.open("rt") as f:
-        l = len(list(f))
-    edit_file(s, l)
+        line_no = len(list(f))
+    edit_file(s, line_no)
 
 
 @cmd
@@ -164,9 +158,9 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     if CHECK.frontend("ht3.hotkey"):
         debug("Reload: Disable all hotkeys")
         ht3.hotkey.disable_all_hotkeys()  # let hotkeys and old functions be deleted
-        l = list(ht3.hotkey.HotKey.HOTKEYS.values())
+        hotkeys = list(ht3.hotkey.HotKey.HOTKEYS.values())
         ht3.hotkey.HotKey.HOTKEYS.clear()  # Remove all hotkeys from the cache
-        assert not any(hk.active for hk in l)
+        assert not any(hk.active for hk in hotkeys)
 
     # remove hooks defined in scripts
     for h in ht3.hook.Hook.HOOKS:
@@ -235,7 +229,7 @@ def restart(*more_args):
                         try:
                             p = tuple(next(arg_iter) for _ in range(params))
                         except StopIteration:
-                            raise ArgumentError(f"Expecting a parameter", a)
+                            raise ArgumentError("Expecting a parameter", a)
                     else:
                         p = ()
                     if not (

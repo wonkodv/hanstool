@@ -1,14 +1,15 @@
 """Completion od commands and python expressions."""
 
-from .env import Env
-from collections import ChainMap
-import collections.abc
-import ht3.command
 import inspect
 import os
 import os.path
 import pathlib
 import re
+from collections import ChainMap
+
+import ht3.command
+
+from .env import Env
 
 __all__ = (
     "filter_completions_i",

@@ -1,7 +1,4 @@
-from Env import *
-
 import dis
-import ht3.command
 import importlib
 import inspect
 import io
@@ -10,6 +7,9 @@ import pdb
 import sys
 import tempfile
 import traceback
+
+import ht3.command
+from Env import *
 
 
 @cmd

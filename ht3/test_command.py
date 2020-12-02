@@ -10,70 +10,60 @@ class TestCmd(unittest.TestCase):
     @patch("ht3.command.COMMANDS", COMMANDS)
     def test_decorator(self):
         @cmd
-        def someCommand():
+        def some_command():
             pass
 
-        @cmd(name="some_other_command")
-        def someOtherCommand():
+        @cmd(name="some_other")
+        def some_other_command():
             pass
 
-        self.assertIn("someCommand", self.COMMANDS)
-        self.assertIn("some_other_command", self.COMMANDS)
+        self.assertIn("some_command", self.COMMANDS)
+        self.assertIn("some_other", self.COMMANDS)
 
     @patch("ht3.command.COMMANDS", COMMANDS)
     def test_command_called(self):
         x = 0
 
         @cmd
-        def someCommand(arg: int):
+        def some_command(arg: int):
             nonlocal x
             x = arg
 
-        run_command("someCommand 1")
+        run_command("some_command 1")
         assert x == 1
-        run_command("someCommand 2")
+        run_command("some_command 2")
         assert x == 2
 
     @patch("ht3.command.COMMANDS", COMMANDS)
     def test_origin(self):
         @cmd
-        def someCommand():
+        def some_command():
             pass
 
-        f, l = self.COMMANDS["someCommand"].origin
+        f, line_no = self.COMMANDS["some_command"].origin
         assert f == __file__
-        assert l > 5
-
-    @patch("ht3.command.COMMANDS", COMMANDS)
-    def test_origin(self):
-        @cmd
-        def someCommand():
-            pass
-
-        f, l = self.COMMANDS["someCommand"].origin
-        assert f == __file__
-        assert l > 5
+        assert line_no > 5
 
     @patch("ht3.command.COMMANDS", COMMANDS)
     def test_context(self):
-        X = None
+        x = None
 
         @cmd
-        def someOtherCommand():
-            nonlocal X
-            X = THREAD_LOCAL.command
+        def some_other_command():
+            nonlocal x
+            x = THREAD_LOCAL.command
 
         @cmd
-        def someCommand():
-            run_command("someOtherCommand")
+        def some_command():
+            run_command("some_other_command")
 
-        run_command("someCommand")
-        assert X.name == "someOtherCommand"
-        assert X.parent.name == "someCommand"
-        assert "result" in repr(X)
+        run_command("some_command")
+        assert x.name == "some_other_command"
+        assert x.parent.name == "some_command"
+        assert "result" in repr(x)
 
 
-class Test_get_command(unittest.TestCase):
+class TestGetCommand(unittest.TestCase):
     COMMANDS = {}
 
     @patch("ht3.command.COMMANDS", COMMANDS)

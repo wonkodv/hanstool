@@ -4,10 +4,11 @@ import inspect
 import textwrap
 import traceback
 
-from .lib import THREAD_LOCAL, start_thread
 import ht3.args
 import ht3.history
 import ht3.hook
+
+from .lib import THREAD_LOCAL
 
 COMMANDS = {}
 
@@ -76,7 +77,6 @@ class Command:
 
     def __repr__(self):
         if not self.started:
-            state = "New"
             return "Command(name={0.name}, invocation={0.invocation})".format(self)
         if not self.finished:
             return "Command(name={0.name}, invocation={0.invocation}, running)".format(

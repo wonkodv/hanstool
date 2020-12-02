@@ -1,10 +1,8 @@
 import collections
-import functools
 import pathlib
 
 import ht3.hook
 from ht3.env import Env
-
 
 HISTORY_FILE_DEFAULT = "~/.config/ht3/history"
 
@@ -39,7 +37,7 @@ def load_history():
         if limit is not None:
             HISTORY = [line.strip() for line in collections.deque(f, limit)]
         else:
-            h = [line.strip() for line in f]
+            HISTORY = [line.strip() for line in f]
     if limit is not None:
         with get_history_file().open("wt") as f:
             for line in HISTORY:

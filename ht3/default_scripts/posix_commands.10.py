@@ -1,7 +1,8 @@
 """Some good Posix Commands."""
 
-from Env import *
 import json
+
+from Env import *
 
 if CHECK.os.posix:
 

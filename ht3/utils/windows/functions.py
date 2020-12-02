@@ -1,8 +1,7 @@
 import functools
 import inspect
-
-from ctypes import windll, c_int, FormatError
-from ctypes.wintypes import DWORD, HWND, LPCSTR, UINT, INT, HINSTANCE, LPCWSTR
+from ctypes import FormatError, c_int, windll
+from ctypes.wintypes import DWORD, HINSTANCE, HWND, INT, LPCSTR, LPCWSTR, UINT
 
 kernel32 = windll.kernel32
 shell32 = windll.shell32

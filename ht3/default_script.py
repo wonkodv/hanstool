@@ -6,13 +6,13 @@ Add Scripts from:
     - ~/.config/ht3/
     - all paths from HT3_SCRIPTS environment variable
 """
-import pkg_resources
-from ht3.scripts import add_scripts, load_scripts
 from os import environ
-from ht3.check import CHECK
 from pathlib import Path
-from ht3 import scripts
-from ht3 import lib
+
+import pkg_resources
+
+from ht3.check import CHECK
+from ht3.scripts import add_scripts
 
 _SCRIPT_RELOAD = False
 _SCRIPT_ADD_TO_ENV = False

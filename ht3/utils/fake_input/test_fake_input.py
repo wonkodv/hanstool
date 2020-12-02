@@ -1,5 +1,6 @@
 import unittest
 from unittest.mock import patch
+
 from .fake_input import fake, fake_re
 
 

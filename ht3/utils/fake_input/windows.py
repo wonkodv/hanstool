@@ -1,10 +1,10 @@
 """Fake Input on windows"""
 
 import ctypes
-from ctypes.wintypes import POINT
-from ht3.utils.keycodes.win32 import KEY_CODES
 import time
+from ctypes.wintypes import POINT
 
+from ht3.utils.keycodes.win32 import KEY_CODES
 
 __all__ = (
     "type_string",

@@ -77,7 +77,7 @@ if CHECK.os.win:
             l, t, r, b = w.rect
 
             @ht3.gui.interact(False)
-            def doit(GUI):
+            def doit(gui):
                 ht3.gui.cmd_win_set_rect(l + 2, t, r - 4, b)
 
             doit()

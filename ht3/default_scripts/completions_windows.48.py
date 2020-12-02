@@ -1,7 +1,6 @@
-from Env import EXECUTABLE_W_ARGS_COMPLETE_HOOK, CHECK, exe_completer
-
 from pathlib import Path
 
+from Env import CHECK, EXECUTABLE_W_ARGS_COMPLETE_HOOK, exe_completer
 
 if CHECK.os.win:
 

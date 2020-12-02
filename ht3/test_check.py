@@ -7,8 +7,8 @@ from ht3.check import Group, Value, CHECK
 
 class TestGroup(unittest.TestCase):
     def test_all(self):
-        l = ["x", "y"]
-        g = Group(l)
+        lst = ["x", "y"]
+        g = Group(lst)
 
         assert g.x
         assert not g.z
@@ -35,7 +35,7 @@ class TestValue(unittest.TestCase):
         assert v == 7
 
 
-class Test_check(unittest.TestCase):
+class TestCheck(unittest.TestCase):
     def test_basic_os(self):
         assert os.name in CHECK.os
         assert CHECK.os(os.name)

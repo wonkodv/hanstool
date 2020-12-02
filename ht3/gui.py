@@ -4,20 +4,10 @@ Has a small window where you enter Text
 and a larger one that will be mostly hidden wher log messages appear.
 """
 
-from . import command
-from . import lib
-from .check import CHECK
-from .env import Env
-
-import ht3.complete
-import ht3.history
-import ht3.utils.process
-
 import collections
 import functools
 import inspect
 import itertools
-import os.path
 import pathlib
 import pprint
 import queue
@@ -25,6 +15,14 @@ import textwrap
 import threading
 import tkinter as tk
 import traceback
+
+import ht3.complete
+import ht3.history
+import ht3.utils.process
+
+from . import command, lib
+from .check import CHECK
+from .env import Env
 
 
 class UserInterface:
@@ -317,10 +315,10 @@ class UserInterface:
                 msg = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
             elif inspect.isfunction(o):
                 try:
-                    s, l = inspect.getsourcelines(o)
+                    s, line = inspect.getsourcelines(o)
                     msg = "".join(
                         "{0:>6d} {1}".format(n, s)
-                        for (n, s) in zip(itertools.count(l), s)
+                        for (n, s) in zip(itertools.count(line), s)
                     )
                 except OSError:
                     msg = repr(o)
@@ -396,7 +394,7 @@ def interact(wait):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                kwargs["GUI"] = tl.gui
+                kwargs["gui"] = tl.gui
                 return f(*args, **kwargs)
             except AttributeError:
                 e = threading.Event()
@@ -412,7 +410,7 @@ def interact(wait):
         @functools.wraps(f)
         def wrapper(*args, **kwargs):
             try:
-                kwargs["GUI"] = tl.gui
+                kwargs["gui"] = tl.gui
                 return f(*args, **kwargs)
             except AttributeError:
                 i = Interaction(None, f, args, kwargs, None)
@@ -449,7 +447,7 @@ def loop():
             try:
                 while True:
                     i = gui_action_q.get_nowait()
-                    r = i.function(*i.args, GUI=gui, **i.kwargs)
+                    r = i.function(*i.args, gui=gui, **i.kwargs)
                     if i.result is not None:
                         i.result.append(r)
                     if i.event is not None:
@@ -479,9 +477,9 @@ tk.Tk.report_callback_exception = _reptor_tk_ex
 
 
 @interact(False)
-def _log_in_gui(topic, frontend, kwargs, GUI):
-    l = getattr(GUI.log_win, topic)
-    l(frontend, **kwargs)
+def _log_in_gui(topic, frontend, kwargs, gui):
+    logger = getattr(gui.log_win, topic)
+    logger(frontend, **kwargs)
 
 
 # logging
@@ -521,23 +519,23 @@ ht3.utils.process.SUBPROCESS_SPAWN_HOOK.register(_log_proxy("log_subprocess"))
 
 @command.COMMAND_RUN_HOOK.register
 @interact(False)
-def _command_run(command, GUI):
+def _command_run(command, gui):
     if command.parent is None:
-        GUI.set_state(GUI.BUSY)
+        gui.set_state(gui.BUSY)
 
 
 @command.COMMAND_FINISHED_HOOK.register
 @interact(False)
-def _command_done(command, GUI):
+def _command_done(command, gui):
     if command.parent is None:
-        GUI.set_state(GUI.IDLE)
+        gui.set_state(gui.IDLE)
 
 
 @command.COMMAND_EXCEPTION_HOOK.register
 @interact(False)
-def _command_err(command, exception, GUI):
+def _command_err(command, exception, gui):
     if command.parent is None:
-        GUI.set_state(GUI.ERROR)
+        gui.set_state(gui.ERROR)
 
 
 # For interacting with scripts:
@@ -551,33 +549,33 @@ def do_on_start(f):
 
 
 @interact(False)
-def close(GUI):
-    GUI.close()
+def close(gui):
+    gui.close()
 
 
 @interact(True)
-def cmd_win_stay_on_top(GUI):
-    GUI.cmd_win.stay_on_top()
+def cmd_win_stay_on_top(gui):
+    gui.cmd_win.stay_on_top()
 
 
 @interact(True)
-def cmd_win_to_front(GUI):
-    GUI.cmd_win.to_front()
+def cmd_win_to_front(gui):
+    gui.cmd_win.to_front()
 
 
 @interact(True)
-def log_win_to_front(GUI):
-    GUI.log_win.to_front()
+def log_win_to_front(gui):
+    gui.log_win.to_front()
 
 
 @interact(True)
-def cmd_win_set_rect(left, top, width, height, GUI):
-    GUI.cmd_win.set_rect(left, top, width, height)
+def cmd_win_set_rect(left, top, width, height, gui):
+    gui.cmd_win.set_rect(left, top, width, height)
 
 
 @interact(False)
-def cmd_win_hide_frame(GUI):
-    GUI.cmd_win.window.overrideredirect(True)
+def cmd_win_hide_frame(gui):
+    gui.cmd_win.window.overrideredirect(True)
 
 
 _globals = globals()

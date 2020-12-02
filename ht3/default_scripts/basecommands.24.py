@@ -1,12 +1,10 @@
 """Useful commands"""
 
-from Env import *
-
-import re
 import itertools
-import threading
-import time
 import os
+import re
+
+from Env import *
 
 
 def _complete_fake(string):
@@ -100,12 +98,13 @@ class PythonFallback(ht3.command.Command):
             Env["__"].append(r)
             Env["_"] = r
 
-    @COMMAND_NOT_FOUND_HOOK.register
-    def _hook(command_string):
-        try:
-            return PythonFallback(command_string)
-        except SyntaxError:
-            pass
+
+@COMMAND_NOT_FOUND_HOOK.register
+def _hook(command_string):
+    try:
+        return PythonFallback(command_string)
+    except SyntaxError:
+        pass
 
 
 @cmd

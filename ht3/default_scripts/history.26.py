@@ -1,6 +1,5 @@
-from Env import *
-
 import ht3.history
+from Env import *
 
 
 def strings_in(needles, haystack):

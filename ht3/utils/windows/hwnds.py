@@ -4,9 +4,8 @@ import collections
 import ctypes
 import re
 import time
-
-from ctypes.wintypes import RECT, POINT, HWND, LPARAM, DWORD, BOOL
-from ctypes import c_wchar, c_bool, byref
+from ctypes import byref, c_bool, c_wchar
+from ctypes.wintypes import BOOL, DWORD, HWND, LPARAM, POINT, RECT
 
 Rect = collections.namedtuple("Rect", "left,top,width,height")
 

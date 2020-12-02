@@ -1,7 +1,7 @@
 """Provide the CHECK object to test the current environment"""
+import functools
 import os
 import sys
-import functools
 
 __all__ = ("CHECK",)
 

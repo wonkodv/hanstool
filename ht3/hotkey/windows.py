@@ -1,15 +1,12 @@
 """Hotkeys on the Windows Plattform."""
 
 import queue
-import time
 import threading
-
-
-from ctypes import windll, byref, WinError, py_object, addressof
-from ctypes.wintypes import MSG, LPARAM
+import time
+from ctypes import WinError, addressof, byref, py_object, windll
+from ctypes.wintypes import LPARAM, MSG
 
 from ht3.utils.keycodes.win32 import KEY_CODES
-
 
 WM_HOTKEY = 0x312
 WM_USER = 0x0400

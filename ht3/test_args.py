@@ -1,19 +1,17 @@
 import unittest
-import pathlib
 import sys
-from unittest.mock import Mock, patch
 from ht3 import args
 
 
 class TestParamClass(unittest.TestCase):
     def test_realpc(self):
-        class cls(args.ParamClass):
+        class Cls(args.ParamClass):
             pass
 
-        assert issubclass(cls, args.ParamClass)
+        assert issubclass(Cls, args.ParamClass)
 
-    def test_virtualPC(self):
-        class cls:
+    def test_virtual_sub_class(self):
+        class Cls:
             @classmethod
             def convert(cls, s):
                 return s
@@ -22,36 +20,36 @@ class TestParamClass(unittest.TestCase):
             def complete(cls, s):
                 return s
 
-        assert issubclass(cls, args.ParamClass)
+        assert issubclass(Cls, args.ParamClass)
 
     def test_virtual_no_class_methods(self):
-        class cls:
+        class Cls:
             def convert(self, s):
                 return s
 
             def complete(self, s):
                 return s
 
-        assert not issubclass(cls, args.ParamClass)
+        assert not issubclass(Cls, args.ParamClass)
 
     def test_virtual_pc_no_complete(self):
-        class cls:
+        class Cls:
             @classmethod
             def convert(cls, s):
                 pass
 
-        assert not issubclass(cls, args.ParamClass)
+        assert not issubclass(Cls, args.ParamClass)
 
     def test_virtual_pc_no_convert(self):
-        class cls:
+        class Cls:
             @classmethod
             def complete(cls, s):
                 pass
 
-        assert not issubclass(cls, args.ParamClass)
+        assert not issubclass(Cls, args.ParamClass)
 
     def test_pc_used(self):
-        class cls:
+        class Cls:
             @classmethod
             def convert(cls, s):
                 return s
@@ -60,7 +58,7 @@ class TestParamClass(unittest.TestCase):
             def complete(cls, s):
                 return s
 
-        assert cls is args._get_param(cls, False)
+        assert Cls is args._get_param(Cls, False)
 
 
 class TestStrParam(unittest.TestCase):
@@ -179,7 +177,12 @@ class TestShellArgParser(unittest.TestCase):
         def f(
             i: int,
             s: args.Param(
-                complete=["ws text", "text", "singlequote's", 'doublequote"s']
+                complete=[
+                    "ws text",
+                    "text",
+                    "singlequote's",
+                    'doublequote"s',
+                ]
             ),
         ):
             pass

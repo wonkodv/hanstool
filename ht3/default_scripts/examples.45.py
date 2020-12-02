@@ -1,12 +1,12 @@
 """Soome example commands and configuration."""
 
-from Env import *
-import re
-import random
-import subprocess
-import string
 import datetime
+import random
+import re
+import string
+import subprocess
 
+from Env import *
 
 if CHECK.frontend("ht3.cli"):
     import ht3.cli

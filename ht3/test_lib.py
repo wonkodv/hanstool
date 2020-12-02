@@ -6,7 +6,7 @@ from unittest.mock import patch, Mock
 from ht3 import lib
 
 
-class Test_frontends(unittest.TestCase):
+class TestFrontends(unittest.TestCase):
     def get_fe(self, n):
         m = Mock()
         m.i = 0
@@ -29,7 +29,7 @@ class Test_frontends(unittest.TestCase):
         return m
 
     @patch("importlib.import_module")
-    def test_full_run(self, importMock):
+    def test_full_run(self, import_mock):
 
         fe1 = self.get_fe("fe1")
         fe2 = self.get_fe("fe2")
@@ -38,7 +38,7 @@ class Test_frontends(unittest.TestCase):
         fe3.loop = lambda: time.sleep(0.1)
         fe3.__name__ = "fe3"
 
-        importMock.side_effect = [fe1, fe2, fe3]
+        import_mock.side_effect = [fe1, fe2, fe3]
 
         lib.load_frontend("frontend1")
         lib.load_frontend("frontend2")

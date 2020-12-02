@@ -1,9 +1,7 @@
 import ht3
+from ht3 import args, command, lib
+from ht3.command import COMMANDS, cmd, run_command
 from ht3.env import Env
-from ht3 import args
-from ht3 import lib
-from ht3 import command
-from ht3.command import cmd, run_command, COMMANDS
 from ht3.utils.helpers import cmd_func
 
 

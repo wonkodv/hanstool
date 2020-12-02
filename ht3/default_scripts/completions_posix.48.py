@@ -1,5 +1,6 @@
-from Env import which, CHECK, exe_completer, procio, Path
 import shlex
+
+from Env import CHECK, Path, exe_completer, procio, which
 
 
 @exe_completer("ls")

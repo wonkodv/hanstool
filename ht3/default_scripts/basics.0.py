@@ -3,35 +3,28 @@
 head other scripts with: from Env import *
 """
 
-import ht3
-
-from ht3.env import Env
-
-from ht3.check import CHECK
-
-from ht3 import args
-
-from time import sleep
+import os
+import os.path
+import re
 from os.path import expanduser
 from pathlib import Path
+from time import sleep
 
+import ht3
+from ht3 import args
+from ht3.check import CHECK
 from ht3.command import *
-from ht3.lib import *
-
-from ht3.utils.fake_input import *
-from ht3.utils.process import *
-from ht3.utils.helpers import *
-from ht3.utils.dialog import *
-
 from ht3.complete import *
+from ht3.env import Env
+from ht3.lib import *
+from ht3.utils.dialog import *
+from ht3.utils.fake_input import *
+from ht3.utils.helpers import *
+from ht3.utils.process import *
 
 if CHECK.os.windows:
     from ht3.utils.windows import *
 
-from pathlib import Path
-import os
-import os.path
-import re
 
 
 args.Python = args.Param(complete=lambda s: Env.complete_py(s), doc="PythonCode")

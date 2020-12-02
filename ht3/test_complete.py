@@ -12,7 +12,7 @@ from ht3.complete import (
 )
 
 
-class Test_Completion(unittest.TestCase):
+class TestCompletion(unittest.TestCase):
     def test_command_completion(self):
         c1 = Mock()
         c1.arg_parser.complete = lambda s: ["arg1", "a2"]
@@ -99,22 +99,22 @@ class Test_Completion(unittest.TestCase):
         c.name = "c"
 
         with patch("ht3.command.COMMANDS", {"c": c}):
-            l = complete_command_args("c b")
+            completions = complete_command_args("c b")
 
-        assert next(l) == "c b"
+        assert next(completions) == "c b"
 
     def test_complete_path_dir_slash(self):
-        l = list(complete_path("ht"))
-        assert "ht3/" in l
+        completions = list(complete_path("ht3"))
+        assert "ht3/" in completions
 
     def test_complete_path_local(self):
-        l = list(complete_path("ht3/comple"))
-        assert "ht3/complete.py" in l
+        completions = list(complete_path("ht3/comple"))
+        assert "ht3/complete.py" in completions
 
-    def test_complete_path_dir_slash(self):
+    def test_complete_path_absolute(self):
         a = str(pathlib.Path(__file__).parent.absolute()).replace("\\", "/")
-        l = list(complete_path(a + "/comple"))
-        assert a + "/complete.py" in l
+        completions = list(complete_path(a + "/comple"))
+        assert a + "/complete.py" in completions
 
     def test_filter_completions(self):
         def src0():

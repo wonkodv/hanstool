@@ -1,16 +1,16 @@
 """The `Env` object, access point to the unified namespace."""
 
-import types
-import sys
-import inspect
-import importlib
-import functools
 import collections.abc
+import functools
+import importlib
+import inspect
+import sys
+import types
 
 _DEFAULT = object()
 
 
-class _Env_class(types.ModuleType, collections.abc.Mapping):
+class EnvClass(types.ModuleType, collections.abc.Mapping):
     """Common Env to be used by scripts
 
     import Env
@@ -26,7 +26,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         self.__name__ = "Env"
         self.__path__ = []
         self.__file__ = __file__
-        super().__init__("Env", _Env_class.__doc__)  # init as Module
+        super().__init__("Env", self.__doc__)  # init as Module
         self._finalized = True  # stop attribute setting
 
         for k in (
@@ -76,7 +76,7 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         except KeyError as ke:
             try:
                 return importlib.import_module(key)
-            except ImportError as ie:
+            except ImportError:
                 raise ke from None
 
     def __getattr__(self, key):
@@ -139,6 +139,6 @@ class _Env_class(types.ModuleType, collections.abc.Mapping):
         return "Env"
 
 
-Env = _Env_class()
+Env = EnvClass()
 
 sys.modules["Env"] = Env

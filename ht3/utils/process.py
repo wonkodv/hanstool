@@ -2,16 +2,16 @@
 
 All functions here use posix semantics, some are redefined in ht3.util.windows.process"""
 
-import subprocess
-import shlex
-import pathlib
 import os
-
-from ht3.env import Env
-from . import processwatch
-from ht3.check import CHECK
+import pathlib
+import shlex
+import subprocess
 
 import ht3.hook
+from ht3.check import CHECK
+from ht3.env import Env
+
+from . import processwatch
 
 SUBPROCESS_SPAWN_HOOK = ht3.hook.Hook("process")
 SUBPROCESS_FINISH_HOOK = ht3.hook.Hook("process")

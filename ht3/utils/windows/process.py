@@ -1,13 +1,14 @@
 """Implement process-related functions that behave special on windows."""
 
-import pathlib
-import subprocess
-import os
-import shlex
 import ctypes
-from ht3.utils import process
-from ht3.env import Env
+import os
+import pathlib
+import shlex
+import subprocess
+
 from ht3.complete import filter_completions_i
+from ht3.env import Env
+from ht3.utils import process
 
 
 def execute(exe, *args, is_split=..., shell=False, **kwargs):

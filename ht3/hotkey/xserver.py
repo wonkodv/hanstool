@@ -4,12 +4,11 @@ uses python-xlib
 """
 
 import threading
-from ht3.utils.keycodes.xserver import KEY_CODES
-from Xlib.display import Display
-from Xlib import X
-from Xlib import XK
-from Xlib.error import CatchError
 
+from ht3.utils.keycodes.xserver import KEY_CODES
+from Xlib import XK, X
+from Xlib.display import Display
+from Xlib.error import CatchError
 
 MODIFIERS = {
     "ALT": X.Mod1Mask,

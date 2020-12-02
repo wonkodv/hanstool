@@ -4,11 +4,11 @@ import collections
 import collections.abc
 import functools
 import getopt
-import ht3.complete
 import inspect
 import pathlib
 import shlex
-import sys
+
+import ht3.complete
 
 _DEFAULT = object()
 

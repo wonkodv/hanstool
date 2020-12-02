@@ -1,7 +1,5 @@
 """Load Scripts, executing them in the global Namespace ``Env``."""
 
-import importlib
-import inspect
 import pathlib
 import re
 import sys
@@ -44,8 +42,7 @@ def add_scripts(path):
     """ Add a script or directory full of scripts.  """
     path = pathlib.Path(path)
     if path.is_dir():
-        l = path.glob("*.py")
-        for p in l:
+        for p in path.glob("*.py"):
             add_scripts(p)
     elif path.is_file():
         if path not in ADDED_SCRIPTS:
@@ -60,10 +57,10 @@ def add_scripts(path):
 def load_scripts():
     """Load added Scripts, sorted d.5.py before c.20.py before b.py before a.101.py."""
 
-    l = sorted(ADDED_SCRIPTS, key=_script_order_key)
-    if not l:
+    scripts_to_load = sorted(ADDED_SCRIPTS, key=_script_order_key)
+    if not scripts_to_load:
         raise ValueError("No scripts added (or already loaded)")
-    for path in l:
+    for path in scripts_to_load:
         name = _script_module(path)
         ename = "Env." + name
         spec = spec_from_file_location(ename, str(path))
@@ -97,7 +94,7 @@ def reload_all():
                 del Env[mod.__name__[4:]]
         SCRIPTS.clear()
         load_scripts()
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

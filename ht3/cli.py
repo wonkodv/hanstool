@@ -1,15 +1,12 @@
 """The Command Line Frontend. Like a shell."""
-import traceback
-import os
-import os.path
 import threading
 
-from .env import Env
-from .command import get_command, COMMAND_EXCEPTION_HOOK
-from .complete import complete_command_with_args
-
-import ht3.lib
 import ht3.history
+import ht3.lib
+
+from .command import COMMAND_EXCEPTION_HOOK, get_command
+from .complete import complete_command_with_args
+from .env import Env
 
 try:
     import readline
@@ -76,8 +73,8 @@ def _setup_readline():
     if not readline:
         return False
 
-    for l in ht3.history.get_history():
-        readline.add_history(l)
+    for h in ht3.history.get_history():
+        readline.add_history(h)
 
     completion_cache = []
 

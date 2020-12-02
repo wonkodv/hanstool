@@ -1,6 +1,7 @@
 """Show the MessageBox."""
 import ctypes
 from functools import reduce
+
 from .functions import MessageBoxW
 
 _MessageBoxFlags = {

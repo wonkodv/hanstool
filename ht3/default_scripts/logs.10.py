@@ -1,9 +1,9 @@
-from Env import *
-
+import itertools
 import pprint
 import shlex
-import itertools
 import textwrap
+
+from Env import *
 
 
 def _print(s, **kwargs):

@@ -1,7 +1,7 @@
-import unittest
 import time
-from unittest.mock import Mock, patch
+import unittest
 from threading import Event
+from unittest.mock import Mock, patch
 
 from ht3.utils import processwatch
 

@@ -1,13 +1,13 @@
 """Fake Input for the X11."""
 
-import Xlib.display
-import Xlib.X
-import Xlib.XK
-import Xlib.protocol.event
-import Xlib.ext.xtest
 import functools
 import time
 
+import Xlib.display
+import Xlib.ext.xtest
+import Xlib.protocol.event
+import Xlib.X
+import Xlib.XK
 from ht3.utils.keycodes.xserver import KEY_CODES
 
 get_mouse_pos = None
