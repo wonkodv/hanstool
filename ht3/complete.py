@@ -139,4 +139,7 @@ def complete_path(s):
         mask = p.name + "*"
         p = p.parent
     for e in p.glob(mask):
-        yield stem + e.name
+        if e.is_dir():
+            yield stem + e.name + "/"
+        else:
+            yield stem + e.name

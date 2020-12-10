@@ -157,10 +157,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     # disable and delete hotkeys
     if CHECK.frontend("ht3.hotkey"):
         debug("Reload: Disable all hotkeys")
-        ht3.hotkey.disable_all_hotkeys()  # let hotkeys and old functions be deleted
-        hotkeys = list(ht3.hotkey.HotKey.HOTKEYS.values())
-        ht3.hotkey.HotKey.HOTKEYS.clear()  # Remove all hotkeys from the cache
-        assert not any(hk.active for hk in hotkeys)
+        ht3.hotkey.free_all_hotkeys()
 
     # remove hooks defined in scripts
     for h in ht3.hook.Hook.HOOKS:
@@ -279,22 +276,13 @@ if CHECK.frontend("ht3.hotkey"):
     import ht3.hotkey
 
     def complete_hotkey(s):
-        return sorted(hk.hotkey for hk in ht3.hotkey.HotKey.HOTKEYS.values())
+        return sorted(hk.hotkey for hk in ht3.hotkey.get_all_hotkeys())
 
     @cmd
     def disable_hotkey(hk: complete_hotkey = None):
         """Disable a hotkey."""
         if hk:
             hk = ht3.hotkey.get_hotkey(hk)
-            hk.unregister()
+            hk.free()
         else:
-            ht3.hotkey.disable_all_hotkeys()
-
-    @cmd
-    def enable_hotkey(hk: complete_hotkey = None):
-        """Disable a hotkey."""
-        if hk:
-            hk = ht3.hotkey.get_hotkey(hk)
-            hk.register()
-        else:
-            ht3.hotkey.enable_all_hotkeys()
+            ht3.hotkey.free_all_hotkeys()
