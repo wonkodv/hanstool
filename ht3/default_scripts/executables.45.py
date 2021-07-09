@@ -39,7 +39,10 @@ def _executable_command_h(command_string):
         pass
     else:
         if which(parts[0]):
-            return _procio.command(s, s)
+            if CHECK.is_cli_frontend:
+                return _procio.command(s, s)
+            else:
+                return _execute_bg.command(s, s)
 
 
 @cmd(name="which")
