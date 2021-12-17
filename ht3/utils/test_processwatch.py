@@ -10,7 +10,7 @@ class TestProcessWatch(unittest.TestCase):
     @patch("ht3.utils.processwatch.SHORT_SLEEP", 0.001)
     @patch("ht3.utils.processwatch.LONG_SLEEP", 0.001)
     def test_watch(self):
-        """ Test processwatch.watch calls callbacks once after poll is not None."""
+        """Test processwatch.watch calls callbacks once after poll is not None."""
         event = Event()
         sentinel = Mock()
         sentinel.poll = lambda: (event.set(), None)[1]

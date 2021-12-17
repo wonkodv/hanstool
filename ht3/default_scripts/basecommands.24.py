@@ -63,7 +63,7 @@ Env["_"] = None
 # Some Eval Python functions
 @cmd(name="=")
 def _show_eval(s: args.Python = ""):
-    """ Evaluate a python expression and show the result """
+    """Evaluate a python expression and show the result"""
     r = evaluate_py_expression(s.lstrip())
     if inspect.isgenerator(r):
         r = list(itertools.islice(r, 1000))

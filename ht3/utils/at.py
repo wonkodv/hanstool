@@ -9,7 +9,7 @@ import threading
 
 
 class IntervalSchedule:
-    """ Schedule after every elapsed timedelta."""
+    """Schedule after every elapsed timedelta."""
 
     def __init__(self, td):
         self.td = td

@@ -4,10 +4,10 @@ from Env import *
 
 if CHECK.os.win:
 
-    from pathlib import Path
     import functools
     import re
     from ctypes import windll
+    from pathlib import Path
 
     @Env
     def explorer_select(f):

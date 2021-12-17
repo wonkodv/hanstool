@@ -8,8 +8,9 @@ is all, or nothing if File-Completion should be tried.
 """
 import shlex
 
-import ht3.hook
 from Env import *
+
+import ht3.hook
 
 EXECUTABLE_W_ARGS_COMPLETE_HOOK = ht3.hook.GeneratorHook("parts")
 Env["EXECUTABLE_W_ARGS_COMPLETE_HOOK"] = EXECUTABLE_W_ARGS_COMPLETE_HOOK

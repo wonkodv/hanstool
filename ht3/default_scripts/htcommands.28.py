@@ -11,14 +11,15 @@ import sys
 import textwrap
 import time
 
-import ht3.scripts
 from Env import *
+
+import ht3.scripts
 from ht3.scripts import SCRIPTS
 
 
 @cmd(name="l")
 def list_commands():
-    """ List all commands."""
+    """List all commands."""
     text = ""
     for n in sorted(COMMANDS):
         c = COMMANDS[n]
@@ -31,7 +32,7 @@ def list_commands():
 
 @cmd(name="?")
 def _help(what: args.Union(args.Command, args.Python)):
-    """ Show help on a command or evaluated python expression """
+    """Show help on a command or evaluated python expression"""
     if what in COMMANDS:
         obj = COMMANDS[what]
         show(inspect.getdoc(obj))
@@ -140,9 +141,10 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     and reload all scripts.
     Can be used after editing a script."""
     # Things we don't want to loose by Env._reload
+    from Env import CHECK
+
     from ht3.command import COMMANDS
     from ht3.scripts import reload_all
-    from Env import CHECK
 
     try:
         from Env import _RELOADED
@@ -196,6 +198,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
     log("Reload: ===== Done =====")
 
     return "Reload Done"
+
 
 @cmd
 def restart(*more_args):

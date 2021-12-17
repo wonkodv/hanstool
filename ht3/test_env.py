@@ -1,6 +1,6 @@
 import unittest
 
-from ht3.env import EnvClass, Env
+from ht3.env import Env, EnvClass
 
 
 class EnvTest(unittest.TestCase):
@@ -64,6 +64,7 @@ class EnvTest(unittest.TestCase):
 
         def _():
             import Env
+
             assert Env.Y == 36
             from Env import X
 

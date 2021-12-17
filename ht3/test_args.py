@@ -1,5 +1,6 @@
-import unittest
 import sys
+import unittest
+
 from ht3 import args
 
 

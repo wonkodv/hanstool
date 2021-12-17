@@ -2,9 +2,9 @@
 from ht3.check import CHECK
 
 if CHECK.os.win:
-    from .message_box import *
-    from .default import *
-    from .hwnds import *
-    from .process import *
     from .clipboard import *
+    from .default import *
     from .functions import *
+    from .hwnds import *
+    from .message_box import *
+    from .process import *

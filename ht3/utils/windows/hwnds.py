@@ -13,7 +13,7 @@ Rect = collections.namedtuple("Rect", "left,top,width,height")
 class Window:
     # Placeholder for singleton Objects
 
-    """NULL Window is used as "No Window" in find """
+    """NULL Window is used as "No Window" in find"""
     NULL = 0
 
     """children of TOP are all Top-Level Windows"""
@@ -214,7 +214,7 @@ class Window:
     )
 
     def _GetWindow(self, cmd):
-        """ Get a relative Window."""
+        """Get a relative Window."""
         cmd = self._getwindow_command.get(cmd, cmd)
         return ctypes.windll.user32.GetWindow(self.hwnd, cmd)
 

@@ -3,12 +3,10 @@
 import pathlib
 import re
 import sys
-
 from importlib.util import spec_from_file_location
 
-
-from .env import Env
 from . import lib
+from .env import Env
 
 SCRIPTS = []
 ADDED_SCRIPTS = []

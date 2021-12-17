@@ -1,5 +1,6 @@
-import ht3.history
 from pathlib import Path
+
+import ht3.history
 
 
 def test_append_with_limit(monkeypatch, tmpdir):

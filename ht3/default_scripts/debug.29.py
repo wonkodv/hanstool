@@ -8,13 +8,14 @@ import sys
 import tempfile
 import traceback
 
-import ht3.command
 from Env import *
+
+import ht3.command
 
 
 @cmd
 def debug(string: args.Union(args.Command, args.Python)):
-    """ Debug a Command """
+    """Debug a Command"""
 
     p = pdb.Pdb()
     cmd = get_command(string)
@@ -34,7 +35,7 @@ def disassemble(s: args.Python):
 
 @cmd
 def py():
-    """ start a python repl """
+    """start a python repl"""
     execute_auto(sys.executable)
 
 

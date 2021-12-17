@@ -1,8 +1,8 @@
+import os
 import unittest
 from unittest.mock import patch
-import os
 
-from ht3.check import Group, Value, CHECK
+from ht3.check import CHECK, Group, Value
 
 
 class TestGroup(unittest.TestCase):

@@ -1,6 +1,8 @@
 import unittest
-from unittest.mock import patch, MagicMock
-from ht3.command import cmd, get_registered_command, NoCommandError, run_command
+from unittest.mock import MagicMock, patch
+
+from ht3.command import (NoCommandError, cmd, get_registered_command,
+                         run_command)
 from ht3.lib import THREAD_LOCAL
 
 

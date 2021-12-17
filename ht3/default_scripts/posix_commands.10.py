@@ -12,7 +12,9 @@ if CHECK.os.posix:
         sudo = "sudo"
         if not CHECK.is_cli_frontend:
             try:
-                procio("sudo true") # check if we have a sudo cookie, or trigger non-password auth mechanisms
+                procio(
+                    "sudo true"
+                )  # check if we have a sudo cookie, or trigger non-password auth mechanisms
             except ProcIOException:
                 sudo = "gksudo"
         return procio(sudo, *args, **kwargs)
@@ -73,7 +75,13 @@ if CHECK.os.posix:
 
         show(f"mount -t {fstype} {dev} {target} --options {options}")
         return sudo(
-            "mount", "-t", fstype, str(dev), str(target), "--options", options,
+            "mount",
+            "-t",
+            fstype,
+            str(dev),
+            str(target),
+            "--options",
+            options,
         )
 
     def complete_mounted_devices(s):

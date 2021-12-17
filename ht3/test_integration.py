@@ -1,11 +1,13 @@
-import pkg_resources
-import ht3.history
 import pathlib
+
+import pkg_resources
+
+import ht3.history
 
 
 def test_integration(monkeypatch, tmpdir):
-    from ht3.scripts import load_scripts, add_scripts
     from ht3.command import run_command
+    from ht3.scripts import add_scripts, load_scripts
 
     f = str(tmpdir.join("history"))
     monkeypatch.setattr(ht3.history, "get_history_file", lambda: pathlib.Path(f))

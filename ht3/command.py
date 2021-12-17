@@ -128,7 +128,7 @@ def register_command(
     doc=_DEFAULT,
     attrs=_DEFAULT
 ):
-    """ Register a function as Command """
+    """Register a function as Command"""
 
     origin = traceback.extract_stack()
     origin = origin[-origin_stacked]
@@ -189,7 +189,7 @@ def cmd(func=None, **kwargs):
     if func is None:
 
         def decorator(func):
-            """ the actual decorator """
+            """the actual decorator"""
             register_command(func=func, origin_stacked=3, **kwargs)
             return func
 

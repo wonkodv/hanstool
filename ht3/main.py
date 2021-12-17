@@ -4,12 +4,11 @@ main() is called from ht3.__main__"""
 
 import pkg_resources
 
-from . import lib
-from .lib import load_frontend, run_frontends
+from . import lib, scripts
 from .command import run_command
 from .env import Env
-from . import scripts
-from .scripts import load_scripts, add_scripts
+from .lib import load_frontend, run_frontends
+from .scripts import add_scripts, load_scripts
 
 HELP = """The initialization and actions of the ht3 can be programmed on the commandline and/or in
 the scripts.  Each argument is either a shorthand that looks like an option, or executed as a python

@@ -1,14 +1,13 @@
 """Module for loading frontends and miscelaneous functions"""
 
 import importlib
+import inspect
 import threading
 
 import ht3.hook
-import inspect
 
-from .env import Env
 from . import check
-
+from .env import Env
 
 EXCEPTION_HOOK = ht3.hook.Hook("exception")
 DEBUG_HOOK = ht3.hook.Hook("message")
@@ -17,14 +16,14 @@ ALERT_HOOK = ht3.hook.Hook("message")
 
 @EXCEPTION_HOOK.register
 def _exception_hook_fallback(exception):
-    """ If no other handlers are installed, raise Exc. """
+    """If no other handlers are installed, raise Exc."""
     if len(EXCEPTION_HOOK.callbacks) == 1:
         raise exception
 
 
 @ALERT_HOOK.register
 def _alert_hook_fallback(message):
-    """ If no other handlers are installed, print. """
+    """If no other handlers are installed, print."""
     if len(EXCEPTION_HOOK.callbacks) == 1:
         print(message)
 

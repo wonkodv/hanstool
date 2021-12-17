@@ -29,7 +29,7 @@ def txt():
 
 @cmd
 def timer(t: args.Time, event: str = "Done"):
-    """ timer timer """
+    """timer timer"""
 
     t2 = datetime.datetime.now() + datetime.timedelta(seconds=t)
     show(f"Reminding you of {event} at {t2}")

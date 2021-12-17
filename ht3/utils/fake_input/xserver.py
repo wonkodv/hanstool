@@ -8,6 +8,7 @@ import Xlib.ext.xtest
 import Xlib.protocol.event
 import Xlib.X
 import Xlib.XK
+
 from ht3.utils.keycodes.xserver import KEY_CODES
 
 get_mouse_pos = None
