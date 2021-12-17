@@ -39,7 +39,7 @@ def _script_order_key(p):
 
 
 def add_scripts(path):
-    """ Add a script or directory full of scripts.  """
+    """Add a script or directory full of scripts."""
     path = pathlib.Path(path)
     if path.is_dir():
         for p in path.glob("*.py"):
@@ -67,7 +67,7 @@ def load_scripts():
         mod = spec.loader.load_module()
         assert mod.__name__ == ename
         assert sys.modules[ename] is mod
-        assert mod.__file__ == str(path)
+        assert path.samefile(mod.__file__), (path, mod.__file__)
         ADDED_SCRIPTS.remove(path)
         SCRIPTS.append(mod)
         if getattr(mod, "_SCRIPT_ADD_TO_ENV", True):
