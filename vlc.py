@@ -47,7 +47,7 @@ def find(search):
 def play_id(id):
     request("/requests/status.json?command=pl_play&id="+id)
 
-@cmd(name="play")
+@cmd
 def play(search):
 
     ids = find(search)

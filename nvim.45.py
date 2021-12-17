@@ -37,6 +37,9 @@ def nvim(server="HT3", env={}, cwd=None):
         else:
             raise FileNotFoundError(f"Socket File not created by nvim. ARGS:{args} {p}")
     else:
+        if not socket.is_socket():
+            raise OSError(f"Expected {socket} to be a socket")
+        show(f"Attaching to {socket}")
         p = None
 
     nvim = neovim.attach("socket", path=str(socket))
