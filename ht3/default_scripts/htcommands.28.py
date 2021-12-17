@@ -195,6 +195,7 @@ def reload(*modules: args.Union(["ENV"], args.Option(sys.modules, sort=True))):
 
     log("Reload: ===== Done =====")
 
+    return "Reload Done"
 
 @cmd
 def restart(*more_args):

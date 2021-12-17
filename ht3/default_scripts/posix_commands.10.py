@@ -6,6 +6,17 @@ from Env import *
 
 if CHECK.os.posix:
 
+    @Env
+    @cmd
+    def sudo(*args, **kwargs):
+        sudo = "sudo"
+        if not CHECK.is_cli_frontend:
+            try:
+                procio("sudo true") # check if we have a sudo cookie, or trigger non-password auth mechanisms
+            except ProcIOException:
+                sudo = "gksudo"
+        return procio(sudo, *args, **kwargs)
+
     def complete_mount_device(s):
         def walk(d):
             if d["fstype"]:
@@ -61,8 +72,8 @@ if CHECK.os.posix:
             )
 
         show(f"mount -t {fstype} {dev} {target} --options {options}")
-        return procio(
-            "sudo", "mount", "-t", fstype, str(dev), str(target), "--options", options
+        return sudo(
+            "mount", "-t", fstype, str(dev), str(target), "--options", options,
         )
 
     def complete_mounted_devices(s):
@@ -86,7 +97,7 @@ if CHECK.os.posix:
         if not device.is_block_device() and not device.is_dir():
             raise ValueError("not blockdevice or mountpoint", device)
 
-        procio("sudo", "umount", str(device))
+        sudo("umount", str(device))
 
         if m:
             device.rmdir()
