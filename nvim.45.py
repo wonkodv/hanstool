@@ -5,12 +5,16 @@ import neovim
 import os.path
 import inspect
 import tempfile
+import ht3.utils.process
 
 if CHECK.os.win32:
     ADDRESS = r"\\.\pipe\nvim-pipe-{}"
-    DEFAULT_NVIMGUI = ('nvim-qt', '--')
 else:
     ADDRESS = "~/.config/nvim/socket-{}"
+
+if ht3.utils.process.which('nvim-qt'):
+    DEFAULT_NVIMGUI = ('nvim-qt', '--')
+else:
     DEFAULT_NVIMGUI = ('xterm','-e','nvim')
 
 @cmd
@@ -28,7 +32,7 @@ def nvim(server="HT3", env={}, cwd=None):
             args = (args,)
         args = *args, '--listen', str(socket)
 
-        p = execute_disconnected(*args, more_env=env)
+        p = execute_disconnected(*args, more_env=env, cwd=cwd)
 
         for i in range(50):
             if socket.exists():
@@ -37,12 +41,19 @@ def nvim(server="HT3", env={}, cwd=None):
         else:
             raise FileNotFoundError(f"Socket File not created by nvim. ARGS:{args} {p}")
     else:
-        if not socket.is_socket():
-            raise OSError(f"Expected {socket} to be a socket")
+        if CHECK.os.posix:
+            if not socket.is_socket():
+                # File or dir or something
+                raise OSError(f"Expected {socket} to be a socket")
+        else:
+            pass # windows sockets are always sockets if they exist
         show(f"Attaching to {socket}")
         p = None
 
-    nvim = neovim.attach("socket", path=str(socket))
+    try:
+        nvim = neovim.attach("socket", path=str(socket))
+    except Exception as e:
+        raise Exception("can not attach to socket", socket)
     nvim.PROCESS = p
     nvim.command("call rpcnotify(0, 'Gui', 'Foreground')")
     return nvim
