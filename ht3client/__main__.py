@@ -1,5 +1,6 @@
-from . import main, ARG_PARSER
 import sys
+
+from . import ARG_PARSER, main
 
 o = ARG_PARSER.parse_args()
 sys.exit(main(o))
