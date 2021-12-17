@@ -6,6 +6,7 @@ from Env import cmd, show
 def mpd():
     execute_disconnected("mpd")
 
+
 try:
     import musicpd
 except ImportError:
@@ -13,7 +14,9 @@ except ImportError:
 else:
 
     def client():
-        return musicpd.MPDClient() #(host=Env.get('MPD_HOST'), port=Env.get('MPD_PORT'));
+        return (
+            musicpd.MPDClient()
+        )  # (host=Env.get('MPD_HOST'), port=Env.get('MPD_PORT'));
 
     @cmd
     def current_song():
@@ -22,16 +25,16 @@ else:
             show(f'{s["artist"]} - {s["album"]} - {s["title"]}')
 
     @cmd
-    def play(typ:['title','artitst','album'], query, *more_query):
+    def play(typ: ["title", "artitst", "album"], query, *more_query):
         query = query + " " + " ".join(more_query)
         with client() as c:
             songs = c.playlistsearch(typ, query)
             if len(songs) > 1:
-                id = songs[0]['id']
+                id = songs[0]["id"]
             else:
-                songs = c.search(typ,query)
+                songs = c.search(typ, query)
                 if len(songs) > 1:
-                    id = c.addid(songs[0]['file'])
+                    id = c.addid(songs[0]["file"])
                 else:
                     show("No such song {typ} {query}")
                     return "No such song {typ} {query}"

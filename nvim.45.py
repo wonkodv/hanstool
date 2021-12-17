@@ -1,10 +1,13 @@
 """Launch and control Neovim"""
 
-from Env import Env, cmd, CHECK, sleep, execute_disconnected, Path, EXCEPTIONS, show
-import neovim
-import os.path
 import inspect
+import os.path
 import tempfile
+
+import neovim
+from Env import (CHECK, EXCEPTIONS, Env, Path, cmd, execute_disconnected, show,
+                 sleep)
+
 import ht3.utils.process
 
 if CHECK.os.win32:
@@ -12,10 +15,11 @@ if CHECK.os.win32:
 else:
     ADDRESS = "~/.config/nvim/socket-{}"
 
-if ht3.utils.process.which('nvim-qt'):
-    DEFAULT_NVIMGUI = ('nvim-qt', '--')
+if ht3.utils.process.which("nvim-qt"):
+    DEFAULT_NVIMGUI = ("nvim-qt", "--")
 else:
-    DEFAULT_NVIMGUI = ('xterm','-e','nvim')
+    DEFAULT_NVIMGUI = ("xterm", "-e", "nvim")
+
 
 @cmd
 def nvim(server="HT3", env={}, cwd=None):
@@ -25,12 +29,12 @@ def nvim(server="HT3", env={}, cwd=None):
             if not socket.parent.is_dir():
                 socket.parent.mkdir(parents=True)
         if CHECK.is_cli_frontend:
-            args = Env.get('NVIM','nvim')
+            args = Env.get("NVIM", "nvim")
         else:
-            args = Env.get('NVIMGUI', DEFAULT_NVIMGUI)
-        if isinstance(args,str):
+            args = Env.get("NVIMGUI", DEFAULT_NVIMGUI)
+        if isinstance(args, str):
             args = (args,)
-        args = *args, '--listen', str(socket)
+        args = *args, "--listen", str(socket)
 
         p = execute_disconnected(*args, more_env=env, cwd=cwd)
 
@@ -46,7 +50,7 @@ def nvim(server="HT3", env={}, cwd=None):
                 # File or dir or something
                 raise OSError(f"Expected {socket} to be a socket")
         else:
-            pass # windows sockets are always sockets if they exist
+            pass  # windows sockets are always sockets if they exist
         show(f"Attaching to {socket}")
         p = None
 
@@ -58,9 +62,10 @@ def nvim(server="HT3", env={}, cwd=None):
     nvim.command("call rpcnotify(0, 'Gui', 'Foreground')")
     return nvim
 
+
 @Env.updateable
 @cmd
-def edit_file(file_name:Path, line:int=0, server="HT3"):
+def edit_file(file_name: Path, line: int = 0, server="HT3"):
     f = str(file_name)
     l = int(line)
 
@@ -75,8 +80,9 @@ def edit_file(file_name:Path, line:int=0, server="HT3"):
         else:
             raise NotImplementedError("Waiting on buffer in external nvim")
 
+
 @cmd
-def exception_trace(i:int=-1):
+def exception_trace(i: int = -1):
     """Open the traceback of the latest exception in nvim."""
 
     e = EXCEPTIONS[i]
@@ -92,15 +98,15 @@ def exception_trace(i:int=-1):
                 try:
                     value = repr(value)
                 except:
-                    value = repr(type(value))+"()"
-                lines.append(f'    {name} = {value}')
+                    value = repr(type(value)) + "()"
+                lines.append(f"    {name} = {value}")
 
             file = os.path.abspath(f.filename)
             line = f.lineno
 
             if i:
-                name = frames[i-1].function
-                args = inspect.getargvalues(frames[i-1].frame)
+                name = frames[i - 1].function
+                args = inspect.getargvalues(frames[i - 1].frame)
                 try:
                     args = inspect.formatargvalues(*args)
                 except:
@@ -110,9 +116,9 @@ def exception_trace(i:int=-1):
                 args = str(exc.args)
             else:
                 name = " ?? "
-                args=""
+                args = ""
 
-            #if os.path.exists(file):
+            # if os.path.exists(file):
             lines.append(f"{file}:{line:d}: {name}{args}")
 
             stk = locls.get("__STACK_FRAMES__")
@@ -145,12 +151,12 @@ def exception_trace(i:int=-1):
     s = "\n".join(lines)
     show(s)
 
-    with tempfile.NamedTemporaryFile('wb', delete=False) as f:
+    with tempfile.NamedTemporaryFile("wb", delete=False) as f:
         f.write(s.encode("UTF-8"))
         f.flush()
         n = nvim()
-        n.command(f':cfile {f.name}')
-        n.command(f':{l}cc ')
+        n.command(f":cfile {f.name}")
+        n.command(f":{l}cc ")
     if CHECK.is_cli_frontend:
         p = n.PROCESS
         if p:
