@@ -3,6 +3,8 @@ import threading
 
 import ht3.history
 import ht3.lib
+import sys
+import os
 
 from .command import COMMAND_EXCEPTION_HOOK, get_command
 from .complete import complete_command_with_args
@@ -10,6 +12,12 @@ from .env import Env
 
 try:
     import readline
+
+except ImportError:
+    readline = None
+
+try:
+    import signal
 except ImportError:
     readline = None
 
@@ -92,7 +100,27 @@ def _setup_readline():
     readline.set_completer(rl_complete)
     readline.set_completer_delims("")  # complete with the whole line
     readline.parse_and_bind("tab: complete")
+    readline.read_init_file()
 
+    if signal:
+        class StdOutWrapper():
+            def __init__(self, wrapped):
+                self.wrapped = wrapped
+                self.prompt = True
+
+            def write(self, s):
+                if self.prompt:
+                    self.wrapped.write('\r\x1b[K')
+                    self.prompt = False
+                self.wrapped.write(s)
+                if s == "\n":
+                    os.kill(os.getpid(), signal.SIGWINCH)
+                    self.prompt = True
+
+            def __getattr__(self, a):
+                return getattr(self.wrapped, a)
+
+        sys.stdout = StdOutWrapper(sys.stdout)
 
 _do_on_start = []
 
