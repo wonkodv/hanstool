@@ -12,8 +12,11 @@ if CHECK.os.posix:
         sudo = "sudo"
         if not CHECK.is_cli_frontend:
             try:
-                procio(
-                    "sudo true"
+                execute(
+                    "sudo -- true",
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    stdin=subprocess.DEVNULL,
                 )  # check if we have a sudo cookie, or trigger non-password auth mechanisms
             except ProcIOException:
                 sudo = "gksudo"
