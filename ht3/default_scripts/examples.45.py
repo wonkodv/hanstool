@@ -125,3 +125,38 @@ def password(
     raise ValueError(
         "can not match all categories", "".join(sorted(pwd)), "".join(sorted(pwchars))
     )
+
+
+_UNICODE_NAMES = None
+
+
+def _complete_unicode_names(s):
+    import unicodedata
+
+    global _UNICODE_NAMES
+    if not _UNICODE_NAMES:
+        l = []
+        for c in range(0x20000):  # everything usefull except Chinese/Japanese/Korean
+            try:
+                l.append(unicodedata.name(chr(c)))
+            except ValueError:
+                pass
+        _UNICODE_NAMES = sorted(l)
+
+    return filter_completions_i(s, _UNICODE_NAMES)
+
+
+@cmd
+def unicode(name: _complete_unicode_names):
+    import unicodedata
+
+    if len(name) == 1:
+        show(unicodedata.name(name))
+        return
+
+    try:
+        s = unicodedata.lookup(name.upper())
+    except KeyError:
+        s = unicodedata.lookup(name.upper() + " SIGN")
+    set_clipboard(s)
+    log(f"{name.upper()} {s} {ord(s)} \\u{ord(s):04x}")
