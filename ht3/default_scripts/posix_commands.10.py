@@ -132,7 +132,7 @@ if CHECK.os.posix:
     print("\x1b]2;HansTool\x07", end="")  # Set Title of Terminal Window
 
     @Env
-    def get_clipboard(s):
+    def get_clipboard():
         return procio("xclip", "-out", "-selection", "clipboard")
 
     @Env
