@@ -197,3 +197,18 @@ if CHECK.os.posix:
 
         cmd = f"pactl move-sink-input {sink_input} {sink}"
         show(cmd + ": " + procio(cmd))
+
+    @cmd
+    def screenshot(filename="~/tmp/screenshot.png"):
+        if "/" in filename:
+            path = pathlib.Path(filename).expanduser()
+        else:
+            path = pathlib.Path("~/tmp").expanduser() / filename
+
+        subprocess.check_call(["import", str(path)])
+        subprocess.run(
+            ["xclip", "-selection", "primary"], input=str(filename).encode("utf-8")
+        )
+        subprocess.check_call(
+            ["xclip", "-selection", "clipboard", "-t", "image/png", str(path)]
+        )
