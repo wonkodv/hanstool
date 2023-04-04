@@ -77,7 +77,6 @@ def _complete_w_file(parts):
 
 
 if which("bash") and False:
-
     # TODO: make this like
     #   https://github.com/Kloadut/awesome-debian/blob/master/lib/awful/completion.lua
 

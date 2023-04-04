@@ -600,7 +600,8 @@ def ArgParser(function, typ, apply_defaults):
     """Create the right Argument Parser for a function.
 
     function: the function to parse for,
-    typ: ArgumentParser or strategy ['auto', 'shell', False for No Args, 1 for 1 argument, :opts for opts]"""
+    typ: ArgumentParser or strategy ['auto', 'shell', False for No Args, 1 for 1 argument, :opts for opts]
+    """
 
     if isinstance(typ, BaseArgParser):
         return typ

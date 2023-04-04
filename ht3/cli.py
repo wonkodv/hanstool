@@ -103,14 +103,15 @@ def _setup_readline():
     readline.read_init_file()
 
     if signal:
-        class StdOutWrapper():
+
+        class StdOutWrapper:
             def __init__(self, wrapped):
                 self.wrapped = wrapped
                 self.prompt = True
 
             def write(self, s):
                 if self.prompt:
-                    self.wrapped.write('\r\x1b[K')
+                    self.wrapped.write("\r\x1b[K")
                     self.prompt = False
                 self.wrapped.write(s)
                 if s == "\n":
@@ -121,6 +122,7 @@ def _setup_readline():
                 return getattr(self.wrapped, a)
 
         sys.stdout = StdOutWrapper(sys.stdout)
+
 
 _do_on_start = []
 

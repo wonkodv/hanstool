@@ -2,9 +2,14 @@ import pathlib
 import unittest
 from unittest.mock import Mock, patch
 
-from ht3.complete import (complete_command_args, complete_commands,
-                          complete_path, complete_py, filter_completions,
-                          filter_completions_i)
+from ht3.complete import (
+    complete_command_args,
+    complete_commands,
+    complete_path,
+    complete_py,
+    filter_completions,
+    filter_completions_i,
+)
 
 
 class TestCompletion(unittest.TestCase):

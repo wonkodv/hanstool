@@ -30,7 +30,6 @@ class TestFrontends(unittest.TestCase):
 
     @patch("importlib.import_module")
     def test_full_run(self, import_mock):
-
         fe1 = self.get_fe("fe1")
         fe2 = self.get_fe("fe2")
 

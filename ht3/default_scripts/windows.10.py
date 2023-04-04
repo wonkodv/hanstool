@@ -3,7 +3,6 @@
 from Env import *
 
 if CHECK.os.win:
-
     import functools
     import re
     from ctypes import windll

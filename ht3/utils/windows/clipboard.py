@@ -1,5 +1,4 @@
-from ctypes import (FormatError, c_size_t, c_void_p, c_wchar_p, cdll, memmove,
-                    windll)
+from ctypes import FormatError, c_size_t, c_void_p, c_wchar_p, cdll, memmove, windll
 from ctypes.wintypes import BOOL, DWORD, UINT
 
 

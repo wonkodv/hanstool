@@ -26,7 +26,6 @@ from .env import Env
 
 
 class UserInterface:
-
     BUSY = 1
     IDLE = 2
     ERROR = 3
