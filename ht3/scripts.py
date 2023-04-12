@@ -103,7 +103,7 @@ def check_all_compilable():
     r = True
     for mod in SCRIPTS:
         path = pathlib.Path(mod.__file__)
-        with path.open("rt") as f:
+        with path.open("rt",  encoding="utf-8") as f:
             c = f.read()
         try:
             compile(c, str(path), "exec")

@@ -72,6 +72,11 @@ def vb(box: complete_virtualbox = None):
 
 
 @cmd
+def cb_table():
+    set_clipboard("(╯°□°）╯︵ ┻━┻")
+
+
+@cmd
 def rand(low: int = 0, high: int = 0xFFFFFFFF):
     """Copy a random number to the Clipboard."""
     r = random.randint(low, high)
@@ -151,12 +156,14 @@ def unicode(name: _complete_unicode_names):
     import unicodedata
 
     if len(name) == 1:
-        show(unicodedata.name(name))
-        return
+        s = name
+        name = unicodedata.name(s)
+        set_clipboard(name)
+    else:
+        try:
+            s = unicodedata.lookup(name.upper())
+        except KeyError:
+            s = unicodedata.lookup(name.upper() + " SIGN")
+        set_clipboard(s)
+    show(f"{name.upper()} {s} {ord(s)} \\u{ord(s):04x}")
 
-    try:
-        s = unicodedata.lookup(name.upper())
-    except KeyError:
-        s = unicodedata.lookup(name.upper() + " SIGN")
-    set_clipboard(s)
-    log(f"{name.upper()} {s} {ord(s)} \\u{ord(s):04x}")

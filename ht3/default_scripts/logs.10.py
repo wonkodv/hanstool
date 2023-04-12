@@ -62,7 +62,7 @@ def log_alert(message):
     elif isinstance(o, bool):
         o = str(o)
     elif isinstance(o, int):
-        o = "0b{0:b}\t0x{0:X}\t{0:d}".format(o)
+        o = "0b{0:_b}\t0x{0:_X}\t{0:_d}".format(o)
     elif inspect.isfunction(o):
         try:
             s, l = inspect.getsourcelines(o)

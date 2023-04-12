@@ -185,7 +185,7 @@ if CHECK.os.win:
 
         while GetAsyncKeyState("SHIFT"):
             sleep(0)
-        w = Window.TOP.search_by_title(r"Firefox \(Private[ \w]*\)$")
+        w = Window.TOP.search_by_title(r"Firefox Private")
         if w:
             if w.visible:
                 if w == Window.get_foreground_window():
