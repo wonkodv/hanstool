@@ -34,10 +34,10 @@ def timer(t: args.Time, event: str = "Done"):
     t2 = datetime.datetime.now() + datetime.timedelta(seconds=t)
     show(f"Reminding you of {event} at {t2}")
 
-    @threaded
+    @threaded(name=f"Timer {event} at {t2}")
     def timer_thread():
         sleep(t)
-        option_dialog("Timer", "Timer up ({0})".format(event), "OK")
+        option_dialog("Timer", f"Timer up: {event}", "OK")
 
 
 @cmd
