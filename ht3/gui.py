@@ -144,8 +144,8 @@ class UserInterface:
             self.window.deiconify()
             self.text.focus_force()
 
-        def stay_on_top(self):
-            self.window.wm_attributes("-topmost", 1)
+        def stay_on_top(self, value=True):
+            self.window.wm_attributes("-topmost", value)
 
         def set_rect(self, left, top, width, height):
             self.window.geometry("%dx%d+%d+%d" % (width, height, left, top))
@@ -553,8 +553,8 @@ def close(gui):
 
 
 @interact(True)
-def cmd_win_stay_on_top(gui):
-    gui.cmd_win.stay_on_top()
+def cmd_win_stay_on_top(value=True, gui=None):
+    gui.cmd_win.stay_on_top(value)
 
 
 @interact(True)

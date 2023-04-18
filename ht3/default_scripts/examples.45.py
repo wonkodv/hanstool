@@ -160,10 +160,15 @@ def unicode(name: _complete_unicode_names):
         name = unicodedata.name(s)
         set_clipboard(name)
     else:
+        name = name.upper()
         try:
-            s = unicodedata.lookup(name.upper())
-        except KeyError:
-            s = unicodedata.lookup(name.upper() + " SIGN")
+            s = unicodedata.lookup(name)
+        except KeyError as e:
+            try:
+                name += " SIGN"
+                s = unicodedata.lookup(name)
+            except KeyError:
+                raise e from None
         set_clipboard(s)
-    show(f"{name.upper()} {s} {ord(s)} \\u{ord(s):04x}")
+    show(f"{name} {s} {ord(s)} \\u{ord(s):04x}")
 
