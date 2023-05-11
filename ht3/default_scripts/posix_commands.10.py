@@ -205,7 +205,7 @@ if CHECK.os.posix:
         else:
             path = pathlib.Path("~/tmp").expanduser() / filename
 
-        subprocess.check_call(["import", str(path)])
+        subprocess.check_call(["import", "-silent", str(path)])
         subprocess.run(
             ["xclip", "-selection", "primary"], input=str(filename).encode("utf-8")
         )

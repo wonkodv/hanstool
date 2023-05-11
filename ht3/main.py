@@ -102,8 +102,10 @@ def precompile(args):
 
 
 def main(args):
-    args = precompile(parse(args))
     try:
+        args = list(parse(args))
+        print("Arguments:", ";".join(f"{function.__name__}{params!r}" for function, params, _ in args))
+        args = precompile(args)
         args = list(args)  # consume to get errors early
     except ArgumentError as e:
         print(*e.args)

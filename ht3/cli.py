@@ -19,7 +19,7 @@ except ImportError:
 try:
     import signal
 except ImportError:
-    readline = None
+    signal = None
 
 
 @COMMAND_EXCEPTION_HOOK.register
