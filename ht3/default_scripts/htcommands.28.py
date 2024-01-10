@@ -275,6 +275,10 @@ if CHECK.frontend("ht3.gui"):
             else:
                 ht3.gui.log_win_to_front()
 
+    @cmd
+    def hide():
+        ht3.gui.cmd_win_hide()
+        ht3.gui.cmd_win_stay_on_top(False)
 
 if CHECK.frontend("ht3.hotkey"):
     import ht3.hotkey

@@ -139,6 +139,9 @@ class UserInterface:
             self._state = state
             self._update_color()
 
+        def hide(self):
+            self.window.withdraw()
+
         def to_front(self):
             self.text.select_range(0, "end")
             self.window.deiconify()
@@ -556,6 +559,10 @@ def close(gui):
 def cmd_win_stay_on_top(value=True, gui=None):
     gui.cmd_win.stay_on_top(value)
 
+
+@interact(True)
+def cmd_win_hide(gui):
+    gui.cmd_win.hide()
 
 @interact(True)
 def cmd_win_to_front(gui):
