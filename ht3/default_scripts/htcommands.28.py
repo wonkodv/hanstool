@@ -259,8 +259,6 @@ def restart(*more_args):
 if CHECK.frontend("ht3.gui"):
     import ht3.gui
 
-    ht3.gui.do_on_start(ht3.gui.cmd_win_stay_on_top)
-
     if CHECK.frontend("ht3.hotkey"):
         HT_TO_FRONT_TIME = 0
 
@@ -272,8 +270,14 @@ if CHECK.frontend("ht3.gui"):
                 Env.MoveHtWindow()
                 ht3.gui.cmd_win_to_front()
                 HT_TO_FRONT_TIME = time.monotonic()
+                ht3.gui.cmd_win_stay_on_top(True)
             else:
                 ht3.gui.log_win_to_front()
+
+    @cmd
+    def hide():
+        ht3.gui.cmd_win_hide()
+        ht3.gui.cmd_win_stay_on_top(False)
 
 
 if CHECK.frontend("ht3.hotkey"):

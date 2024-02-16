@@ -72,11 +72,6 @@ def vb(box: complete_virtualbox = None):
 
 
 @cmd
-def cb_table():
-    set_clipboard("(╯°□°）╯︵ ┻━┻")
-
-
-@cmd
 def rand(low: int = 0, high: int = 0xFFFFFFFF):
     """Copy a random number to the Clipboard."""
     r = random.randint(low, high)
@@ -171,4 +166,3 @@ def unicode(name: _complete_unicode_names):
                 raise e from None
         set_clipboard(s)
     show(f"{name} {s} {ord(s)} \\u{ord(s):04x}")
-
