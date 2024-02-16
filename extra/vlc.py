@@ -55,7 +55,6 @@ def play_id(id):
 
 @cmd
 def play(search):
-
     ids = find(search)
     if ids:
         for name, id in ids:

@@ -5,8 +5,7 @@ import os.path
 import tempfile
 
 import neovim
-from Env import (CHECK, EXCEPTIONS, Env, Path, cmd, execute_disconnected, show,
-                 sleep)
+from Env import CHECK, EXCEPTIONS, Env, Path, cmd, execute_disconnected, show, sleep
 
 import ht3.utils.process
 
@@ -18,7 +17,7 @@ else:
 if ht3.utils.process.which("nvim-qt"):
     DEFAULT_NVIMGUI = ("nvim-qt", "--")
 else:
-    DEFAULT_NVIMGUI = ("xterm", "-e", "nvim")
+    DEFAULT_NVIMGUI = ("x-terminal-emulator", "-e", "nvim")
 
 
 @cmd
@@ -28,10 +27,7 @@ def nvim(server="HT3", env={}, cwd=None):
         if CHECK.os.posix:
             if not socket.parent.is_dir():
                 socket.parent.mkdir(parents=True)
-        if CHECK.is_cli_frontend:
-            args = Env.get("NVIM", "nvim")
-        else:
-            args = Env.get("NVIMGUI", DEFAULT_NVIMGUI)
+        args = Env.get("NVIMGUI", DEFAULT_NVIMGUI)
         if isinstance(args, str):
             args = (args,)
         args = *args, "--listen", str(socket)
