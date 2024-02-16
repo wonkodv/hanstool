@@ -34,6 +34,7 @@ def load_history():
     global HISTORY
     limit = Env.get("HISTORY_LIMIT", 1000)
     with get_history_file().open("rt") as f:
+        f = (l for l in f if '\0' not in l)
         if limit is not None:
             HISTORY = [line.strip() for line in collections.deque(f, limit)]
         else:
