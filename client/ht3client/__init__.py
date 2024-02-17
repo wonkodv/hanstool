@@ -31,6 +31,9 @@ ARG_PARSER.add_argument(
     help="Complete the (partial) command instead of executing",
 )
 ARG_PARSER.add_argument(
+    "-1", "--once", action="store_true", help="Exit after the first command"
+)
+ARG_PARSER.add_argument(
     "-q", "--quiet", action="store_true", help="Hide Exception Traceback"
 )
 ARG_PARSER.add_argument(
@@ -108,8 +111,8 @@ class HT3Client:
         raise TypeError(s, t, r)
 
 
-def repl(*socket_info):
-    htc = HT3Client(*socket_info)
+def repl(socket_typ, socket_addr, once=False):
+    htc = HT3Client(socket_typ, socket_addr)
     with htc:
         htc.ping()
 
@@ -150,6 +153,8 @@ def repl(*socket_info):
                     print(e.args[0])
                 except KeyboardInterrupt:
                     print()
+                if once:
+                    return
         except EOFError:
             print()
 
@@ -189,7 +194,7 @@ def main(options):
             if r is not None:
                 print(r)
         else:
-            repl(typ, adr)
+            repl(typ, adr, options.once)
     except RemoteException as e:
         print(e.args[0], file=sys.stderr)
     except Exception as e:
