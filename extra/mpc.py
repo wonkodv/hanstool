@@ -1,11 +1,6 @@
 from Env import cmd, show, execute_disconnected
 
 
-@cmd
-def mpd():
-    execute_disconnected("mpd")
-
-
 def client():
     import musicpd
 
