@@ -5,4 +5,4 @@
 #! nix-shell -p python3Packages.tkinter
 #! nix-shell -p python3Packages.pynvim
 
-PYTHONPATH="$(dirname -- "$0"):$PYTHONPATH" python -m client "$@"
+PYTHONPATH="$(dirname -- "$(readlink -f "$0")"):$PYTHONPATH" python -m client "$@"

@@ -53,7 +53,7 @@ def measure_interval():
 
 def complete_virtualbox(s=None):
     """Helper function for the vb command, get the names of installed boxes."""
-    vms = procio("vboxmanage list vms", shell=False, is_split=False)
+    vms = procio("VBoxManage list vms", shell=False, is_split=False)
 
     # "debian" {fbc948a5-7b8b-489c-88b0-7f5eaceb150e}
     for s in sorted(vms.split("\n")):
@@ -68,7 +68,7 @@ def vb(box: complete_virtualbox = None):
     if not box:
         return execute_disconnected("virtualbox")
     else:
-        return procio("vboxmanage", "startvm", box)
+        return procio("VBoxManage", "startvm", box)
 
 
 @cmd
