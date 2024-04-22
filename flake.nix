@@ -25,7 +25,7 @@
                 dontUnpack = true;
                 installPhase = ''
                     mkdir -p $out/bin
-                    echo "PYTHONPATH='$PYTHONPATH:${self}' python -m client" > $out/bin/ht3-client
+                    echo "PATH='$PATH' PYTHONPATH='$PYTHONPATH:${self}' python -m client \"\$@\"" > $out/bin/ht3-client
                     chmod +x $out/bin/ht3-client
                 '';
             };
@@ -35,7 +35,7 @@
                 dontUnpack = true;
                 installPhase = ''
                     mkdir -p $out/bin
-                    echo "PYTHONPATH='$PYTHONPATH:${self}' python -m ht3" > $out/bin/ht3
+                    echo "PATH='$PATH' PYTHONPATH='$PYTHONPATH:${self}' python -m ht3 \"\$@\"" > $out/bin/ht3
                     chmod +x $out/bin/ht3
                 '';
             };
