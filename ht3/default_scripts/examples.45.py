@@ -127,10 +127,10 @@ def password(
     )
 
 
+
 _UNICODE_NAMES = None
 
-
-def _complete_unicode_names(s):
+def _unicode_names():
     import unicodedata
 
     global _UNICODE_NAMES
@@ -142,8 +142,10 @@ def _complete_unicode_names(s):
             except ValueError:
                 pass
         _UNICODE_NAMES = sorted(l)
+    return _UNICODE_NAMES
 
-    return filter_completions_i(s, _UNICODE_NAMES)
+def _complete_unicode_names(s):
+    return filter_completions_i(s, _unicode_names())
 
 
 @cmd
@@ -163,6 +165,7 @@ def unicode(name: _complete_unicode_names):
                 name += " SIGN"
                 s = unicodedata.lookup(name)
             except KeyError:
-                raise e from None
+                show("\n".join(f"{n} {unicodedata.lookup(n)} {ord(unicodedata.lookup(n))} \\u{ord(unicodedata.lookup(n)):04x}"  for n in _unicode_names() if all(s in n for s in name.split())))
+                return
         set_clipboard(s)
     show(f"{name} {s} {ord(s)} \\u{ord(s):04x}")

@@ -65,19 +65,33 @@ if CHECK.os.win:
             w = w.find(class_name="ToolbarWindow32", title="hanstool")
             return w
 
+        def taskbar_clock():
+            w = Window.TOP.find(class_name="Shell_TrayWnd")
+            w = w.find(class_name="TrayNotifyWnd")
+            return w
+
         @Env
         @cmd
         def MoveHtWindow():
             """Find a toolbar named ``hanstool`` and place the command window over it."""
             try:
                 w = taskbar_toolbar()
+                left, top, width, height = w.rect
+                left, width = left + 2, width - 4
             except KeyError:
-                return
-            l, t, r, b = w.rect
+                try:
+                    w = taskbar_clock()
+                    left, top, width, height = w.rect
+                    height = height - 2
+                    top = top + 1
+                    width = 150
+                    left = left - 151
+                except KeyError:
+                    return
 
             @ht3.gui.interact(False)
             def doit(gui):
-                ht3.gui.cmd_win_set_rect(l + 2, t, r - 4, b)
+                ht3.gui.cmd_win_set_rect(left, top, width, height)
 
             doit()
 
@@ -205,6 +219,12 @@ if CHECK.os.win:
             except FileExistsError:
                 pass
         execute_disconnected("explorer {}".format(shellescape(str(p))))
+
+    @cmd
+    def uptime():
+        b, u = get_uptime()
+        show(f"Boot: {b}, uptime: {u}")
+        set_clipboard(b)
 
     @Env
     def get_uptime():
