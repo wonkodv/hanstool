@@ -19,26 +19,27 @@
         ];
     in {
         packages.${system} = rec {
-            client = pkgs.stdenv.mkDerivation {
+            ht3-client = pkgs.stdenv.mkDerivation {
                 name = "ht3-client";
                 buildInputs = [ pkgs.python3 ];
                 dontUnpack = true;
                 installPhase = ''
                     mkdir -p $out/bin
-                    echo "PATH='$PATH' PYTHONPATH='$PYTHONPATH:${self}' python -m client \"\$@\"" > $out/bin/ht3-client
+                    echo "PATH=\"\$PATH:'$PATH'\" PYTHONPATH='$PYTHONPATH:${self}' python -m client \"\$@\"" > $out/bin/ht3-client
                     chmod +x $out/bin/ht3-client
                 '';
             };
-            default = pkgs.stdenv.mkDerivation {
+            ht3 = pkgs.stdenv.mkDerivation {
                 name = "ht3";
                 buildInputs = deps;
                 dontUnpack = true;
                 installPhase = ''
                     mkdir -p $out/bin
-                    echo "PATH='$PATH' PYTHONPATH='$PYTHONPATH:${self}' python -m ht3 \"\$@\"" > $out/bin/ht3
+                    echo "PATH=\"\$PATH:'$PATH'\" PYTHONPATH='$PYTHONPATH:${self}' python -m ht3 \"\$@\"" > $out/bin/ht3
                     chmod +x $out/bin/ht3
                 '';
             };
+            default = ht3;
         };
 
 
