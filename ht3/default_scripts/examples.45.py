@@ -66,7 +66,7 @@ def complete_virtualbox(s=None):
 def vb(box: complete_virtualbox = None):
     """Open VirtualBox (the manager) or start a box with the approximate name."""
     if not box:
-        return execute_disconnected("virtualbox")
+        return execute_disconnected("VirtualBox")
     else:
         return procio("VBoxManage", "startvm", box)
 

@@ -3,6 +3,7 @@
 main() is called from ht3.__main__"""
 
 import pkg_resources
+import pathlib
 
 from . import lib, scripts
 from .command import run_command
@@ -44,8 +45,12 @@ class ArgumentError(ValueError):
 def load_default_script():
     if not scripts.SCRIPTS:
         if not scripts.ADDED_SCRIPTS:
-            s = pkg_resources.resource_filename("ht3", "default_script.py")
-            add_scripts(s)
+            p = pathlib.Path("~/.config/ht3/config.py").expanduser()
+            if p.is_file():
+                add_scripts(p)
+            else:
+                s = pkg_resources.resource_filename("ht3", "default_script.py")
+                add_scripts(s)
     while scripts.ADDED_SCRIPTS:
         load_scripts()
 
